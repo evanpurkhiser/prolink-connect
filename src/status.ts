@@ -6,8 +6,9 @@ export function packetToStatus(packet: Buffer) {
     throw new Error('CDJ status packet does not start with the expected header');
   }
 
+  // Rekordbox sends some short status packets that we can just ignore.
   if (packet.length < 0xff) {
-    throw new Error('Invalid status packet');
+    return;
   }
 
   console.log(packet[0x8d]);

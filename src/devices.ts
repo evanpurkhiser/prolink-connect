@@ -1,8 +1,9 @@
 import 'module-alias/register';
 
 import dgram from 'dgram-as-promised';
+import {hexdump} from '@gct256/hexdump';
 
-import {ANNOUNCE_PORT, PROLINK_HEADER, VIRTUAL_CDJ_NAME} from 'src/constants';
+import {ANNOUNCE_PORT, VIRTUAL_CDJ_NAME} from 'src/constants';
 import {
   deviceFromPacket,
   getAnnouncePacket,
@@ -10,10 +11,10 @@ import {
   getVirtualCDJ,
   getBroadcastAddress,
 } from 'src/utils';
-import {Device} from 'src/types';
+import {Device, DeviceType} from 'src/types';
 
-import {hexdump} from '@gct256/hexdump';
 import {packetToStatus} from 'src/status';
+import {RemoteDatabase} from 'src/remotedb';
 
 async function setupConnections() {
   const announceSocket = dgram.createSocket('udp4');
@@ -28,7 +29,9 @@ async function setupConnections() {
         return;
       }
 
-      markFirstDevice(device);
+      if (device.type === DeviceType.Rekordbox) {
+        markFirstDevice(device);
+      }
     })
   );
 
@@ -36,6 +39,8 @@ async function setupConnections() {
   await statusSocket.bind(50002, '0.0.0.0');
 
   const firstDevice = await firstDeviceSeen;
+
+  console.log(firstDevice);
 
   const iface = getMatchingInterface(firstDevice.ip);
   if (iface === null) {
@@ -50,8 +55,18 @@ async function setupConnections() {
   }, 1000);
 
   statusSocket.socket.on('message', (d) => {
-    console.log(packetToStatus(d));
+    //console.log(packetToStatus(d));
   });
+
+  const dm = new RemoteDatabase(vcdj);
+
+  console.log('connecting...');
+
+  await dm.connectToDevice(firstDevice);
+
+  console.log('connected');
+
+  await dm.lookupMetadata(firstDevice);
 }
 
 setupConnections();

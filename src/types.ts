@@ -26,7 +26,28 @@ export type Device = {
   lastActive?: Date;
 };
 
-export namespace CDJStatus {
+/**
+ * Track load slot flags
+ */
+export enum TrackSlot {
+  Empty = 0x00,
+  CD = 0x01,
+  SD = 0x02,
+  USB = 0x03,
+  RB = 0x04,
+}
+
+/**
+ * Track type flags
+ */
+export enum TrackType {
+  None = 0x00,
+  RB = 0x01,
+  Unanalyzed = 0x02,
+  AudioCD = 0x05,
+}
+
+export module CDJStatus {
   /**
    * Status flag bitmasks
    */
@@ -51,27 +72,6 @@ export namespace CDJStatus {
     Searching = 0x09,
     SpunDown = 0x0e,
     Ended = 0x11,
-  }
-
-  /**
-   * Track load slot flags
-   */
-  export enum TrackSlot {
-    Empty = 0x00,
-    CD = 0x01,
-    SD = 0x02,
-    USB = 0x03,
-    RB = 0x04,
-  }
-
-  /**
-   * Track type flags
-   */
-  export enum TrackType {
-    None = 0x00,
-    RB = 0x01,
-    Unanalyzed = 0x02,
-    AudioCD = 0x05,
   }
 
   /**

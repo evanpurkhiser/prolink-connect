@@ -4,7 +4,7 @@
 export const ANNOUNCE_PORT = 50000;
 
 /**
- * All UDP packets on the PRO DJ LINK network start with this header.
+ * All UDP packets on the PRO DJ LINK network start with this magic header.
  */
 export const PROLINK_HEADER = Uint8Array.of(
   0x51,
@@ -18,6 +18,11 @@ export const PROLINK_HEADER = Uint8Array.of(
   0x4f,
   0x4c
 );
+
+/**
+ * All remote database messages include this 4 byte magic value.
+ */
+export const REMOTEDB_MAGIC = 0x872349ae;
 
 /**
  * VirtualCDJName is the name given to the Virtual CDJ device.

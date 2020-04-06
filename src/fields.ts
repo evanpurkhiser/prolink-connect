@@ -24,6 +24,8 @@ interface BaseField {
    * property in that it will include the field type header.
    */
   readonly buffer: Buffer;
+
+  new (...args: any[]): BaseField;
 }
 
 class BaseField {
@@ -38,6 +40,11 @@ class BaseField {
    * field length.
    */
   static bytesToRead: number | false = false;
+
+  /**
+   * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+   */
+  ['constructor']: typeof BaseField;
 }
 
 export type NumberField = BaseField & {
@@ -110,8 +117,6 @@ const makeNumberField = (type: NumberFieldType) =>
     }
   };
 
-export type Field = NumberField | StringField | BinaryField;
-
 /**
  * Field representing a UInt8
  */
@@ -171,6 +176,8 @@ export class Binary extends BaseField implements BinaryField {
     return makeVariableBuffer(FieldType.Binary, this.data);
   }
 }
+
+export type Field = NumberField | StringField | BinaryField;
 
 const fieldMap = {
   [FieldType.UInt8]: UInt8,
