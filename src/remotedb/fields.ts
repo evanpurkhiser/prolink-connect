@@ -1,5 +1,7 @@
 import {PromiseReadable} from 'promise-readable';
 
+const NULL_CHAR = '\0';
+
 /**
  * Field type is a leading byte that indicates what the field is.
  */
@@ -7,8 +9,8 @@ export enum FieldType {
   UInt8 = 0x0f,
   UInt16 = 0x10,
   UInt32 = 0x11,
-  String = 0x26,
   Binary = 0x14,
+  String = 0x26,
 }
 
 /**
@@ -24,8 +26,6 @@ interface BaseField {
    * property in that it will include the field type header.
    */
   readonly buffer: Buffer;
-
-  new (...args: any[]): BaseField;
 }
 
 class BaseField {
@@ -36,10 +36,10 @@ class BaseField {
 
   /**
    * The number of bytes to read for this field. If the field is not a fixed size,
-   * set this to true, causing the parser to read a single UInt32 to determine the
-   * field length.
+   * set this to a function which will recieve the UInt32 value just after
+   * reading the field type, returning the next number of bytes to read.
    */
-  static bytesToRead: number | false = false;
+  static bytesToRead: number | ((reportedLength: number) => number);
 
   /**
    * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
@@ -47,18 +47,18 @@ class BaseField {
   ['constructor']: typeof BaseField;
 }
 
-export type NumberField = BaseField & {
+export type NumberField<T extends number = number> = BaseField & {
   /**
    * The fields number value
    */
-  value: number;
+  value: T;
 };
 
-export type StringField = BaseField & {
+export type StringField<T extends string = string> = BaseField & {
   /**
    * The fields decoded string value
    */
-  value: string;
+  value: T;
 };
 
 export type BinaryField = BaseField & {
@@ -88,10 +88,11 @@ function parseNumber(value: number | Buffer, type: NumberFieldType): [number, Bu
   return [value[readFn](), value];
 }
 
-function makeVariableBuffer(type: FieldType, fieldData: Buffer) {
+function makeVariableBuffer(type: FieldType, fieldData: Buffer, lengthHeader?: number) {
+  // Add 4 bytes for length header and 1 byte for type header.
   const data = Buffer.alloc(fieldData.length + 4 + 1);
   data.writeUInt8(type);
-  data.writeUInt32BE(fieldData.length, 0x01);
+  data.writeUInt32BE(lengthHeader ?? fieldData.length, 0x01);
 
   fieldData.copy(data, 0x05);
 
@@ -100,8 +101,8 @@ function makeVariableBuffer(type: FieldType, fieldData: Buffer) {
 
 const makeNumberField = (type: NumberFieldType) =>
   class Number extends BaseField implements NumberField {
-    static bytesToRead = numberBufferInfo[type][0];
     static type = type;
+    static bytesToRead = numberBufferInfo[type][0];
 
     value: number;
 
@@ -133,11 +134,14 @@ export const UInt16 = makeNumberField(FieldType.UInt16);
 export const UInt32 = makeNumberField(FieldType.UInt32);
 
 /**
- * Field representing a big endian UTF-16 string
+ * Field representing a null-terminated big endian UTF-16 string
  */
 export class String extends BaseField implements StringField {
-  static bytesToRead = false as const;
-  type = FieldType.String as const;
+  static type = FieldType.String as const;
+
+  // Compute the number of bytes in the string given the length of the string.
+  // A UTF-16 string takes 2 bytes per character.
+  static bytesToRead = (length: number) => length * 2;
 
   value: string;
 
@@ -145,16 +149,16 @@ export class String extends BaseField implements StringField {
     super();
     if (typeof value === 'string') {
       this.value = value;
-      this.data = Buffer.from(value, 'utf16le').swap16();
+      this.data = Buffer.from(value + NULL_CHAR, 'utf16le').swap16();
       return;
     }
 
-    this.value = Buffer.from(value).swap16().toString('utf16le');
+    this.value = Buffer.from(value).swap16().slice(0, -2).toString('utf16le');
     this.data = value;
   }
 
   get buffer() {
-    return makeVariableBuffer(FieldType.String, this.data);
+    return makeVariableBuffer(FieldType.String, this.data, this.data.length / 2);
   }
 }
 
@@ -162,8 +166,8 @@ export class String extends BaseField implements StringField {
  * Field representing binary data
  */
 export class Binary extends BaseField implements BinaryField {
-  static bytesToRead = false as const;
   static type = FieldType.Binary as const;
+  static bytesToRead = (bytes: number) => bytes;
 
   value: Buffer;
 
@@ -183,8 +187,8 @@ const fieldMap = {
   [FieldType.UInt8]: UInt8,
   [FieldType.UInt16]: UInt16,
   [FieldType.UInt32]: UInt32,
-  [FieldType.String]: String,
   [FieldType.Binary]: Binary,
+  [FieldType.String]: String,
 } as const;
 
 /**
@@ -219,13 +223,13 @@ export async function readField<
 
   let nextByteCount: number;
 
-  if (Field.bytesToRead !== false) {
+  if (typeof Field.bytesToRead === 'number') {
     nextByteCount = Field.bytesToRead;
   } else {
     // Read the field length as a UInt32 when we do not know the field length
     // from the type
     const lengthData = await read(stream, 4);
-    nextByteCount = lengthData.readUInt32BE();
+    nextByteCount = Field.bytesToRead(lengthData.readUInt32BE());
   }
 
   return new Field(await read(stream, nextByteCount)) as F;

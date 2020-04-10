@@ -20,11 +20,6 @@ export const PROLINK_HEADER = Uint8Array.of(
 );
 
 /**
- * All remote database messages include this 4 byte magic value.
- */
-export const REMOTEDB_MAGIC = 0x872349ae;
-
-/**
  * VirtualCDJName is the name given to the Virtual CDJ device.
  */
 export const VIRTUAL_CDJ_NAME = 'prolink-go';

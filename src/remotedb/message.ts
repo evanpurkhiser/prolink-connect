@@ -1,8 +1,17 @@
 import {PromiseReadable} from 'promise-readable';
 
-import {readField, Field, FieldType, UInt32, UInt16, Binary, UInt8} from 'src/fields';
-import {REMOTEDB_MAGIC} from 'src/constants';
-import {DeviceID, TrackSlot, TrackType} from 'src/types';
+import {REMOTEDB_MAGIC} from 'src/remotedb/constants';
+import {
+  readField,
+  Field,
+  FieldType,
+  NumberField,
+  StringField,
+  UInt8,
+  UInt16,
+  UInt32,
+  Binary,
+} from 'src/remotedb/fields';
 
 /**
  * Known message types. These are used for both request and response messages.
@@ -32,6 +41,7 @@ export enum MessageType {
   MenuPlaylist = 0x1105,
   MenuFolder = 0x2006,
 
+  // Filters
   ArtistsOfGenre = 0x1101,
   AlbumsOfArtist = 0x1102,
   TracksOfAlbum = 0x1103,
@@ -162,6 +172,124 @@ export enum ItemType {
 }
 
 /**
+ * All menu items have 12 arguments of these types
+ */
+type ItemArgs = [
+  NumberField, // Parent ID, such as an artist for a track item.
+  NumberField, // Main ID, such as rekordbox for a track item.
+  NumberField, // Length in bytes of Label 1.
+  StringField, // Label 1 main text
+  NumberField, // Length in bytes of Label 2.
+  StringField, // Label 2 (secondary text, e.g. artist name for playlist entries)
+  NumberField<ItemType>,
+  NumberField, // Some type of flags
+  NumberField, // Holds artwork ID?
+  NumberField,
+  NumberField,
+  NumberField
+];
+
+/**
+ * Convert a message item argument lists to a structured intermediate object
+ */
+const makeItemData = (args: ItemArgs) => ({
+  parentId: args[0].value,
+  mainId: args[1].value,
+  label1: args[3].value,
+  label2: args[5].value,
+  itemType: args[6].value,
+  artworkId: args[8].value,
+});
+
+type ItemData = ReturnType<typeof makeItemData>;
+
+const mapIdName = (a: ItemData) => ({
+  id: a.mainId,
+  name: a.label1,
+});
+
+/**
+ * Maps item types to structured objects
+ */
+const itemTransformers = {
+  [ItemType.TrackTitle]: (a: ItemData) => ({
+    id: a.mainId,
+    title: a.label1,
+    artworkId: a.artworkId,
+  }),
+  [ItemType.AlbumTitle]: mapIdName,
+  [ItemType.Artist]: mapIdName,
+  [ItemType.Genre]: mapIdName,
+  [ItemType.Label]: mapIdName,
+  [ItemType.Key]: mapIdName,
+
+  [ItemType.Comment]: (a: ItemData) => a.label1,
+  [ItemType.Year]: (a: ItemData) => a.label1,
+  [ItemType.Rating]: (a: ItemData) => a.mainId,
+  [ItemType.Tempo]: (a: ItemData) => a.mainId / 100,
+  [ItemType.Duration]: (a: ItemData) => a.mainId,
+
+  // TODO
+
+  [ItemType.ColorNone]: (a: ItemData) => a,
+  [ItemType.ColorPink]: (a: ItemData) => a,
+  [ItemType.ColorRed]: (a: ItemData) => a,
+  [ItemType.ColorOrange]: (a: ItemData) => a,
+  [ItemType.ColorYellow]: (a: ItemData) => a,
+  [ItemType.ColorGreen]: (a: ItemData) => a,
+  [ItemType.ColorAqua]: (a: ItemData) => a,
+  [ItemType.ColorBlue]: (a: ItemData) => a,
+  [ItemType.ColorPurple]: (a: ItemData) => a,
+
+  [ItemType.Folder]: (a: ItemData) => a,
+  [ItemType.Disc]: (a: ItemData) => a,
+  [ItemType.Playlist]: (a: ItemData) => a,
+  [ItemType.BitRate]: (a: ItemData) => a,
+
+  [ItemType.HistoryPlaylist]: (a: ItemData) => a,
+  [ItemType.OrigianlArtist]: (a: ItemData) => a,
+  [ItemType.Remixer]: (a: ItemData) => a,
+  [ItemType.DateAdded]: (a: ItemData) => a,
+  [ItemType.MenuGenre]: (a: ItemData) => a,
+  [ItemType.MenuArtist]: (a: ItemData) => a,
+  [ItemType.MenuAlbum]: (a: ItemData) => a,
+  [ItemType.MenuTrack]: (a: ItemData) => a,
+  [ItemType.MenuPlaylist]: (a: ItemData) => a,
+  [ItemType.MenuBPM]: (a: ItemData) => a,
+  [ItemType.MenuRating]: (a: ItemData) => a,
+  [ItemType.MenuYear]: (a: ItemData) => a,
+  [ItemType.MenuRemixer]: (a: ItemData) => a,
+  [ItemType.MenuLabel]: (a: ItemData) => a,
+  [ItemType.MenuOriginal]: (a: ItemData) => a,
+  [ItemType.MenuKey]: (a: ItemData) => a,
+  [ItemType.MenuColor]: (a: ItemData) => a,
+  [ItemType.MenuFolder]: (a: ItemData) => a,
+  [ItemType.MenuSearch]: (a: ItemData) => a,
+  [ItemType.MenuTime]: (a: ItemData) => a,
+  [ItemType.MenuBit]: (a: ItemData) => a,
+  [ItemType.MenuFilename]: (a: ItemData) => a,
+  [ItemType.MenuHistory]: (a: ItemData) => a,
+  [ItemType.MenuAll]: (a: ItemData) => a,
+  [ItemType.TrackTitleAlbum]: (a: ItemData) => a,
+  [ItemType.TrackTitleGenre]: (a: ItemData) => a,
+  [ItemType.TrackTitleArtist]: (a: ItemData) => a,
+  [ItemType.TrackTitleRating]: (a: ItemData) => a,
+  [ItemType.TrackTitleTime]: (a: ItemData) => a,
+  [ItemType.TrackTitleBPM]: (a: ItemData) => a,
+  [ItemType.TrackTitleLabel]: (a: ItemData) => a,
+  [ItemType.TrackTitleKey]: (a: ItemData) => a,
+  [ItemType.TrackTitleBitRate]: (a: ItemData) => a,
+  [ItemType.TrackTitleColor]: (a: ItemData) => a,
+  [ItemType.TrackTitleComment]: (a: ItemData) => a,
+  [ItemType.TrackTitleOriginalArtist]: (a: ItemData) => a,
+  [ItemType.TrackTitleRemixer]: (a: ItemData) => a,
+  [ItemType.TrackTitleDJPlayCount]: (a: ItemData) => a,
+  [ItemType.MenuTrackTitleDateAdded]: (a: ItemData) => a,
+};
+
+export type Item<T extends ItemType> = ReturnType<typeof itemTransformers[T]>;
+
+/**
  * Menu target specifies where a menu should be "rendered" This differes based
  * on the request being made.
  */
@@ -214,7 +342,7 @@ type Options = {
 /**
  * Representation of a set of fields sequenced into a known message format.
  */
-export default class Message {
+export class Message {
   /**
    * Read a single mesasge via a readable stream
    */
@@ -263,6 +391,7 @@ export default class Message {
    * The transaction ID is used to associate responses to their requests.
    */
   transactionId?: number;
+
   readonly type: MessageType;
   readonly args: Field[];
 
@@ -272,6 +401,9 @@ export default class Message {
     this.args = args;
   }
 
+  /**
+   * The byte serialization of the message
+   */
   get buffer() {
     // Determine the argument list from the list of fields
     const argList = Buffer.alloc(ARG_COUNT, 0x00);
@@ -288,19 +420,18 @@ export default class Message {
 
     return Buffer.concat(fields.map((f) => f.buffer));
   }
+
+  /**
+   * Get the javascript representation of the message
+   */
+  get data() {
+    if (this.type !== MessageType.MenuItem) {
+      throw new Error('Cannot convert non MenuItem message to item');
+    }
+
+    const args = makeItemData(this.args as ItemArgs);
+    const transform = itemTransformers[args.itemType];
+
+    return transform(args);
+  }
 }
-
-type TrackDescriptorOpts = {
-  hostDeviceId: DeviceID;
-  menuTarget: MenuTarget;
-  trackSlot: TrackSlot;
-  trackType: TrackType;
-};
-
-export const makeDescriptorField = ({
-  hostDeviceId,
-  menuTarget,
-  trackSlot,
-  trackType,
-}: TrackDescriptorOpts) =>
-  new UInt32(Buffer.of(hostDeviceId, menuTarget, trackSlot, trackType));

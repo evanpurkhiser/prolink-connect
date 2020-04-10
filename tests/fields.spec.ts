@@ -1,4 +1,4 @@
-import * as Field from '../src/fields';
+import * as Field from '../src/remotedb/fields';
 
 describe('UInt8', () => {
   let num: Field.NumberField;
@@ -65,9 +65,10 @@ describe('String', () => {
 
   afterEach(() => {
     expect(string.value).toBe('test');
-    expect(string.data).toHaveLength(8);
-    expect([...string.data]).toEqual([0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74]);
-    expect(string.buffer).toHaveLength(13);
+    expect(string.data).toHaveLength(10);
+    // prettier-ignore
+    expect([...string.data]).toEqual([0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x00]);
+    expect(string.buffer).toHaveLength(15);
     expect(string.buffer[0]).toBe(Field.FieldType.String);
   });
 
@@ -76,7 +77,9 @@ describe('String', () => {
   });
 
   it('decodes', () => {
-    string = new Field.String(Buffer.of(0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74));
+    string = new Field.String(
+      Buffer.of(0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x00)
+    );
   });
 });
 
