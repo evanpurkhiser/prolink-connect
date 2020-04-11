@@ -21,8 +21,8 @@ async function setupConnections() {
   await announceSocket.bind(ANNOUNCE_PORT, '0.0.0.0');
   announceSocket.setBroadcast(true);
 
-  const firstDeviceSeen = new Promise<Device>((markFirstDevice) =>
-    announceSocket.socket.on('message', (packet) => {
+  const firstDeviceSeen = new Promise<Device>(markFirstDevice =>
+    announceSocket.socket.on('message', packet => {
       const device = deviceFromPacket(packet);
 
       if (device.name === VIRTUAL_CDJ_NAME) {
@@ -54,7 +54,7 @@ async function setupConnections() {
     announceSocket.send(announcePacket, 50000, getBroadcastAddress(iface));
   }, 1000);
 
-  statusSocket.socket.on('message', (d) => {
+  statusSocket.socket.on('message', d => {
     //console.log(packetToStatus(d));
   });
 

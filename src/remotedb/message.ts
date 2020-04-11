@@ -409,7 +409,7 @@ export class Message<T extends MessageType = any> {
   get buffer() {
     // Determine the argument list from the list of fields
     const argList = Buffer.alloc(ARG_COUNT, 0x00);
-    argList.set(this.args.map((arg) => fieldArgsMap[arg.constructor.type]));
+    argList.set(this.args.map(arg => fieldArgsMap[arg.constructor.type]));
 
     const fields = [
       new UInt32(REMOTEDB_MAGIC),
@@ -420,7 +420,7 @@ export class Message<T extends MessageType = any> {
       ...this.args,
     ];
 
-    return Buffer.concat(fields.map((f) => f.buffer));
+    return Buffer.concat(fields.map(f => f.buffer));
   }
 
   /**
