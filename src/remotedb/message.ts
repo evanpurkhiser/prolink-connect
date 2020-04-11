@@ -290,14 +290,6 @@ const itemTransformers = {
 export type Item<T extends ItemType> = ReturnType<typeof itemTransformers[T]>;
 
 /**
- * Menu target specifies where a menu should be "rendered" This differes based
- * on the request being made.
- */
-export enum MenuTarget {
-  Main = 0x01,
-}
-
-/**
  * The message argument list always containts 12 slots
  */
 const ARG_COUNT = 12;
@@ -307,7 +299,7 @@ const ARG_COUNT = 12;
  * duplicating the field type, but has different values for whatever reason.
  *
  * There do not appear to be argument types for UInt8 and UInt16. At least, no
- * messages include these field types as arguments.
+ * messages include these field types as arguments as far as we know.
  */
 enum ArgumentType {
   String = 0x02,
@@ -333,20 +325,23 @@ const argsFieldMap = {
   [ArgumentType.Binary]: FieldType.Binary,
 };
 
-type Options = {
+type Options<T extends MessageType> = {
   transactionId?: number;
-  type: MessageType;
+  type: T;
   args: Field[];
 };
 
 /**
  * Representation of a set of fields sequenced into a known message format.
  */
-export class Message {
+export class Message<T extends MessageType = any> {
   /**
    * Read a single mesasge via a readable stream
    */
-  static async fromStream(stream: PromiseReadable<any>) {
+  static async fromStream<T extends MessageType>(
+    stream: PromiseReadable<any>,
+    expect: T
+  ) {
     // 01. Read magic bytes
     const magicHeader = await readField(stream, FieldType.UInt32);
 
@@ -380,9 +375,16 @@ export class Message {
       args[i] = await readField(stream, argsFieldMap[argList.value[i] as ArgumentType]);
     }
 
+    if (messageType.value !== expect) {
+      const expected = expect.toString(16);
+      const actual = messageType.value.toString(16);
+
+      throw new Error(`Expected message type ${expected}, got ${actual}`);
+    }
+
     return new Message({
       transactionId: txId.value,
-      type: messageType.value,
+      type: messageType.value as T,
       args,
     });
   }
@@ -392,10 +394,10 @@ export class Message {
    */
   transactionId?: number;
 
-  readonly type: MessageType;
+  readonly type: T;
   readonly args: Field[];
 
-  constructor({transactionId, type, args}: Options) {
+  constructor({transactionId, type, args}: Options<T>) {
     this.transactionId = transactionId;
     this.type = type;
     this.args = args;
@@ -422,7 +424,7 @@ export class Message {
   }
 
   /**
-   * Get the javascript representation of the message
+   * Get the JS representation of the message
    */
   get data() {
     if (this.type !== MessageType.MenuItem) {

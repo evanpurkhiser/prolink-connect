@@ -1,4 +1,4 @@
-import {MessageType, MenuTarget, Message} from 'src/remotedb/message';
+import {MessageType, Message} from 'src/remotedb/message';
 import {DeviceID, TrackSlot, TrackType} from 'src/types';
 import {UInt32} from 'src/remotedb/fields';
 import {Connection} from 'src/remotedb';
@@ -7,6 +7,14 @@ import {Connection} from 'src/remotedb';
  * Specifies the number of items we should request at a time in menu render requests
  */
 const LIMIT = 64;
+
+/**
+ * Menu target specifies where a menu should be "rendered" This differes based
+ * on the request being made.
+ */
+export enum MenuTarget {
+  Main = 0x01,
+}
 
 type Descriptor = {
   hostDeviceId: DeviceID;
@@ -47,22 +55,19 @@ export async function* renderItems(
     if (itemsRead % LIMIT === 0) {
       const message = makeRenderMessage(descriptor, itemsRead, LIMIT);
       await conn.writeMessage(message);
+      await conn.readMessage(MessageType.MenuHeader);
     }
 
     // Read each item. Ignoring headers and footers, we will determine when to
     // stop by counting the items read until we reach the total items.
-    const resp = await conn.readMessage();
-
-    if (resp.type === MessageType.MenuHeader) {
-      continue;
-    }
+    const resp = await conn.readMessage(MessageType.MenuItem);
 
     yield resp;
     itemsRead++;
 
     // When we've reached the end of a page we must read the footer
     if (itemsRead % LIMIT === 0) {
-      await conn.readMessage();
+      await conn.readMessage(MessageType.MenuFooter);
     }
   }
 }

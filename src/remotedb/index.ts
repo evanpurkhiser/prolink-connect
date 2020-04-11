@@ -6,8 +6,8 @@ import {Mutex} from 'async-mutex';
 import {Device, DeviceID, TrackType, TrackSlot} from 'src/types';
 import {REMOTEDB_SERVER_QUERY_PORT} from 'src/remotedb/constants';
 import {UInt32, readField} from 'src/remotedb/fields';
-import {Message, MessageType, MenuTarget, Item, ItemType} from 'src/remotedb/message';
-import {fieldFromDescriptor, renderItems} from 'src/remotedb/queries';
+import {Message, MessageType, Item, ItemType} from 'src/remotedb/message';
+import {fieldFromDescriptor, renderItems, MenuTarget} from 'src/remotedb/queries';
 
 /**
  * Queries the remote device for the port that the remote database server is
@@ -54,8 +54,8 @@ export class Connection {
     await this.socket.write(message.buffer);
   }
 
-  async readMessage() {
-    return await Message.fromStream(this.socket);
+  async readMessage<T extends MessageType>(expect: T) {
+    return await Message.fromStream(this.socket, expect);
   }
 }
 
@@ -105,7 +105,7 @@ export class RemoteDatabase {
     });
 
     await socket.write(intro.buffer);
-    const resp = await Message.fromStream(socket);
+    const resp = await Message.fromStream(socket, MessageType.Success);
 
     if (resp.type !== MessageType.Success) {
       throw new Error(`Failed to introduce self to device ID: ${device.id}`);
@@ -130,7 +130,7 @@ export class RemoteDatabase {
     const conn = this.connections[device.id];
 
     await conn.writeMessage(trackRequest);
-    const resp = await conn.readMessage();
+    const resp = await conn.readMessage(MessageType.Success);
 
     const itemsTotal = resp.args[1].value;
 

@@ -68,6 +68,8 @@ export type BinaryField = BaseField & {
   value: Buffer;
 };
 
+export type Field = NumberField | StringField | BinaryField;
+
 type NumberFieldType = FieldType.UInt32 | FieldType.UInt16 | FieldType.UInt8;
 
 const numberBufferInfo = {
@@ -180,8 +182,6 @@ export class Binary extends BaseField implements BinaryField {
     return makeVariableBuffer(FieldType.Binary, this.data);
   }
 }
-
-export type Field = NumberField | StringField | BinaryField;
 
 const fieldMap = {
   [FieldType.UInt8]: UInt8,
