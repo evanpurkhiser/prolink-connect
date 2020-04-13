@@ -1,5 +1,3 @@
-import 'module-alias/register';
-
 import dgram from 'dgram-as-promised';
 import {hexdump} from '@gct256/hexdump';
 
@@ -16,7 +14,7 @@ import {Device, DeviceType} from 'src/types';
 import {packetToStatus} from 'src/status';
 import {RemoteDatabase} from 'src/remotedb';
 
-async function setupConnections() {
+export async function setupConnections() {
   const announceSocket = dgram.createSocket('udp4');
   await announceSocket.bind(ANNOUNCE_PORT, '0.0.0.0');
   announceSocket.setBroadcast(true);
@@ -68,5 +66,3 @@ async function setupConnections() {
 
   await dm.lookupMetadata(firstDevice);
 }
-
-setupConnections();

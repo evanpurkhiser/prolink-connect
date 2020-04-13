@@ -2,12 +2,19 @@ import ip from 'ip-address';
 import PromiseSocket from 'promise-socket';
 import {Socket} from 'net';
 import {Mutex} from 'async-mutex';
+import {createCanvas} from 'canvas';
+import Color from 'color';
+import open from 'open';
+import tmp from 'tmp-promise';
 
 import {Device, DeviceID, TrackType, TrackSlot} from 'src/types';
 import {REMOTEDB_SERVER_QUERY_PORT} from 'src/remotedb/constants';
-import {UInt32, readField} from 'src/remotedb/fields';
-import {Message, MessageType, Item, ItemType} from 'src/remotedb/message';
+import {UInt32, readField, Binary} from 'src/remotedb/fields';
 import {fieldFromDescriptor, renderItems, MenuTarget} from 'src/remotedb/queries';
+import {Message} from 'src/remotedb/message';
+import {Response, MessageType} from 'src/remotedb/message/types';
+import {ItemType, Item, Items} from 'src/remotedb/message/item';
+import {appendFile} from 'fs';
 
 /**
  * Queries the remote device for the port that the remote database server is
@@ -38,6 +45,9 @@ export async function getRemoteDBServerPort(deviceIp: ip.Address4) {
   return resp.readUInt16BE();
 }
 
+/**
+ * Manages a connection to a single device
+ */
 export class Connection {
   socket: PromiseSocket<Socket>;
   txId: number;
@@ -54,7 +64,7 @@ export class Connection {
     await this.socket.write(message.buffer);
   }
 
-  async readMessage<T extends MessageType>(expect: T) {
+  async readMessage<T extends Response>(expect: T) {
     return await Message.fromStream(this.socket, expect);
   }
 }
@@ -129,29 +139,95 @@ export class RemoteDatabase {
 
     const conn = this.connections[device.id];
 
+    console.log('here we go');
+
     await conn.writeMessage(trackRequest);
     const resp = await conn.readMessage(MessageType.Success);
+    const items = renderItems(conn, trackDescriptor, resp.data.itemsAvailable);
 
-    const itemsTotal = resp.args[1].value;
-
-    if (typeof itemsTotal !== 'number') {
-      return;
-    }
-
-    console.log(`reading ${itemsTotal} items`);
-
-    type ItemMap = {
-      [P in ItemType]?: Item<P>;
-    };
-
-    const data: ItemMap = {};
-
-    const items = renderItems(conn, trackDescriptor, itemsTotal);
-
+    const data: Partial<Items> = {};
     for await (const item of items) {
-      data[item.args[6].value as ItemType] = item;
+      data[item.type] = item as any;
     }
 
-    console.log(data);
+    const artId = data[ItemType.TrackTitle]?.artworkId ?? 0;
+
+    const artRequest = new Message({
+      type: MessageType.GetArtwork,
+      args: [fieldFromDescriptor(trackDescriptor), new UInt32(artId)],
+    });
+
+    await conn.writeMessage(artRequest);
+    const art = await conn.readMessage(MessageType.Artwork);
+
+    const beatGrid = new Message({
+      type: MessageType.GetBeatGrid,
+      args: [fieldFromDescriptor(trackDescriptor), new UInt32(9688)],
+    });
+
+    await conn.writeMessage(beatGrid);
+    const grid = await conn.readMessage(MessageType.BeatGrid);
+
+    console.log('got grid');
+
+    const waveformPreview = new Message({
+      type: MessageType.GetWaveformPreview,
+      args: [
+        fieldFromDescriptor(trackDescriptor),
+        new UInt32(0),
+        new UInt32(6616),
+        new UInt32(0),
+        new Binary(Buffer.alloc(0)),
+      ],
+    });
+
+    await conn.writeMessage(waveformPreview);
+    const previewWave = await conn.readMessage(MessageType.WaveformPreview);
+
+    console.log('got waveform ');
+
+    const waveformDetailed = new Message({
+      type: MessageType.GetWaveformDetailed,
+      args: [fieldFromDescriptor(trackDescriptor), new UInt32(6616), new UInt32(0)],
+    });
+
+    await conn.writeMessage(waveformDetailed);
+    const pv = await conn.readMessage(MessageType.WaveformDetailed);
+
+    console.log('got detailed waveform');
+
+    const waveformHd = new Message({
+      type: MessageType.GetWaveformHD,
+      args: [
+        fieldFromDescriptor(trackDescriptor),
+        new UInt32(6616),
+        new UInt32(Buffer.from('PWV5').readUInt32LE()),
+        new UInt32(Buffer.from('EXT\0').readUInt32LE()),
+      ],
+    });
+
+    await conn.writeMessage(waveformHd);
+    const hd = await conn.readMessage(MessageType.WaveformHD);
+
+    const waveformData = hd.data;
+
+    const canvas = createCanvas(waveformData.length / 2, 64);
+    const ctx = canvas.getContext('2d');
+
+    waveformData.slice(0, waveformData.length / 2).forEach((d, i) => {
+      const blue = Color.rgb(d.color.map(c => c * 255));
+
+      ctx.strokeStyle = blue.hex();
+      ctx.beginPath();
+      ctx.lineTo(i, 32 - d.height);
+      ctx.lineTo(i, 32 + d.height);
+      ctx.stroke();
+    });
+
+    const {path} = await tmp.file();
+
+    appendFile(path, canvas.toBuffer('image/png'), () => {
+      open(`file://${path}`, {app: 'google chrome'});
+    });
   }
 }

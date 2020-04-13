@@ -96,3 +96,65 @@ export module CDJStatus {
     packetNum: number;
   };
 }
+
+/**
+ * A beat grid is a series of offsets from the start of the track. Each offset
+ * indicates what count within the measure it is.
+ */
+export type BeatGrid = Array<{
+  /**
+   * Offset from the beginning of track in milliseconds of this beat.
+   */
+  offset: number;
+  /**
+   * The count of this particular beat within the measure
+   */
+  count: 1 | 2 | 3 | 4;
+}>;
+
+/**
+ * A waveform segment contains a height and 'whiteness' value.
+ */
+type WaveformSegment = {
+  /**
+   * The height this segment in the waveform. Ranges from 0 - 31.
+   */
+  height: number;
+  /**
+   * The level of "whiteness" of the waveform. 0 being completely blue, and 1
+   * being completely white.
+   */
+  whiteness: number;
+};
+
+/**
+ * A HD waveform segment contains the height of the waveform, and it's color
+ * represented as RGB values.
+ */
+type WaveformHDSegment = {
+  /**
+   * The height this segment in the waveform. Ranges from 0 - 31.
+   */
+  height: number;
+  /**
+   * the RGB value, each channel ranges from 0-1 for the segment.
+   */
+  color: [number, number, number];
+};
+
+/**
+ * The waveform preview will be 400 segments of data.
+ */
+export type WaveformPreview = WaveformSegment[];
+
+/**
+ * Detailed waveforms have 150 segments per second of audio (150 'half frames'
+ * per second of audio).
+ */
+export type WaveformDetailed = WaveformSegment[];
+
+/**
+ * HD waveforms have 150 segments per second of audio (150 'half frames' per
+ * second of audio).
+ */
+export type WaveformHD = WaveformHDSegment[];

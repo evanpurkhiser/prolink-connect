@@ -1,7 +1,8 @@
-import {MessageType, Message} from 'src/remotedb/message';
+import {Message} from 'src/remotedb/message';
 import {DeviceID, TrackSlot, TrackType} from 'src/types';
 import {UInt32} from 'src/remotedb/fields';
 import {Connection} from 'src/remotedb';
+import {MessageType} from './message/types';
 
 /**
  * Specifies the number of items we should request at a time in menu render requests
@@ -62,11 +63,11 @@ export async function* renderItems(
     // stop by counting the items read until we reach the total items.
     const resp = await conn.readMessage(MessageType.MenuItem);
 
-    yield resp;
+    yield resp.data;
     itemsRead++;
 
     // When we've reached the end of a page we must read the footer
-    if (itemsRead % LIMIT === 0) {
+    if (itemsRead % LIMIT === 0 || itemsRead === total) {
       await conn.readMessage(MessageType.MenuFooter);
     }
   }
