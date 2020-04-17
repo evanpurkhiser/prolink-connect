@@ -155,6 +155,7 @@ export class String extends BaseField implements StringField {
       return;
     }
 
+    // Slice off the last two bytes to remove the trailing null bytes
     this.value = Buffer.from(value).swap16().slice(0, -2).toString('utf16le');
     this.data = value;
   }
