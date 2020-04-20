@@ -14,7 +14,6 @@
       "src/*": ["src/*"],
       "kaitai-struct": ["src/localdb/kaitai/index.d.ts"]
     },
-    "types": ["src/index.d.ts"],
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true

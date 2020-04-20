@@ -1,8 +1,8 @@
 import {KaitaiStream} from 'kaitai-struct';
 import {Connection, EntityManager} from 'typeorm';
 
-import RekordboxPdb from 'src/localdb/kaitai/RekordboxPdb';
-import RekordboxAnlz from 'src/localdb/kaitai/RekordboxAnlz';
+import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
+import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
 import {Track, Artist, Album, Key, Color, Genre, Label} from 'src/entities';
 import {makeCueLoopEntry} from './utils';
 import {HotcueButton} from 'src/types';

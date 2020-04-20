@@ -1,6 +1,3 @@
-import 'module-alias/register';
-import 'reflect-metadata';
-
 import process from 'process';
 
 import fs from 'fs';
