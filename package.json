@@ -8,6 +8,7 @@
     "dev": "ts-node src/cli/index.ts"
   },
   "dependencies": {
+    "@sentry/node": "^5.15.4",
     "async-mutex": "^0.1.4",
     "dgram-as-promised": "^3.0.3",
     "ip-address": "^6.3.0",

@@ -2,10 +2,6 @@ import ip from 'ip-address';
 import PromiseSocket from 'promise-socket';
 import {Socket} from 'net';
 import {Mutex} from 'async-mutex';
-import {createCanvas} from 'canvas';
-import Color from 'color';
-import open from 'open';
-import tmp from 'tmp-promise';
 
 import {Device, DeviceID, TrackType, TrackSlot} from 'src/types';
 import {REMOTEDB_SERVER_QUERY_PORT} from 'src/remotedb/constants';
@@ -14,7 +10,6 @@ import {fieldFromDescriptor, renderItems, MenuTarget} from 'src/remotedb/queries
 import {Message} from 'src/remotedb/message';
 import {Response, MessageType} from 'src/remotedb/message/types';
 import {ItemType, Item, Items} from 'src/remotedb/message/item';
-import {appendFile} from 'fs';
 
 /**
  * Queries the remote device for the port that the remote database server is
@@ -103,6 +98,8 @@ export class RemoteDatabase {
     // There is some kind of problem if not.
     const data = await readField(socket, UInt32.type);
 
+    console.log(data);
+
     if (data.value !== 0x01) {
       throw new Error(`Expected 0x01 during preamble handshake. Got ${data.value}`);
     }
@@ -150,6 +147,8 @@ export class RemoteDatabase {
       data[item.type] = item as any;
     }
 
+    console.log(data);
+
     const artId = data[ItemType.TrackTitle]?.artworkId ?? 0;
 
     const artRequest = new Message({
@@ -168,7 +167,7 @@ export class RemoteDatabase {
     await conn.writeMessage(beatGrid);
     const grid = await conn.readMessage(MessageType.BeatGrid);
 
-    console.log('got grid');
+    console.log('got grid', grid.data.slice(0, 20));
 
     const waveformPreview = new Message({
       type: MessageType.GetWaveformPreview,
@@ -200,7 +199,7 @@ export class RemoteDatabase {
       type: MessageType.GetWaveformHD,
       args: [
         fieldFromDescriptor(trackDescriptor),
-        new UInt32(6616),
+        new UInt32(10010),
         new UInt32(Buffer.from('PWV5').readUInt32LE()),
         new UInt32(Buffer.from('EXT\0').readUInt32LE()),
       ],
@@ -209,25 +208,45 @@ export class RemoteDatabase {
     await conn.writeMessage(waveformHd);
     const hd = await conn.readMessage(MessageType.WaveformHD);
 
-    const waveformData = hd.data;
-
-    const canvas = createCanvas(waveformData.length / 2, 64);
-    const ctx = canvas.getContext('2d');
-
-    waveformData.slice(0, waveformData.length / 2).forEach((d, i) => {
-      const blue = Color.rgb(d.color.map(c => c * 255));
-
-      ctx.strokeStyle = blue.hex();
-      ctx.beginPath();
-      ctx.lineTo(i, 32 - d.height);
-      ctx.lineTo(i, 32 + d.height);
-      ctx.stroke();
+    const cueLoops = new Message({
+      type: MessageType.GetCueAndLoops,
+      args: [fieldFromDescriptor(trackDescriptor), new UInt32(10010)],
     });
 
-    const {path} = await tmp.file();
+    await conn.writeMessage(cueLoops);
+    const cl = await conn.readMessage(MessageType.CueAndLoop);
 
-    appendFile(path, canvas.toBuffer('image/png'), () => {
-      open(`file://${path}`, {app: 'google chrome'});
+    console.log(cl.data);
+
+    const advCueLoops = new Message({
+      type: MessageType.GetAdvCueAndLoops,
+      args: [fieldFromDescriptor(trackDescriptor), new UInt32(9688), new UInt32(0)],
     });
+
+    await conn.writeMessage(advCueLoops);
+    const acl = await conn.readMessage(MessageType.AdvCueAndLoops);
+
+    console.log(acl.data);
+
+    // const waveformData = hd.data;
+
+    //     const canvas = createCanvas(waveformData.length / 3, 128);
+    //     const ctx = canvas.getContext('2d');
+
+    //     waveformData.slice(0, waveformData.length / 3).forEach((d, i) => {
+    //       const blue = Color.rgb(d.color.map(c => c * 255));
+
+    //       ctx.strokeStyle = blue.hex();
+    //       ctx.beginPath();
+    //       ctx.lineTo(i + 0.5, 64 - d.height * 2);
+    //       ctx.lineTo(i + 0.5, 64 + d.height * 2);
+    //       ctx.stroke();
+    //     });
+
+    // const {path} = await tmp.file();
+
+    // appendFile(path, canvas.toBuffer('image/png'), () => {
+    //   open(`file://${path}`, {app: 'google chrome'});
+    // });
   }
 }

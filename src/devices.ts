@@ -1,5 +1,4 @@
 import dgram from 'dgram-as-promised';
-import {hexdump} from '@gct256/hexdump';
 
 import {ANNOUNCE_PORT, VIRTUAL_CDJ_NAME} from 'src/constants';
 import {
@@ -10,7 +9,6 @@ import {
   getBroadcastAddress,
 } from 'src/utils';
 import {Device, DeviceType} from 'src/types';
-
 import {packetToStatus} from 'src/status';
 import {RemoteDatabase} from 'src/remotedb';
 
