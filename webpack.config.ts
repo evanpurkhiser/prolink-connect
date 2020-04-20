@@ -1,19 +1,21 @@
-const nodeExternals = require('webpack-node-externals');
-const path = require('path');
+import * as webpack from 'webpack';
+import nodeExternals from 'webpack-node-externals';
+import path from 'path';
 
-module.exports = {
-  mode: 'development',
+const config: webpack.Configuration = {
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   entry: './src/index.ts',
   target: 'node',
   externals: [nodeExternals()],
   output: {
-    path: path.resolve(__dirname, 'build'),
+    path: path.resolve(__dirname, 'dist'),
     filename: 'index.js',
   },
   resolve: {
     extensions: ['.ts', '.js'],
     alias: {src: path.join(__dirname, 'src')},
   },
+  devtool: 'inline-source-map',
   module: {
     rules: [
       {
@@ -28,3 +30,5 @@ module.exports = {
     ],
   },
 };
+
+export default config;

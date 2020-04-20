@@ -4,11 +4,11 @@
     "module": "CommonJS",
     "lib": ["ScriptHost", "ES2019"],
     "allowJs": true,
-    "rootDir": "src",
     "downlevelIteration": true,
     "strict": true,
     "strictPropertyInitialization": false,
     "moduleResolution": "node",
+    "rootDir": "./",
     "baseUrl": "./",
     "paths": {
       "src/*": ["src/*"],
@@ -16,6 +16,7 @@
     },
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true
   }
 }
