@@ -1,15 +1,13 @@
 import {Response} from 'src/remotedb/message/types';
 import {Field} from 'src/remotedb/fields';
 import {fieldsToItem} from 'src/remotedb/message/item';
+import {makeCueLoopEntry} from 'src/localdb/utils';
 import {
   BeatGrid,
   WaveformDetailed,
   WaveformPreview,
   WaveformHD,
-  CuePoint,
-  Loop,
-  Hotcue,
-  HotLoop,
+  CueAndLoop,
   HotcueButton,
 } from 'src/types';
 
@@ -31,25 +29,6 @@ const extractColor = (val: number, mask: number): number =>
 function makeOffsetArray(byteLength: number, segmentSize: number) {
   return new Array(byteLength / segmentSize).fill(null).map((_, i) => i * segmentSize);
 }
-
-type CueAndLoop = CuePoint | Loop | Hotcue | HotLoop;
-
-const makeCueLoopEntry = (
-  isCue: boolean,
-  isLoop: boolean,
-  frameOffset: number,
-  length: number,
-  button: false | HotcueButton
-): null | CueAndLoop =>
-  button !== false
-    ? isLoop
-      ? {type: 'hot_loop', frameOffset, length, button}
-      : {type: 'hot_cue', frameOffset, button}
-    : isLoop
-    ? {type: 'loop', frameOffset, length}
-    : isCue
-    ? {type: 'cue_point', frameOffset}
-    : null;
 
 /**
  * Generic null converter, for responses with no data.
@@ -165,10 +144,15 @@ const convertCueAndLoops = (args: Field[]): CueAndLoop[] => {
       const isCue = !!entry[1];
       const button = entry[2] === 0 ? false : (entry[2] as HotcueButton);
 
-      const frameOffset = entry.readUInt32LE(0x0c);
-      const length = entry.readUInt32LE(0x10) - frameOffset;
+      const offsetInFrames = entry.readUInt32LE(0x0c);
+      const lengthInFrames = entry.readUInt32LE(0x10) - offsetInFrames;
 
-      return makeCueLoopEntry(isCue, isLoop, frameOffset, length, button);
+      // NOTE: The offset and length are reported as 1/150th second increments.
+      //       We convert these to milliseconds here.
+      const offset = (offsetInFrames / 150) * 1000;
+      const length = (lengthInFrames / 150) * 1000;
+
+      return makeCueLoopEntry(isCue, isLoop, offset, length, button);
     })
     .filter((c): c is CueAndLoop => c !== null);
 };
@@ -200,10 +184,15 @@ const convertAdvCueAndLoops = (args: Field[]): CueAndLoop[] => {
       const isCue = entry[6] === 0x01;
       const isLoop = entry[6] === 0x02;
 
-      const frameOffset = entry.readUInt32LE(0x0c);
-      const length = entry.readUInt32LE(0x10) - frameOffset;
+      const offsetInFrames = entry.readUInt32LE(0x0c);
+      const lengthInFrames = entry.readUInt32LE(0x10) - offsetInFrames;
 
-      const basicEntry = makeCueLoopEntry(isCue, isLoop, frameOffset, length, button);
+      // NOTE: The offset and length are reported as 1/150th second increments.
+      //       We convert these to milliseconds here.
+      const offset = (offsetInFrames / 150) * 1000;
+      const length = (lengthInFrames / 150) * 1000;
+
+      const basicEntry = makeCueLoopEntry(isCue, isLoop, offset, length, button);
 
       // It seems the label may not always be included, if the entry is only 0x38
       // bytes long, exclude color and comment
@@ -233,7 +222,7 @@ export const responseTransform = {
   [Response.MenuItem]: fieldsToItem,
   [Response.Artwork]: convertArtwork,
   [Response.BeatGrid]: convertBeatGrid,
-  [Response.CueAndLoops]: convertCueAndLoops,
+  [Response.CueAndLoop]: convertCueAndLoops,
   [Response.WaveformPreview]: convertWaveformPreview,
   [Response.WaveformDetailed]: convertWaveformDetailed,
   [Response.WaveformHD]: convertWaveformHD,

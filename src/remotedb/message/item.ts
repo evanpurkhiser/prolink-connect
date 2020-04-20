@@ -120,6 +120,8 @@ export const fieldsToItem = (args: Field[]) => {
  * Maps item types to structured objects
  */
 export const transformItem = {
+  // TODO: Ideally these should actually return entities from src/entites
+
   [ItemType.TrackTitle]: (a: ItemData) => ({
     id: a.mainId,
     title: a.label1,
@@ -136,8 +138,7 @@ export const transformItem = {
   [ItemType.Tempo]: (a: ItemData) => ({bpm: a.mainId / 100}),
   [ItemType.Duration]: (a: ItemData) => ({duration: a.mainId}),
 
-  // TODO
-
+  // TODO: All of these item types are missing
   [ItemType.ColorNone]: (a: ItemData) => a,
   [ItemType.ColorPink]: (a: ItemData) => a,
   [ItemType.ColorRed]: (a: ItemData) => a,

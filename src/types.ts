@@ -99,7 +99,7 @@ export module CDJStatus {
 
 /**
  * A beat grid is a series of offsets from the start of the track. Each offset
- * indicates what count within the measure it is along with the bpm.
+ * indicates what count within the measure it is along with the BPM.
  */
 export type BeatGrid = Array<{
   /**
@@ -203,16 +203,15 @@ export enum CueColor {
 }
 
 /**
- * Represnts a single cue point. On older exportts the label and color may be
+ * Represents a single cue point. On older exports the label and color may be
  * undefined.
  */
 export type CuePoint = {
   type: 'cue_point';
   /**
-   * Numberof 1/150th second units (number of "half frames") from the start of
-   * the track.
+   * Number of milliseconds from the start of the track.
    */
-  frameOffset: number;
+  offset: number;
   /**
    * The comment associated to the cue point
    */
@@ -250,4 +249,6 @@ export type Hotcue = BareCuePoint & {
 /**
  * A hot loop, this is the union of a hotcue and a loop.
  */
-export type HotLoop = {type: 'hot_loop'} & Omit<Hotcue & Loop, 'type'>;
+export type Hotloop = {type: 'hot_loop'} & Omit<Hotcue & Loop, 'type'>;
+
+export type CueAndLoop = CuePoint | Loop | Hotcue | Hotloop;

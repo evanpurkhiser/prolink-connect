@@ -82,7 +82,7 @@ export enum Response {
   MenuHeader = 0x4001,
   MenuFooter = 0x4201,
   BeatGrid = 0x4602,
-  CueAndLoops = 0x4702,
+  CueAndLoop = 0x4702,
   WaveformPreview = 0x4402,
   WaveformDetailed = 0x4a02,
   AdvCueAndLoops = 0x4e02,

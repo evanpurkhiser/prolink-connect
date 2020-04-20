@@ -1,0 +1,345 @@
+import {KaitaiStream} from 'kaitai-struct';
+import {Connection, EntityManager} from 'typeorm';
+
+import RekordboxPdb from 'src/localdb/kaitai/RekordboxPdb';
+import RekordboxAnlz from 'src/localdb/kaitai/RekordboxAnlz';
+import {Track, Artist, Album, Key, Color, Genre, Label} from 'src/entities';
+import {makeCueLoopEntry} from './utils';
+import {HotcueButton} from 'src/types';
+
+// NOTE: Kaitai doesn't currently have a good typescript exporter, so we will
+//       be making liberal usage of any in these utilities. We still guarantee
+//       a fully typed public interface of this module.
+
+/**
+ * Function used to resolve a ANLZ file path into a data buffer.
+ */
+type AnlzResolver = (path: string) => Promise<Buffer>;
+
+/**
+ * Details about the current state of the hydtration task
+ */
+type Progress = {
+  /**
+   * The action that has progressed
+   */
+  action: 'entity_loaded' | 'entity_saved';
+  /**
+   * The specific table that progress is being reported for
+   */
+  table: string;
+  /**
+   * The total progress steps for this table and action
+   */
+  total: number;
+  /**
+   * The completed number of progress steps
+   */
+  complete: number;
+};
+
+/**
+ * Options to hydrate the database
+ */
+type Options = {
+  /**
+   * The database connection of which the tables will be hydrated
+   */
+  conn: Connection;
+  /**
+   * This buffer should contain the Rekordbox pdb file contents. It will be
+   * used to do the hydration
+   */
+  pdbData: Buffer;
+  /**
+   * The provided function should resolve ANLZ files into buffers. Typically
+   * you would just read the file, but in the case of the PROLINK network, this
+   * would handle loading the file over NFS.
+   */
+  anlzFileResolver: AnlzResolver;
+  /**
+   * For larger music collections, it may take some time to load everything,
+   * especially when limited by IO. When hydration progresses this function
+   * will be called.
+   */
+  onProgress?: (progress: Progress) => void;
+};
+
+/**
+ * Given a rekordbox pdb file contents. This function will hydrate the provided
+ * database with all entities from the Rekordbox database. This includes all
+ * track metadata, including analyzed metadata (such as beatgrids and waveforms).
+ */
+export async function hydrateDatabase({pdbData, ...options}: Options) {
+  const hydrator = new RekordboxHydrator(options);
+  await hydrator.hydrateFromPdb(pdbData);
+}
+
+/**
+ * This service provides utilities for translating rekordbox database (pdb_ and
+ * analysis (ANLZ) files into the common entity types used in this library.
+ */
+class RekordboxHydrator {
+  conn: Connection;
+  anlzFileResolver: AnlzResolver;
+  onProgress: (progress: Progress) => void;
+
+  constructor({conn, anlzFileResolver, onProgress}: Omit<Options, 'pdbData'>) {
+    this.conn = conn;
+    this.anlzFileResolver = anlzFileResolver;
+    this.onProgress = onProgress ?? (_ => null);
+  }
+
+  /**
+   * Extract entries from a rekordbox pdb file and hydrate the passed database
+   * connection with entities derived from the rekordbox entries.
+   */
+  async hydrateFromPdb(pdbData: Buffer) {
+    const stream = new KaitaiStream(pdbData);
+    const db = new RekordboxPdb(stream);
+
+    // TODO: Not sure why the transaction doesn't handle differing foreign key
+    //       constraints, without this we will get FK constraint errors
+    //       (despite the comment above the transaction call below).
+    await this.conn.query('PRAGMA foreign_keys = OFF;');
+
+    const doHydration = async (em: EntityManager) => {
+      await Promise.all(db.tables.map((table: any) => this.hydrateFromTable(table, em)));
+    };
+
+    // Execute within a transaction to allow for deferred foreign key constraints.
+    await this.conn.transaction(doHydration);
+  }
+
+  /**
+   * Hydrate the database with entities from the provided RekordboxPdb table.
+   * See pdbEntityCreators for how tables are mapped into database entities.
+   */
+  async hydrateFromTable(table: any, em: EntityManager) {
+    const tableName: string = RekordboxPdb.PageType[table.type].toLowerCase();
+    const createEntity = pdbEntityCreators[table.type];
+
+    if (createEntity === undefined) {
+      return;
+    }
+
+    let totalItems = 0;
+    for (const _ of tableRows(table)) {
+      totalItems++;
+    }
+
+    let totalLoaded = 0;
+    let totalSaved = 0;
+
+    const p = {table: tableName, total: totalItems};
+
+    const saveEntity = (entity: ReturnType<typeof createEntity>) =>
+      new Promise<never>(async finished => {
+        // Tracks have additional data that is hydrated through the ANLZ files
+        if (entity instanceof Track) {
+          await this.hydrateAnlz(entity);
+        }
+
+        await em.save(entity);
+        finished();
+        this.onProgress({action: 'entity_saved', complete: ++totalSaved, ...p});
+      });
+
+    const savingEntities: Promise<never>[] = [];
+
+    for (const row of tableRows(table)) {
+      const entity = createEntity(row);
+      savingEntities.push(saveEntity(entity));
+      this.onProgress({action: 'entity_loaded', complete: ++totalLoaded, ...p});
+    }
+
+    await Promise.all(savingEntities);
+  }
+
+  /**
+   * Hydrate the ANLZ sections of a Track entity from the analyzePath. This
+   * method will mutate the passed Track entity.
+   */
+  async hydrateAnlz(track: Track) {
+    const anlzData = await this.anlzFileResolver(track.analyzePath);
+    const stream = new KaitaiStream(anlzData);
+    const anlz = new RekordboxAnlz(stream);
+
+    for (const section of anlz.sections) {
+      trackAnlzHydrators[section.fourcc]?.(track, section);
+    }
+  }
+}
+
+/**
+ * Utility generator that pages through a table and yields every present row.
+ * This flattens the concept of rowGroups and refs.
+ */
+function* tableRows(table: any) {
+  const {firstPage, lastPage} = table;
+
+  let pageRef = firstPage;
+  do {
+    const page = pageRef.body;
+
+    // Adjust our page ref for the next iteration. We do this early in our loop
+    // so we can break without having to remember to update for the next iter.
+    pageRef = page.nextPage;
+
+    // Ignore non-data pages. Not sure what these are for?
+    if (!page.isDataPage) {
+      continue;
+    }
+
+    const rows = page.rowGroups
+      .map((group: any) => group.rows)
+      .flat()
+      .filter((row: any) => row.present);
+
+    for (const row of rows) {
+      yield row.body;
+    }
+  } while (pageRef.index <= lastPage.index);
+}
+
+type IdAndNameEntity = new () => {id: number; name: string};
+
+/**
+ * Utility to create a hydrator that hydrates the provided entity with the id
+ * and name properties from the row.
+ */
+const makeIdNameHydrator = <T extends IdAndNameEntity>(Entity: T) => (row: any) => {
+  const item = new Entity();
+
+  item.id = row.id;
+  item.name = row.name.body.text;
+
+  return item;
+};
+
+/**
+ * Translates a pdb track row entry to a {@link Track} entity.
+ */
+function hydrateTrack(trackRow: any) {
+  const track = new Track();
+
+  track.id = trackRow.id;
+  track.title = trackRow.title.body.text;
+  track.trackNumber = trackRow.trackNumber;
+  track.discNumber = trackRow.discNumber;
+  track.duration = trackRow.duration;
+  track.sampleRate = trackRow.sampleRate;
+  track.sampleDepth = trackRow.sampleDepth;
+  track.bitrate = trackRow.bitrate;
+  track.tempo = trackRow.tempo / 100;
+  track.playCount = trackRow.playCount;
+  track.year = trackRow.year;
+  track.rating = trackRow.rating;
+  track.mixName = trackRow.mixName.body.text;
+  track.comment = trackRow.comment.body.text;
+  track.autoloadHotcues = trackRow.autoloadHotcues.body.text === 'ON';
+  track.kuvoPublic = trackRow.kuvoPublic.body.text === 'ON';
+  track.filePath = trackRow.filePath.body.text;
+  track.fileName = trackRow.filename.body.text;
+  track.fileSize = trackRow.fileSize;
+  track.analyzePath = trackRow.analyzePath.body.text;
+  track.releaseDate = trackRow.releaseDate.body.text;
+  track.analyzeDate = new Date(trackRow.analyzeDate.body.text);
+  track.dateAdded = new Date(trackRow.dateAdded.body.text);
+
+  // This implicitly bypasses typescripts checks since these would expect to be
+  // assigned to objects. In this case we are _okay_ with this as the entity
+  // manager will translates these ids into the database fields.
+  track.artist = trackRow.artistId || null;
+  track.originalArtist = trackRow.originalArtistId || null;
+  track.remixer = trackRow.remixerId || null;
+  track.composer = trackRow.composerId || null;
+  track.album = trackRow.albumId || null;
+  track.label = trackRow.labelId || null;
+  track.genre = trackRow.genreId || null;
+  track.color = trackRow.colorId || null;
+  track.key = trackRow.keyId || null;
+
+  // NOTE: There are a few additional columns that will be hydrated through the
+  // analyze files (given the analyzePath) which we do not assign here.
+
+  return track;
+}
+
+/**
+ * Fill beatgrid data from the ANLZ section
+ */
+function hydrateBeatgrid(track: Track, data: any) {
+  const beatgrid = data.body.beats.map((beat: any) => ({
+    offset: beat.time,
+    bpm: beat.tempo / 100,
+    count: beat.beatNumber,
+  }));
+
+  track.beatGrid = beatgrid;
+}
+
+/**
+ * Fill cue and loop data from the ANLZ section
+ */
+function hydrateCueAndLoop(track: Track, data: any) {
+  const cueAndLoops = data.body.cues.map((entry: any) => {
+    // Cues with the status 0 are likely leftovers that were removed
+
+    const button = entry.hotCue === 0 ? false : (entry.type as HotcueButton);
+    const isCue = entry.type === 0x01;
+    const isLoop = entry.type === 0x02;
+
+    // NOTE: Unlike the remotedb, these entries are already in milliseconds.
+    const offset = entry.time;
+    const length = entry.loopTime - offset;
+
+    return makeCueLoopEntry(isCue, isLoop, offset, length, button);
+  });
+
+  track.cueAndLoops = cueAndLoops;
+}
+
+const {PageType} = RekordboxPdb;
+const {SectionTags} = RekordboxAnlz;
+
+/**
+ * Maps rekordbox table names to funcitons that create entity objects for the
+ * passed row.
+ */
+const pdbEntityCreators = {
+  [PageType.TRACKS]: hydrateTrack,
+  [PageType.ARTISTS]: makeIdNameHydrator(Artist),
+  [PageType.GENRES]: makeIdNameHydrator(Genre),
+  [PageType.ALBUMS]: makeIdNameHydrator(Album),
+  [PageType.LABELS]: makeIdNameHydrator(Label),
+  [PageType.COLORS]: makeIdNameHydrator(Color),
+  [PageType.KEYS]: makeIdNameHydrator(Key),
+
+  // TODO: The following pages haven't yet been extracted into the local
+  //       database.
+  //
+  // [PageType.PLAYLIST_TREE]: null,
+  // [PageType.PLAYLIST_ENTRIES]: null, <- Can use typeORM nested things
+  // [PageType.ARTWORK]: null,          <- Would like to add to track itself
+  // [PageType.COLUMNS]: null,          <- Dunno what this is for
+  // [PageType.HISTORY]: null,          <- Somehow diff from playlists?
+};
+
+/**
+ * Hydrate provided Track entities with data from named ANLZ sections.
+ */
+const trackAnlzHydrators = {
+  [SectionTags.BEAT_GRID]: hydrateBeatgrid,
+  [SectionTags.CUES]: hydrateCueAndLoop,
+
+  // TODO: The following sections haven't yet been extracted into the local
+  //       database.
+  //
+  // [SectionTags.CUES_2]: null,             <- In the EXT file
+  // [SectionTags.SONG_STRUCTURE]: null,     <- In the EXT file
+  // [SectionTags.WAVE_PREVIEW]: null,
+  // [SectionTags.WAVE_SCROLL]: null,
+  // [SectionTags.WAVE_COLOR_PREVIEW]: null, <- In the EXT file
+  // [SectionTags.WAVE_COLOR_SCROLL]: null,  <- In the EXT file
+};
