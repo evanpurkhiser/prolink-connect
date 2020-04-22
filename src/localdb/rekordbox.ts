@@ -3,7 +3,7 @@ import {Connection, EntityManager} from 'typeorm';
 
 import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
-import {makeCueLoopEntry} from './utils';
+import {makeCueLoopEntry} from 'src/localdb/utils';
 import {HotcueButton} from 'src/types';
 import {
   Track,
@@ -15,6 +15,7 @@ import {
   Label,
   Playlist,
   PlaylistEntry,
+  Artwork,
 } from 'src/entities';
 
 // NOTE: Kaitai doesn't currently have a good typescript exporter, so we will
@@ -147,10 +148,14 @@ class RekordboxHydrator {
       new Promise<never>(async finished => {
         // Tracks have additional data that is hydrated through the ANLZ files
         if (entity instanceof Track) {
-          await this.hydrateAnlz(entity);
+          await this.hydrateAnlz(entity, 'DAT');
+          await this.hydrateAnlz(entity, 'EXT');
         }
 
-        await em.save(entity);
+        if (entity) {
+          await em.save(entity);
+        }
+
         finished();
         this.onProgress({action: 'entity_saved', complete: ++totalSaved, ...p});
       });
@@ -170,8 +175,8 @@ class RekordboxHydrator {
    * Hydrate the ANLZ sections of a Track entity from the analyzePath. This
    * method will mutate the passed Track entity.
    */
-  async hydrateAnlz(track: Track) {
-    const anlzData = await this.anlzFileResolver(track.analyzePath);
+  async hydrateAnlz(track: Track, type: 'DAT' | 'EXT') {
+    const anlzData = await this.anlzFileResolver(`${track.analyzePath}.${type}`);
     const stream = new KaitaiStream(anlzData);
     const anlz = new RekordboxAnlz(stream);
 
@@ -256,10 +261,24 @@ function createTrack(trackRow: any) {
   track.analyzeDate = new Date(trackRow.analyzeDate.body.text);
   track.dateAdded = new Date(trackRow.dateAdded.body.text);
 
+  // The analyze file comes in 3 forms
+  //
+  //  1. A `DAT` file, which is missing some extended information, for the older
+  //     Pioneer equipment (likely due to memory constraints).
+  //
+  //  2. A `EXT` file which includes colored waveforms and other extended data.
+  //
+  //  3. A `EX2` file -- currently unknown
+  //
+  // We noramlize this path by trimming the DAT extension off. Later we will
+  // try and read whatever is available.
+  track.analyzePath = track.analyzePath.substring(0, track.analyzePath.length - 4);
+
   // This implicitly bypasses typescripts checks since these would expect to be
   // assigned to objects. In this case we are _okay_ with this as the entity
   // manager will translates these ids into the database fields.
   track.artist = trackRow.artistId || null;
+  track.artwork = trackRow.artworkId || null;
   track.originalArtist = trackRow.originalArtistId || null;
   track.remixer = trackRow.remixerId || null;
   track.composer = trackRow.composerId || null;
@@ -298,6 +317,21 @@ function createPlaylistEntry(playlistTrackRow: any) {
   entry.track = playlistTrackRow.trackId;
 
   return entry;
+}
+
+/**
+ * Translates a pdb artwork entry into a {@link Artwork} entity.
+ */
+function createArtworkEntry(artworkRow: any) {
+  const art = new Artwork();
+  art.id = artworkRow.id;
+  art.path = artworkRow.path.body.text;
+
+  return art;
+}
+
+function createHistoryEntry(historyRow: any) {
+  return null;
 }
 
 /**
@@ -349,14 +383,10 @@ const pdbEntityCreators = {
   [PageType.LABELS]: makeIdNameHydrator(Label),
   [PageType.COLORS]: makeIdNameHydrator(Color),
   [PageType.KEYS]: makeIdNameHydrator(Key),
+  [PageType.ARTWORK]: createArtworkEntry,
   [PageType.PLAYLIST_TREE]: createPlaylist,
   [PageType.PLAYLIST_ENTRIES]: createPlaylistEntry,
-
-  // TODO: The following pages haven't yet been extracted into the local
-  //       database.
-  //
-  // [PageType.ARTWORK]: null,          <- Would like to add to track itself
-  // [PageType.HISTORY]: null,          <- Somehow diff from playlists?
+  [PageType.HISTORY]: createHistoryEntry,
 };
 
 /**

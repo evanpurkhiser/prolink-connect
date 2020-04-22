@@ -5,15 +5,13 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  JoinTable,
-  ManyToMany,
 } from 'typeorm';
 import {BeatGrid, CueAndLoop} from './types';
 
 @Entity()
 export class Artwork {
   @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.artist) tracks: Track[];
+  @OneToMany(() => Track, track => track.artwork) tracks: Track[];
   @Column() path: string;
 }
 
@@ -113,6 +111,7 @@ export class Track {
   @Column({type: 'simple-json', nullable: true})
   cueAndLoops: CueAndLoop[] | null;
 
+  @ManyToOne(() => Artwork, {eager: true}) artwork: Artwork | null;
   @ManyToOne(() => Artist, {eager: true}) artist: Artist | null;
   @ManyToOne(() => Artist, {eager: true}) originalArtist: Artist | null;
   @ManyToOne(() => Artist, {eager: true}) remixer: Artist | null;
