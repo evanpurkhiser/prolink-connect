@@ -3,9 +3,19 @@ import {Connection, EntityManager} from 'typeorm';
 
 import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
-import {Track, Artist, Album, Key, Color, Genre, Label} from 'src/entities';
 import {makeCueLoopEntry} from './utils';
 import {HotcueButton} from 'src/types';
+import {
+  Track,
+  Artist,
+  Album,
+  Key,
+  Color,
+  Genre,
+  Label,
+  Playlist,
+  PlaylistEntry,
+} from 'src/entities';
 
 // NOTE: Kaitai doesn't currently have a good typescript exporter, so we will
 //       be making liberal usage of any in these utilities. We still guarantee
@@ -220,9 +230,8 @@ const makeIdNameHydrator = <T extends IdAndNameEntity>(Entity: T) => (row: any) 
 /**
  * Translates a pdb track row entry to a {@link Track} entity.
  */
-function hydrateTrack(trackRow: any) {
+function createTrack(trackRow: any) {
   const track = new Track();
-
   track.id = trackRow.id;
   track.title = trackRow.title.body.text;
   track.trackNumber = trackRow.trackNumber;
@@ -267,6 +276,31 @@ function hydrateTrack(trackRow: any) {
 }
 
 /**
+ * Translates a pdb playlist row entry into a {@link Playlist} entity.
+ */
+function createPlaylist(playlistRow: any) {
+  const playlist = new Playlist();
+  playlist.id = playlistRow.id;
+  playlist.name = playlistRow.name.body.text;
+  playlist.parent = playlistRow.parentId || null;
+  playlist.isFolder = playlistRow.rawIsFolder !== 0;
+
+  return playlist;
+}
+
+/**
+ * Translates a pdb playlist track entry into a {@link PlaylistTrack} entity.
+ */
+function createPlaylistEntry(playlistTrackRow: any) {
+  const entry = new PlaylistEntry();
+  entry.sortIndex = playlistTrackRow.entryIndex;
+  entry.playlist = playlistTrackRow.playlistId;
+  entry.track = playlistTrackRow.trackId;
+
+  return entry;
+}
+
+/**
  * Fill beatgrid data from the ANLZ section
  */
 function hydrateBeatgrid(track: Track, data: any) {
@@ -308,21 +342,20 @@ const {SectionTags} = RekordboxAnlz;
  * passed row.
  */
 const pdbEntityCreators = {
-  [PageType.TRACKS]: hydrateTrack,
+  [PageType.TRACKS]: createTrack,
   [PageType.ARTISTS]: makeIdNameHydrator(Artist),
   [PageType.GENRES]: makeIdNameHydrator(Genre),
   [PageType.ALBUMS]: makeIdNameHydrator(Album),
   [PageType.LABELS]: makeIdNameHydrator(Label),
   [PageType.COLORS]: makeIdNameHydrator(Color),
   [PageType.KEYS]: makeIdNameHydrator(Key),
+  [PageType.PLAYLIST_TREE]: createPlaylist,
+  [PageType.PLAYLIST_ENTRIES]: createPlaylistEntry,
 
   // TODO: The following pages haven't yet been extracted into the local
   //       database.
   //
-  // [PageType.PLAYLIST_TREE]: null,
-  // [PageType.PLAYLIST_ENTRIES]: null, <- Can use typeORM nested things
   // [PageType.ARTWORK]: null,          <- Would like to add to track itself
-  // [PageType.COLUMNS]: null,          <- Dunno what this is for
   // [PageType.HISTORY]: null,          <- Somehow diff from playlists?
 };
 

@@ -1,4 +1,13 @@
-import {Entity, PrimaryColumn, Column, ManyToOne, OneToMany} from 'typeorm';
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  JoinTable,
+  ManyToMany,
+} from 'typeorm';
 import {BeatGrid, CueAndLoop} from './types';
 
 @Entity()
@@ -51,6 +60,22 @@ export class Artist {
 }
 
 @Entity()
+export class Playlist {
+  @PrimaryColumn() id: number;
+  @Column() isFolder: boolean;
+  @Column() name: string;
+
+  @ManyToOne(() => Playlist, playlist => playlist.children)
+  parent: Playlist | null;
+
+  @OneToMany(() => Playlist, playlist => playlist.parent)
+  children: Playlist[];
+
+  @OneToMany(() => PlaylistEntry, entry => entry.playlist)
+  entries: PlaylistEntry[];
+}
+
+@Entity()
 export class Track {
   @PrimaryColumn() id: number;
   @Column() title: string;
@@ -97,4 +122,16 @@ export class Track {
   @ManyToOne(() => Genre, {eager: true}) genre: Genre | null;
   @ManyToOne(() => Color, {eager: true}) color: Color | null;
   @ManyToOne(() => Key, {eager: true}) key: Key | null;
+}
+
+@Entity({orderBy: {sortIndex: 'DESC'}})
+export class PlaylistEntry {
+  @PrimaryGeneratedColumn() id: number;
+  @Column() sortIndex: number;
+
+  @ManyToOne(() => Playlist, playlist => playlist)
+  playlist: Playlist;
+
+  @ManyToOne(() => Track)
+  track: Track;
 }
