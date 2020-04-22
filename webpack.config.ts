@@ -19,13 +19,13 @@ const config: webpack.Configuration = {
   module: {
     rules: [
       {
+        test: /\.ksy$/,
+        use: ['kaitai-struct-loader'],
+      },
+      {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: ['ts-loader'],
-      },
-      {
-        test: /\.ksy$/,
-        use: ['kaitai-struct-loader'],
       },
     ],
   },

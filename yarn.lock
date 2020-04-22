@@ -3383,24 +3383,18 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
-kaitai-struct-compiler@^0.7.1, kaitai-struct-compiler@^0.8.0-SNAPSHOT.20180205.11616:
+kaitai-struct-compiler@^0.8.0-SNAPSHOT.20180205.11616:
   version "0.8.0-SNAPSHOT.20180205.11616"
   resolved "https://registry.yarnpkg.com/kaitai-struct-compiler/-/kaitai-struct-compiler-0.8.0-SNAPSHOT.20180205.11616.tgz#25975bf13d1b4e36244bc74e129fe99e76536881"
   integrity sha1-JZdb8T0bTjYkS8dOEp/pnnZTaIE=
 
-kaitai-struct-loader@^0.1.2:
+"kaitai-struct-loader@https://github.com/EvanPurkhiser/kaitai-struct-loader":
   version "0.1.2"
-  resolved "https://registry.yarnpkg.com/kaitai-struct-loader/-/kaitai-struct-loader-0.1.2.tgz#941b1f825ea138986e240c66d8d4b711de878346"
-  integrity sha512-GO02O/voAflphuo68iCIhi8NNYH1ZNQHajC5dleR+dsR4hZIFeKJ7hZRon64VTFvoROCrqe6Wri2tTSsUWnbkg==
+  resolved "https://github.com/EvanPurkhiser/kaitai-struct-loader#03982fe04501c7e9936fd714786b8ca648fe48a7"
   dependencies:
     js-yaml "^3.9.0"
-    kaitai-struct "^0.8.0-SNAPSHOT.2"
-    kaitai-struct-compiler "^0.7.1"
-
-kaitai-struct@^0.8.0-SNAPSHOT.2:
-  version "0.8.0-SNAPSHOT.11"
-  resolved "https://registry.yarnpkg.com/kaitai-struct/-/kaitai-struct-0.8.0-SNAPSHOT.11.tgz#33236a29981021de119019d0aa87e20ed1c1abc9"
-  integrity sha512-KvwMkEJt6B9/5qwLSz6DoNge+aT9B2oyKXldbeZVeNl2c/BgpRuEIuVrEHJ/iSKp4H5IrjdMZTCtFrYFsn1R1g==
+    kaitai-struct "^0.9.0-SNAPSHOT.1"
+    kaitai-struct-compiler "^0.8.0-SNAPSHOT.20180205.11616"
 
 kaitai-struct@^0.9.0-SNAPSHOT.1:
   version "0.9.0-SNAPSHOT.1"
