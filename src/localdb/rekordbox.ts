@@ -32,15 +32,11 @@ type AnlzResolver = (path: string) => Promise<Buffer>;
  */
 type Progress = {
   /**
-   * The action that has progressed
-   */
-  action: 'entity_loaded' | 'entity_saved';
-  /**
    * The specific table that progress is being reported for
    */
   table: string;
   /**
-   * The total progress steps for this table and action
+   * The total progress steps for this table
    */
   total: number;
   /**
@@ -134,15 +130,11 @@ class RekordboxHydrator {
       return;
     }
 
+    let totalSaved = 0;
     let totalItems = 0;
-    for (const _ of tableRows(table)) {
+    for await (const _ of tableRows(table)) {
       totalItems++;
     }
-
-    let totalLoaded = 0;
-    let totalSaved = 0;
-
-    const p = {table: tableName, total: totalItems};
 
     const saveEntity = (entity: ReturnType<typeof createEntity>) =>
       new Promise<never>(async finished => {
@@ -157,15 +149,16 @@ class RekordboxHydrator {
         }
 
         finished();
-        this.onProgress({action: 'entity_saved', complete: ++totalSaved, ...p});
+        this.onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
       });
 
     const savingEntities: Promise<never>[] = [];
 
-    for (const row of tableRows(table)) {
+    for await (const row of tableRows(table)) {
       const entity = createEntity(row);
       savingEntities.push(saveEntity(entity));
-      this.onProgress({action: 'entity_loaded', complete: ++totalLoaded, ...p});
+
+      await new Promise(r => setTimeout(r, 0));
     }
 
     await Promise.all(savingEntities);
