@@ -3,6 +3,11 @@ import ip from 'ip-address';
 
 import {PROLINK_HEADER, VIRTUAL_CDJ_FIRMWARE, VIRTUAL_CDJ_NAME} from 'src/constants';
 import {Device, DeviceID, DeviceType} from 'src/types';
+import {SocketAsPromised} from 'dgram-as-promised';
+
+export async function udpRead(conn: SocketAsPromised) {
+  return await new Promise<Buffer>(resolve => conn.socket.once('message', resolve));
+}
 
 /**
  * Converts a announce packet to a device object.
