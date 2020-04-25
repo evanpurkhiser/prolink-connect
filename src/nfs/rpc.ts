@@ -2,7 +2,8 @@ import dgram, {SocketAsPromised} from 'dgram-as-promised';
 import {Mutex} from 'async-mutex';
 
 import {udpRead} from 'src/utils';
-import {rpc} from 'src/nfs/xdr';
+
+import {rpc} from './xdr';
 
 /**
  * The RPC auth stamp passed by the CDJs. It's unclear if this is actually
@@ -32,14 +33,18 @@ type RpcCall = {
  */
 export class RpcConnection {
   address: string;
-  conn: SocketAsPromised;
+  socket: SocketAsPromised;
   mutex: Mutex;
   xid = 1;
 
   constructor(address: string) {
     this.address = address;
-    this.conn = dgram.createSocket('udp4');
+    this.socket = dgram.createSocket('udp4');
     this.mutex = new Mutex();
+  }
+
+  get connected() {
+    return true; // TODO
   }
 
   setupRequest({program, version, procedure, data}: Omit<RpcCall, 'port'>) {
@@ -80,8 +85,8 @@ export class RpcConnection {
     let resp: Buffer;
 
     try {
-      await this.conn.send(callData, 0, callData.length, port, this.address);
-      resp = await udpRead(this.conn);
+      await this.socket.send(callData, 0, callData.length, port, this.address);
+      resp = await udpRead(this.socket);
     } finally {
       releaseLock();
     }
@@ -102,7 +107,7 @@ export class RpcConnection {
   }
 
   async disconnect() {
-    await this.conn.close();
+    await this.socket.close();
   }
 }
 
