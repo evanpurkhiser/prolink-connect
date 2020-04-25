@@ -3,5 +3,5 @@ declare module 'kaitai-struct' {
     constructor(data: Buffer);
   }
 }
-
+declare module 'js-xdr*';
 declare module 'src/localdb/kaitai/*';

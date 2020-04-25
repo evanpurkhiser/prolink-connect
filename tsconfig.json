@@ -11,8 +11,7 @@
     "rootDir": "./",
     "baseUrl": "./",
     "paths": {
-      "src/*": ["src/*"],
-      "kaitai-struct": ["src/localdb/kaitai/index.d.ts"]
+      "src/*": ["src/*"]
     },
     "esModuleInterop": true,
     "experimentalDecorators": true,
