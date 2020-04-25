@@ -1,9 +1,8 @@
-import {Mutex} from 'async-mutex';
 import dgram, {SocketAsPromised} from 'dgram-as-promised';
+import {Mutex} from 'async-mutex';
 
+import {udpRead} from 'src/utils';
 import {rpc} from 'src/nfs/xdr';
-
-const RPC_VERSION = 2;
 
 /**
  * The RPC auth stamp passed by the CDJs. It's unclear if this is actually
@@ -19,11 +18,6 @@ const rpcAuthMessage = new rpc.UnixAuth({
   gids: [],
 });
 
-/**
- * This module implements just enough of the RPC 2 protocol to support making
- * NFS procedure calls to device.
- */
-
 type RpcCall = {
   port: number;
   program: number;
@@ -32,7 +26,11 @@ type RpcCall = {
   data: Buffer;
 };
 
-export default class RpcClient {
+/**
+ * Generic RPC connection. Can be used to make RPC 2 calls to any program
+ * specificed in the RpcCall.
+ */
+export class RpcConnection {
   address: string;
   conn: SocketAsPromised;
   mutex: Mutex;
@@ -44,62 +42,95 @@ export default class RpcClient {
     this.mutex = new Mutex();
   }
 
-  async call({port, program, version, procedure, data}: RpcCall) {
-    this.xid++;
+  setupRequest({program, version, procedure, data}: Omit<RpcCall, 'port'>) {
+    const auth = new rpc.Auth({
+      flavor: 1,
+      body: rpcAuthMessage.toXDR(),
+    });
 
-    // TODO: Mutex?
+    const verifier = new rpc.Auth({
+      flavor: 0,
+      body: Buffer.alloc(0),
+    });
 
     const request = new rpc.Request({
-      rpcVersion: RPC_VERSION,
-      program,
+      rpcVersion: rpc.Version,
       programVersion: version,
+      program,
       procedure,
-      auth: new rpc.Auth({
-        flavor: 1,
-        body: rpcAuthMessage.toXDR(),
-      }),
-      verifier: new rpc.Auth({
-        flavor: 0,
-        body: Buffer.alloc(0),
-      }),
+      auth,
+      verifier,
       data,
     });
 
-    const callData = new rpc.Packet({
+    const packet = new rpc.Packet({
       xid: this.xid,
       message: rpc.Message.request(request),
-    }).toXDR();
+    });
 
+    return packet.toXDR();
+  }
+
+  async call({port, ...call}: RpcCall) {
+    this.xid++;
+
+    const callData = this.setupRequest(call);
     const releaseLock = await this.mutex.acquire();
+
+    let resp: Buffer;
 
     try {
       await this.conn.send(callData, 0, callData.length, port, this.address);
-
-      const resp = await new Promise<Buffer>((resolve, reject) =>
-        this.conn.socket.once('message', p => {
-          const packet = rpc.Packet.fromXDR(p);
-
-          const response = packet.message().response();
-          if (response.arm() !== 'accepted') {
-            return reject(new Error('RPC request was denied'));
-          }
-
-          const data = response.accepted().response();
-          if (data.arm() !== 'success') {
-            return reject(new Error('RPC did not successfully return data'));
-          }
-
-          resolve(data.success());
-        })
-      );
-
-      return resp;
+      resp = await udpRead(this.conn);
     } finally {
       releaseLock();
     }
+
+    const packet = rpc.Packet.fromXDR(resp);
+
+    const message = packet.message().response();
+    if (message.arm() !== 'accepted') {
+      throw new Error('RPC request was denied');
+    }
+
+    const body = message.accepted().response();
+    if (body.arm() !== 'success') {
+      throw new Error('RPC did not successfully return data');
+    }
+
+    return body.success() as Buffer;
   }
 
   async disconnect() {
     await this.conn.close();
+  }
+}
+
+type RpcProgramCall = Pick<RpcCall, 'procedure' | 'data'>;
+
+/**
+ * RpcProgram is constructed with specialziation details for a sepcific RPC
+ * program. This should be used to avoid non-DRY usage of RpcConnection.
+ */
+export class RpcProgram {
+  program: number;
+  version: number;
+  port: number;
+  conn: RpcConnection;
+
+  constructor(conn: RpcConnection, program: number, version: number, port: number) {
+    this.conn = conn;
+    this.program = program;
+    this.version = version;
+    this.port = port;
+  }
+
+  call(data: RpcProgramCall) {
+    const {program, version, port} = this;
+    return this.conn.call({program, version, port, ...data});
+  }
+
+  disconnect() {
+    this.conn.disconnect();
   }
 }

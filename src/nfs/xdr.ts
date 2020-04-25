@@ -44,7 +44,13 @@ class StringUTF16LE {
   }
 }
 
+/**
+ * RPC XDR data types. This implemenets nearly the entire XDR spec for the
+ * ONC-RPC protocol.
+ */
 export const rpc = XDR.config((xdr: any) => {
+  xdr.const('Version', 2);
+
   xdr.enum('MessageType', {
     request: 0,
     response: 1,
@@ -168,6 +174,9 @@ export const rpc = XDR.config((xdr: any) => {
   ]);
 });
 
+/**
+ * Portmap RPC XDR types
+ */
 export const portmap = XDR.config((xdr: any) => {
   xdr.const('Program', 100000);
   xdr.const('Version', 2);
@@ -184,6 +193,9 @@ export const portmap = XDR.config((xdr: any) => {
   ]);
 });
 
+/**
+ * Mount RPC XDR types
+ */
 export const mount = XDR.config((xdr: any) => {
   xdr.const('Program', 100005);
   xdr.const('Version', 1);
@@ -221,6 +233,9 @@ export const mount = XDR.config((xdr: any) => {
   xdr.struct('ExportListResponse', [['next', xdr.option(xdr.lookup('ExportList'))]]);
 });
 
+/**
+ * NFS RPC XDR types
+ */
 export const nfs = XDR.config((xdr: any) => {
   xdr.const('Program', 100003);
   xdr.const('Version', 2);
