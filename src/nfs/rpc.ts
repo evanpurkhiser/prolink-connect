@@ -44,7 +44,9 @@ export class RpcConnection {
   }
 
   get connected() {
-    return true; // TODO
+    // TODO: Figure out what logic we can do here to dtermien if the socket is
+    // still open.
+    return true;
   }
 
   setupRequest({program, version, procedure, data}: Omit<RpcCall, 'port'>) {
