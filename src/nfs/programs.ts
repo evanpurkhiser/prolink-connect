@@ -111,7 +111,7 @@ export async function lookupFile(conn: RpcProgram, handle: Buffer, filename: str
 
   const fileResp = nfs.DirectoryOpResponse.fromXDR(resp);
   if (fileResp.arm() !== 'success') {
-    throw new Error('Failed to lookup file');
+    throw new Error(`Failed file lookup of ${filename}`);
   }
 
   const fileHandle = fileResp.success().handle();
