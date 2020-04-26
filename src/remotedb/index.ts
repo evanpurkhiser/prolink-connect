@@ -4,12 +4,13 @@ import {Socket} from 'net';
 import {Mutex} from 'async-mutex';
 
 import {Device, DeviceID, TrackType, TrackSlot} from 'src/types';
-import {REMOTEDB_SERVER_QUERY_PORT} from 'src/remotedb/constants';
-import {UInt32, readField, Binary} from 'src/remotedb/fields';
-import {fieldFromDescriptor, renderItems, MenuTarget} from 'src/remotedb/queries';
-import {Message} from 'src/remotedb/message';
-import {Response, MessageType} from 'src/remotedb/message/types';
-import {ItemType, Item, Items} from 'src/remotedb/message/item';
+
+import {REMOTEDB_SERVER_QUERY_PORT} from './constants';
+import {UInt32, readField, Binary} from './fields';
+import {fieldFromDescriptor, renderItems, MenuTarget} from './queries';
+import {Response, MessageType} from './message/types';
+import {ItemType, Item, Items} from './message/item';
+import {Message} from './message';
 
 /**
  * Queries the remote device for the port that the remote database server is
