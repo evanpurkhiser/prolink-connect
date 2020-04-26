@@ -143,6 +143,8 @@ export async function fetchFile({device, slot, path, onProgress}: FetchFileOptio
     throw new Error(`The slot (${slot}) is not exported on Device ${device.id}`);
   }
 
+  // TODO: Clear roothandle cache and retry if we fail to lookup the file path
+
   const fileInfo = await lookupPath(nfsClient, rootHandle, path);
   const file = await fetchFileCall(nfsClient, fileInfo, onProgress);
 
