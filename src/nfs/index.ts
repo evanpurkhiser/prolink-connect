@@ -27,7 +27,7 @@ const slotMountMapping = {
 
 /**
  * This module maintains a singleton cached list of player addresses -> active
- * connections. It is not guarenteed that the connections in the cache will
+ * connections. It is not guaranteed that the connections in the cache will
  * still be connected.
  */
 const clientsCache: Map<string, ClientSet> = new Map();

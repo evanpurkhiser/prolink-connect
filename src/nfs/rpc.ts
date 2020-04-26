@@ -29,7 +29,7 @@ type RpcCall = {
 
 /**
  * Generic RPC connection. Can be used to make RPC 2 calls to any program
- * specificed in the RpcCall.
+ * specified in the RpcCall.
  */
 export class RpcConnection {
   address: string;
@@ -44,7 +44,7 @@ export class RpcConnection {
   }
 
   get connected() {
-    // TODO: Figure out what logic we can do here to dtermien if the socket is
+    // TODO: Figure out what logic we can do here to determine if the socket is
     // still open.
     return true;
   }
@@ -116,8 +116,9 @@ export class RpcConnection {
 type RpcProgramCall = Pick<RpcCall, 'procedure' | 'data'>;
 
 /**
- * RpcProgram is constructed with specialziation details for a sepcific RPC
- * program. This should be used to avoid non-DRY usage of RpcConnection.
+ * RpcProgram is constructed with specialization details for a specific RPC
+ * program. This should be used to avoid having to repeat yourself for calls
+ * made using the RpcConnection.
  */
 export class RpcProgram {
   program: number;
