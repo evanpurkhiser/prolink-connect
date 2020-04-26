@@ -23,7 +23,9 @@ import {
 //       a fully typed public interface of this module.
 
 /**
- * Function used to resolve a ANLZ file path into a data buffer.
+ * The provided function should resolve ANLZ files into buffers. Typically
+ * you would just read the file, but in the case of the PROLINK network, this
+ * would handle loading the file over NFS.
  */
 type AnlzResolver = (path: string) => Promise<Buffer>;
 
@@ -59,12 +61,6 @@ type Options = {
    */
   pdbData: Buffer;
   /**
-   * The provided function should resolve ANLZ files into buffers. Typically
-   * you would just read the file, but in the case of the PROLINK network, this
-   * would handle loading the file over NFS.
-   */
-  anlzFileResolver: AnlzResolver;
-  /**
    * For larger music collections, it may take some time to load everything,
    * especially when limited by IO. When hydration progresses this function
    * will be called.
@@ -83,17 +79,40 @@ export async function hydrateDatabase({pdbData, ...options}: Options) {
 }
 
 /**
+ * Hydrate the ANLZ sections of a Track entity from the analyzePath. This
+ * method will mutate the passed Track entity.
+ */
+export async function hydrateAnlz(
+  track: Track,
+  type: 'DAT' | 'EXT',
+  anlzResolver: AnlzResolver
+) {
+  const path = `${track.analyzePath}.${type}`;
+
+  console.log(path);
+
+  const anlzData = await anlzResolver(path);
+
+  const stream = new KaitaiStream(anlzData);
+  const anlz = new RekordboxAnlz(stream);
+
+  console.log(anlzData);
+
+  for (const section of anlz.sections) {
+    trackAnlzHydrators[section.fourcc]?.(track, section);
+  }
+}
+
+/**
  * This service provides utilities for translating rekordbox database (pdb_ and
  * analysis (ANLZ) files into the common entity types used in this library.
  */
 class RekordboxHydrator {
   conn: Connection;
-  anlzFileResolver: AnlzResolver;
   onProgress: (progress: Progress) => void;
 
-  constructor({conn, anlzFileResolver, onProgress}: Omit<Options, 'pdbData'>) {
+  constructor({conn, onProgress}: Omit<Options, 'pdbData'>) {
     this.conn = conn;
-    this.anlzFileResolver = anlzFileResolver;
     this.onProgress = onProgress ?? (_ => null);
   }
 
@@ -138,12 +157,6 @@ class RekordboxHydrator {
 
     const saveEntity = (entity: ReturnType<typeof createEntity>) =>
       new Promise<never>(async finished => {
-        // Tracks have additional data that is hydrated through the ANLZ files
-        if (entity instanceof Track) {
-          await this.hydrateAnlz(entity, 'DAT');
-          await this.hydrateAnlz(entity, 'EXT');
-        }
-
         if (entity) {
           await em.save(entity);
         }
@@ -156,26 +169,15 @@ class RekordboxHydrator {
 
     for await (const row of tableRows(table)) {
       const entity = createEntity(row);
-      savingEntities.push(saveEntity(entity));
+      const savePromise = saveEntity(entity);
 
+      savingEntities.push(savePromise);
+
+      // Allow additional tasks to occur during hydration
       await new Promise(r => setTimeout(r, 0));
     }
 
     await Promise.all(savingEntities);
-  }
-
-  /**
-   * Hydrate the ANLZ sections of a Track entity from the analyzePath. This
-   * method will mutate the passed Track entity.
-   */
-  async hydrateAnlz(track: Track, type: 'DAT' | 'EXT') {
-    const anlzData = await this.anlzFileResolver(`${track.analyzePath}.${type}`);
-    const stream = new KaitaiStream(anlzData);
-    const anlz = new RekordboxAnlz(stream);
-
-    for (const section of anlz.sections) {
-      trackAnlzHydrators[section.fourcc]?.(track, section);
-    }
   }
 }
 
@@ -324,6 +326,7 @@ function createArtworkEntry(artworkRow: any) {
 }
 
 function createHistoryEntry(historyRow: any) {
+  // TODO
   return null;
 }
 
@@ -399,3 +402,7 @@ const trackAnlzHydrators = {
   // [SectionTags.WAVE_COLOR_PREVIEW]: null, <- In the EXT file
   // [SectionTags.WAVE_COLOR_SCROLL]: null,  <- In the EXT file
 };
+
+export const expectedTables = Object.keys(pdbEntityCreators).map(pageId =>
+  RekordboxPdb.PageType[pageId].toLowerCase()
+);
