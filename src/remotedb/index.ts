@@ -6,11 +6,48 @@ import {Mutex} from 'async-mutex';
 import {Device, DeviceID, TrackType, TrackSlot} from 'src/types';
 
 import {REMOTEDB_SERVER_QUERY_PORT} from './constants';
-import {UInt32, readField, Binary} from './fields';
-import {fieldFromDescriptor, renderItems, MenuTarget} from './queries';
-import {Response, MessageType} from './message/types';
-import {ItemType, Item, Items} from './message/item';
+import {UInt32, readField} from './fields';
+import {Response, MessageType, DataRequest} from './message/types';
 import {Message} from './message';
+import {queryHandlers} from './queries';
+
+/**
+ * Menu target specifies where a menu should be "rendered" This differes based
+ * on the request being made.
+ */
+export enum MenuTarget {
+  Main = 0x01,
+}
+
+/**
+ * Used to specify where to lookup data when making queries
+ */
+export type LookupDescriptor = {
+  hostDevice: Device;
+  menuTarget: MenuTarget;
+  trackSlot: TrackSlot;
+  trackType: TrackType;
+};
+
+// TODO: This should be expanded to extend Requset once we have all the rest in
+// the queryHandlers
+type QueryArgs<T extends DataRequest> = Parameters<typeof queryHandlers[T]>[0]['args'];
+
+type QueryOpts<T extends DataRequest> = {
+  lookupDescriptor: LookupDescriptor;
+  /**
+   * The device to target the query to
+   */
+  device: Device;
+  /**
+   * The query type to make
+   */
+  query: T;
+  /**
+   * Arguments to pass to the query. These are query speciifc
+   */
+  args: QueryArgs<T>;
+};
 
 /**
  * Queries the remote device for the port that the remote database server is
@@ -60,8 +97,8 @@ export class Connection {
     await this.socket.write(message.buffer);
   }
 
-  async readMessage<T extends Response>(expect: T) {
-    return await Message.fromStream(this.socket, expect);
+  readMessage<T extends Response>(expect: T) {
+    return this.lock.runExclusive(() => Message.fromStream(this.socket, expect));
   }
 }
 
@@ -70,7 +107,7 @@ export class Connection {
  */
 export class RemoteDatabase {
   /**
-   * The device we are accessing other remote databases from.
+   * Our host device that is talking to the remotedb server.
    */
   hostDevice: Device;
 
@@ -99,8 +136,6 @@ export class RemoteDatabase {
     // There is some kind of problem if not.
     const data = await readField(socket, UInt32.type);
 
-    console.log(data);
-
     if (data.value !== 0x01) {
       throw new Error(`Expected 0x01 during preamble handshake. Got ${data.value}`);
     }
@@ -122,132 +157,12 @@ export class RemoteDatabase {
     this.connections[device.id] = new Connection(socket);
   }
 
-  async lookupMetadata(device: Device) {
-    const trackDescriptor = {
-      hostDeviceId: this.hostDevice.id,
-      menuTarget: MenuTarget.Main,
-      trackSlot: TrackSlot.RB,
-      trackType: TrackType.RB,
-    };
-
-    const trackRequest = new Message({
-      type: MessageType.GetMetadata,
-      args: [fieldFromDescriptor(trackDescriptor), new UInt32(9688)],
-    });
-
+  query<T extends DataRequest>(opts: QueryOpts<T>) {
+    const {query, lookupDescriptor, device, args} = opts;
     const conn = this.connections[device.id];
 
-    console.log('here we go');
+    const handler = queryHandlers[query];
 
-    await conn.writeMessage(trackRequest);
-    const resp = await conn.readMessage(MessageType.Success);
-    const items = renderItems(conn, trackDescriptor, resp.data.itemsAvailable);
-
-    const data: Partial<Items> = {};
-    for await (const item of items) {
-      data[item.type] = item as any;
-    }
-
-    console.log(data);
-
-    const artId = data[ItemType.TrackTitle]?.artworkId ?? 0;
-
-    const artRequest = new Message({
-      type: MessageType.GetArtwork,
-      args: [fieldFromDescriptor(trackDescriptor), new UInt32(artId)],
-    });
-
-    await conn.writeMessage(artRequest);
-    const art = await conn.readMessage(MessageType.Artwork);
-
-    const beatGrid = new Message({
-      type: MessageType.GetBeatGrid,
-      args: [fieldFromDescriptor(trackDescriptor), new UInt32(9688)],
-    });
-
-    await conn.writeMessage(beatGrid);
-    const grid = await conn.readMessage(MessageType.BeatGrid);
-
-    console.log('got grid', grid.data.slice(0, 20));
-
-    const waveformPreview = new Message({
-      type: MessageType.GetWaveformPreview,
-      args: [
-        fieldFromDescriptor(trackDescriptor),
-        new UInt32(0),
-        new UInt32(6616),
-        new UInt32(0),
-        new Binary(Buffer.alloc(0)),
-      ],
-    });
-
-    await conn.writeMessage(waveformPreview);
-    const previewWave = await conn.readMessage(MessageType.WaveformPreview);
-
-    console.log('got waveform ');
-
-    const waveformDetailed = new Message({
-      type: MessageType.GetWaveformDetailed,
-      args: [fieldFromDescriptor(trackDescriptor), new UInt32(6616), new UInt32(0)],
-    });
-
-    await conn.writeMessage(waveformDetailed);
-    const pv = await conn.readMessage(MessageType.WaveformDetailed);
-
-    console.log('got detailed waveform');
-
-    const waveformHd = new Message({
-      type: MessageType.GetWaveformHD,
-      args: [
-        fieldFromDescriptor(trackDescriptor),
-        new UInt32(10010),
-        new UInt32(Buffer.from('PWV5').readUInt32LE()),
-        new UInt32(Buffer.from('EXT\0').readUInt32LE()),
-      ],
-    });
-
-    await conn.writeMessage(waveformHd);
-    const hd = await conn.readMessage(MessageType.WaveformHD);
-
-    const cueLoops = new Message({
-      type: MessageType.GetCueAndLoops,
-      args: [fieldFromDescriptor(trackDescriptor), new UInt32(10010)],
-    });
-
-    await conn.writeMessage(cueLoops);
-    const cl = await conn.readMessage(MessageType.CueAndLoop);
-
-    console.log(cl.data);
-
-    const advCueLoops = new Message({
-      type: MessageType.GetAdvCueAndLoops,
-      args: [fieldFromDescriptor(trackDescriptor), new UInt32(9688), new UInt32(0)],
-    });
-
-    await conn.writeMessage(advCueLoops);
-    const acl = await conn.readMessage(MessageType.AdvCueAndLoops);
-
-    console.log(acl.data);
-
-    // const waveformData = hd.data;
-
-    //     const canvas = createCanvas(waveformData.length / 3, 128);
-    //     const ctx = canvas.getContext('2d');
-
-    //     waveformData.slice(0, waveformData.length / 3).forEach((d, i) => {
-    //       const blue = Color.rgb(d.color.map(c => c * 255));
-
-    //       ctx.strokeStyle = blue.hex();
-    //       ctx.beginPath();
-    //       ctx.lineTo(i + 0.5, 64 - d.height * 2);
-    //       ctx.lineTo(i + 0.5, 64 + d.height * 2);
-    //       ctx.stroke();
-    //     });
-
-    // const {path} = await tmp.file();
-
-    // appendFile(path, canvas.toBuffer('image/png'), () => {
-    //   open(`file://${path}`, {app: 'google chrome'});
-    // });
+    return handler({conn, lookupDescriptor, args});
   }
 }

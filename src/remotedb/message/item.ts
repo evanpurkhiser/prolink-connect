@@ -92,6 +92,7 @@ type ItemArgs = [
 
 /**
  * Convert a message item argument lists to a structured intermediate object
+ * for more clear access.
  */
 const makeItemData = (args: ItemArgs) => ({
   parentId: args[0].value,
@@ -104,24 +105,18 @@ const makeItemData = (args: ItemArgs) => ({
 
 type ItemData = ReturnType<typeof makeItemData>;
 
+/**
+ * Generic transformer for items that include just an id and label
+ */
 const mapIdName = (a: ItemData) => ({
   id: a.mainId,
   name: a.label1,
 });
 
-export const fieldsToItem = (args: Field[]) => {
-  const itemData = makeItemData(args as ItemArgs);
-  const data = transformItem[itemData.type](itemData);
-
-  return {...data, type: itemData.type};
-};
-
 /**
  * Maps item types to structured objects
  */
-export const transformItem = {
-  // TODO: Ideally these should actually return entities from src/entites
-
+const transformItem = {
   [ItemType.TrackTitle]: (a: ItemData) => ({
     id: a.mainId,
     title: a.label1,
@@ -195,8 +190,27 @@ export const transformItem = {
   [ItemType.MenuTrackTitleDateAdded]: (a: ItemData) => a,
 };
 
+/**
+ * Represents a generic Item, specialized to a specific item by providing a
+ * ItemType to the template.
+ */
+export type Item<T extends ItemType> = ReturnType<typeof transformItem[T]> & {type: T};
+
+/**
+ * Maps ItemTypes to Items
+ */
 export type Items = {
-  [T in keyof typeof transformItem]: ReturnType<typeof transformItem[T] & {type: T}>;
+  [T in keyof typeof transformItem]: Item<T>;
 };
 
-export type Item<T extends ItemType> = ReturnType<typeof transformItem[T]>;
+/**
+ * Translate a list of fields for an item response into a structure object,
+ * making items more clear to work with.
+ */
+export const fieldsToItem = (args: Field[]) => {
+  const itemData = makeItemData(args as ItemArgs);
+  const {type} = itemData;
+  const data = transformItem[type](itemData);
+
+  return {...data, type} as Items[ItemType];
+};
