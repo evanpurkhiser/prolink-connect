@@ -1,6 +1,6 @@
 import {Device, TrackSlot} from 'src/types';
 
-import {RpcConnection, RpcProgram} from './rpc';
+import {RpcConnection, RpcProgram, RetryConfig} from './rpc';
 import {nfs, mount} from './xdr';
 import {
   makeProgramClient,
@@ -24,6 +24,11 @@ const slotMountMapping = {
   [TrackSlot.SD]: '/B/',
   [TrackSlot.RB]: '/',
 } as const;
+
+/**
+ * The module-level retry configuration for newly created RpcConnections.
+ */
+let retryConfig: RetryConfig = {};
 
 /**
  * This module maintains a singleton cached list of player addresses -> active
@@ -51,7 +56,7 @@ async function getClients(address: string) {
     clientsCache.delete(address);
   }
 
-  const conn = new RpcConnection(address);
+  const conn = new RpcConnection(address, retryConfig);
 
   const mountClient = await makeProgramClient(conn, {
     id: mount.Program,
@@ -150,4 +155,15 @@ export async function fetchFile({device, slot, path, onProgress}: FetchFileOptio
 export function resetDeviceCache(device: Device) {
   clientsCache.delete(device.ip.address);
   rootHandleCache.delete(device.ip.address);
+}
+
+/**
+ * Configure the retry strategy for making NFS calls using this module
+ */
+export function configureRetryStrategy(config: RetryConfig) {
+  retryConfig = config;
+
+  for (const client of clientsCache.values()) {
+    client.conn.retryConfig = config;
+  }
 }

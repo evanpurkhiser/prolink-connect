@@ -1,4 +1,7 @@
+import {OperationOptions} from 'retry';
+import promiseRetry from 'promise-retry';
 import dgram, {SocketAsPromised} from 'dgram-as-promised';
+import {timeout, TimeoutError} from 'promise-timeout';
 import {Mutex} from 'async-mutex';
 
 import {udpRead} from 'src/utils';
@@ -28,17 +31,32 @@ type RpcCall = {
 };
 
 /**
+ * Configuration for the retry strategy to use when making RPC calls
+ *
+ * @see https://www.npmjs.com/package/promise-retry#promiseretryfn-options
+ */
+export type RetryConfig = OperationOptions & {
+  /**
+   * Time in milliseconds to wait before a RPC transaction should timeout.
+   * @default 1000
+   */
+  transactionTimeout?: number;
+};
+
+/**
  * Generic RPC connection. Can be used to make RPC 2 calls to any program
  * specified in the RpcCall.
  */
 export class RpcConnection {
   address: string;
+  retryConfig: RetryConfig;
   socket: SocketAsPromised;
   mutex: Mutex;
   xid = 1;
 
-  constructor(address: string) {
+  constructor(address: string, retryConfig?: RetryConfig) {
     this.address = address;
+    this.retryConfig = retryConfig ?? {};
     this.socket = dgram.createSocket('udp4');
     this.mutex = new Mutex();
   }
@@ -78,21 +96,48 @@ export class RpcConnection {
     return packet.toXDR();
   }
 
+  /**
+   * Execute a RPC transaction (call and response).
+   *
+   * If a transaction does not complete after the configured timeout it will be
+   * retried with the retry configuration.
+   */
   async call({port, ...call}: RpcCall) {
     this.xid++;
 
     const callData = this.setupRequest(call);
-    const releaseLock = await this.mutex.acquire();
 
-    let resp: Buffer;
-
-    try {
+    // Function to execute the transaction
+    const executeCall = async () => {
       await this.socket.send(callData, 0, callData.length, port, this.address);
-      resp = await udpRead(this.socket);
-    } finally {
-      releaseLock();
-    }
+      return await udpRead(this.socket);
+    };
 
+    const {transactionTimeout, ...retryConfig} = this.retryConfig;
+
+    // Function to execute the transaction, with timeout if the transaction
+    // does not resolve after RESPONSE_RETRY_TIMEOUT.
+    const executeWithTimeout = async () =>
+      timeout(executeCall(), transactionTimeout ?? 1000);
+
+    // Function to execute the transaction, with retries if the transaction times out.
+    const executeWithRetry = async () =>
+      promiseRetry(retryConfig, async retry => {
+        try {
+          return await executeWithTimeout();
+        } catch (err) {
+          if (err instanceof TimeoutError) {
+            retry(err);
+          } else {
+            throw err;
+          }
+        }
+      });
+
+    // Execute the transaction exclusively to avoid async call races
+    const resp = await this.mutex.runExclusive(executeWithRetry);
+
+    // Decode the XDR response
     const packet = rpc.Packet.fromXDR(resp);
 
     const message = packet.message().response();
