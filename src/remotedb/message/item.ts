@@ -4,6 +4,7 @@ import {NumberField, StringField, Field} from 'src/remotedb/fields';
  * Item types associated to the MenuItem message type.
  */
 export enum ItemType {
+  Path = 0x0000,
   Folder = 0x0001,
   AlbumTitle = 0x0002,
   Disc = 0x0003,
@@ -23,6 +24,7 @@ export enum ItemType {
   OrigianlArtist = 0x0028,
   Remixer = 0x0029,
   DateAdded = 0x002e,
+  Unknown01 = 0x002f,
 
   ColorNone = 0x0013,
   ColorPink = 0x0014,
@@ -127,11 +129,13 @@ const transformItem = {
   [ItemType.Genre]: mapIdName,
   [ItemType.Label]: mapIdName,
   [ItemType.Key]: mapIdName,
+  [ItemType.BitRate]: (a: ItemData) => ({bitrate: a.mainId}),
   [ItemType.Comment]: (a: ItemData) => ({comment: a.label1}),
   [ItemType.Year]: (a: ItemData) => ({year: a.label1}),
   [ItemType.Rating]: (a: ItemData) => ({rating: a.mainId}),
   [ItemType.Tempo]: (a: ItemData) => ({bpm: a.mainId / 100}),
   [ItemType.Duration]: (a: ItemData) => ({duration: a.mainId}),
+  [ItemType.Unknown01]: (_: ItemData) => null,
 
   // TODO: All of these item types are missing
   [ItemType.ColorNone]: (a: ItemData) => a,
@@ -144,10 +148,10 @@ const transformItem = {
   [ItemType.ColorBlue]: (a: ItemData) => a,
   [ItemType.ColorPurple]: (a: ItemData) => a,
 
+  [ItemType.Path]: (a: ItemData) => ({path: a.label1}),
   [ItemType.Folder]: (a: ItemData) => a,
   [ItemType.Disc]: (a: ItemData) => a,
   [ItemType.Playlist]: (a: ItemData) => a,
-  [ItemType.BitRate]: (a: ItemData) => a,
 
   [ItemType.HistoryPlaylist]: (a: ItemData) => a,
   [ItemType.OrigianlArtist]: (a: ItemData) => a,
@@ -210,7 +214,14 @@ export type Items = {
 export const fieldsToItem = (args: Field[]) => {
   const itemData = makeItemData(args as ItemArgs);
   const {type} = itemData;
-  const data = transformItem[type](itemData);
 
-  return {...data, type} as Items[ItemType];
+  const transformer = transformItem[type];
+
+  // Typescript gives us safety, but it is possible there is an itemType we're
+  // not aware of yet, throw just in case.
+  if (transformer === undefined) {
+    throw new Error(`No item transformer registered for item type ${type}`);
+  }
+
+  return {...transformer(itemData), type} as Items[ItemType];
 };
