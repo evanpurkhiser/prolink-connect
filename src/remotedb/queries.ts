@@ -74,8 +74,6 @@ async function getMetadata(opts: TrackQueryOpts) {
     trackItems[item.type] = item as any;
   }
 
-  console.log(Object.keys(trackItems));
-
   // Translate our trackItems into a (partial) Track entity.
   const track = new Track();
   track.id = trackItems[ItemType.TrackTitle].id;

@@ -119,6 +119,7 @@ const mapIdName = (a: ItemData) => ({
  * Maps item types to structured objects
  */
 const transformItem = {
+  [ItemType.Path]: (a: ItemData) => ({path: a.label1}),
   [ItemType.TrackTitle]: (a: ItemData) => ({
     id: a.mainId,
     title: a.label1,
@@ -148,7 +149,6 @@ const transformItem = {
   [ItemType.ColorBlue]: (a: ItemData) => a,
   [ItemType.ColorPurple]: (a: ItemData) => a,
 
-  [ItemType.Path]: (a: ItemData) => ({path: a.label1}),
   [ItemType.Folder]: (a: ItemData) => a,
   [ItemType.Disc]: (a: ItemData) => a,
   [ItemType.Playlist]: (a: ItemData) => a,
