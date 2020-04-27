@@ -34,10 +34,17 @@ export type QueryDescriptor = {
  */
 export type LookupDescriptor = QueryDescriptor & {hostDevice: Device};
 
-export type Query = DataRequest;
-
 // TODO: This should be expanded to extend Requset once we have all the rest in
 // the queryHandlers
+
+/**
+ * Used to specify the query type that is being made
+ */
+export type Query = DataRequest;
+
+/**
+ * Options used to make a remotedb query
+ */
 type QueryOpts<T extends Query> = {
   queryDescriptor: QueryDescriptor;
   /**
@@ -54,7 +61,7 @@ type QueryOpts<T extends Query> = {
  * Queries the remote device for the port that the remote database server is
  * listening on for requests.
  */
-export async function getRemoteDBServerPort(deviceIp: ip.Address4) {
+async function getRemoteDBServerPort(deviceIp: ip.Address4) {
   const conn = new PromiseSocket(new Socket());
   await conn.connect(REMOTEDB_SERVER_QUERY_PORT, deviceIp.address);
 
