@@ -2,40 +2,13 @@ import {SocketAsPromised} from 'dgram-as-promised';
 import {networkInterfaces, NetworkInterfaceInfoIPv4, NetworkInterfaceInfo} from 'os';
 import ip from 'ip-address';
 
-import {PROLINK_HEADER, VIRTUAL_CDJ_FIRMWARE, VIRTUAL_CDJ_NAME} from 'src/constants';
-import {Device, DeviceID, DeviceType} from 'src/types';
+import {Device} from 'src/types';
 
 /**
  * Async version of udp socket read
  */
 export async function udpRead(conn: SocketAsPromised) {
   return await new Promise<Buffer>(resolve => conn.socket.once('message', resolve));
-}
-
-/**
- * Converts a announce packet to a device object.
- */
-export function deviceFromPacket(packet: Buffer): Device {
-  if (packet.indexOf(PROLINK_HEADER) !== 0) {
-    throw new Error('Announce packet does not start with expected header');
-  }
-
-  if (packet[0x0a] != 0x06) {
-    throw new Error('Packet is not an announce packet');
-  }
-
-  const name = packet
-    .slice(0x0c, 0x0c + 20)
-    .toString()
-    .replace(/\0/g, '');
-
-  return {
-    name,
-    id: packet[0x24],
-    type: packet[0x34],
-    macAddr: new Uint8Array(packet.slice(0x26, 0x26 + 6)),
-    ip: ip.Address4.fromInteger(packet.readUInt32BE(0x2c)),
-  };
 }
 
 /**
