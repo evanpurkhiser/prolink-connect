@@ -88,15 +88,10 @@ export async function hydrateAnlz(
   anlzResolver: AnlzResolver
 ) {
   const path = `${track.analyzePath}.${type}`;
-
-  console.log(path);
-
   const anlzData = await anlzResolver(path);
 
   const stream = new KaitaiStream(anlzData);
   const anlz = new RekordboxAnlz(stream);
-
-  console.log(anlzData);
 
   for (const section of anlz.sections) {
     trackAnlzHydrators[section.fourcc]?.(track, section);
