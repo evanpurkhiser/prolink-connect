@@ -1,4 +1,4 @@
-import * as Field from '../src/remotedb/fields';
+import * as Field from 'src/remotedb/fields';
 
 describe('UInt8', () => {
   let num: Field.NumberField;
