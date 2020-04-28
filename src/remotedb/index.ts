@@ -41,6 +41,7 @@ export type LookupDescriptor = QueryDescriptor & {hostDevice: Device};
  * Used to specify the query type that is being made
  */
 export type Query = DataRequest;
+export const Query = DataRequest;
 
 /**
  * Options used to make a remotedb query
