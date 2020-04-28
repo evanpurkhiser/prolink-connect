@@ -71,9 +71,11 @@ export function makeStatusPacket(device: Device): Uint8Array {
  * constructs the announce packet that is sent on the PRO DJ LINK network to
  * announce a devices existence.
  */
-export function makeAnnouncePacket(device: Device): Uint8Array {
+export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
+  const d = deviceToAnnounce;
+
   // unknown padding bytes
-  const unknown1 = [0x01, 0x02, 0x00, 0x36];
+  const unknown1 = [0x01, 0x02];
   const unknown2 = [0x01, 0x00, 0x00, 0x00];
 
   // The packet blow is constructed in the followig format:
@@ -81,7 +83,8 @@ export function makeAnnouncePacket(device: Device): Uint8Array {
   //  - 0x00: 10 byte header
   //  - 0x0A: 02 byte announce packet type
   //  - 0x0c: 20 byte device name
-  //  - 0x20: 04 byte unknown
+  //  - 0x20: 02 byte unknown
+  //  - 0x22: 02 byte packet length
   //  - 0x24: 01 byte for the player ID
   //  - 0x25: 01 byte for the player type
   //  - 0x26: 06 byte mac address
@@ -93,14 +96,15 @@ export function makeAnnouncePacket(device: Device): Uint8Array {
   const parts = [
     ...PROLINK_HEADER,
     ...[0x06, 0x00],
-    ...buildName(device),
+    ...buildName(d),
     ...unknown1,
-    ...[device.id],
-    ...[device.type],
-    ...device.macAddr,
-    ...device.ip.toArray(),
+    ...[0x00, 0x36],
+    ...[d.id],
+    ...[d.type],
+    ...d.macAddr,
+    ...d.ip.toArray(),
     ...unknown2,
-    ...[device.type],
+    ...[d.type],
     ...[0x00],
   ];
 
