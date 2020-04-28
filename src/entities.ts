@@ -6,7 +6,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import {BeatGrid, CueAndLoop} from './types';
+
+import {BeatGrid, CueAndLoop} from 'src/types';
 
 @Entity()
 export class Artwork {
