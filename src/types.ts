@@ -78,9 +78,9 @@ export module CDJStatus {
    * Represents various details about the current state of the CDJ.
    */
   export type State = {
-    playerID: number;
-    trackID: number;
-    trackDevice: DeviceID;
+    deviceId: number;
+    trackId: number;
+    trackDeviceId: DeviceID;
     trackSlot: TrackSlot;
     trackType: TrackType;
     playState: PlayState;
