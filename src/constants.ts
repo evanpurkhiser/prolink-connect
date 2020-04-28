@@ -3,8 +3,12 @@
  */
 export const ANNOUNCE_PORT = 50000;
 
-// prettier-ignore
+/**
+ * The port on which devices on the prolink network announce themselves.
+ */
+export const STATUS_PORT = 50002;
 
+// prettier-ignore
 /**
  * All UDP packets on the PRO DJ LINK network start with this magic header.
  */
