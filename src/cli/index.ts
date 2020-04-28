@@ -5,7 +5,7 @@ import signale from 'signale';
 import * as entities from 'src/entities';
 import {hydrateDatabase, hydrateAnlz} from 'src/localdb/rekordbox';
 import {fetchFile} from 'src/nfs';
-import {TrackSlot, TrackType, Device, DeviceType} from 'src/types';
+import {TrackSlot, TrackType, Device, DeviceType, DeviceID} from 'src/types';
 import {ANNOUNCE_PORT, STATUS_PORT} from 'src/constants';
 import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
 import {getVirtualCDJ, makeAnnouncePacket} from 'src/virtualcdj';
@@ -157,10 +157,10 @@ async function test() {
     signale.star(track);
   }
 
-  let currentTrack = 0;
+  let currentTrack: Record<DeviceID, number> = {};
 
   statusEmitter.on('status', async status => {
-    if (status.trackId === currentTrack) {
+    if (status.trackId === currentTrack[status.deviceId]) {
       return;
     }
 
@@ -175,10 +175,10 @@ async function test() {
       return;
     }
 
-    signale.star(`Track changed!`);
+    signale.star(`Track changed on device ${status.deviceId}!`);
 
     const {trackSlot, trackId} = status;
-    currentTrack = trackId;
+    currentTrack[status.deviceId] = trackId;
 
     // Lookup track from CDJ
     if (device.type === DeviceType.CDJ) {
