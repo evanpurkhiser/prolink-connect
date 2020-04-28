@@ -1,5 +1,6 @@
 import dgram from 'dgram-as-promised';
 import {createConnection} from 'typeorm';
+import signale from 'signale';
 
 import * as entities from 'src/entities';
 import {hydrateDatabase, hydrateAnlz} from 'src/localdb/rekordbox';
@@ -22,24 +23,34 @@ async function test() {
     logging: false,
   });
 
+  signale.info('Opening announce connection...');
   // Socket used to listen for devices on the network
   const announceSocket = dgram.createSocket('udp4');
   await announceSocket.bind(ANNOUNCE_PORT, '0.0.0.0');
   announceSocket.setBroadcast(true);
 
+  signale.info('Opening status connection...');
   // Socket used to listen for status packets
   const statusSocket = dgram.createSocket('udp4');
   await statusSocket.bind(STATUS_PORT, '0.0.0.0');
+
+  signale.success('Sockets connected!');
 
   // Setup device services
   const deviceManager = new DeviceManager(announceSocket);
   const statusEmitter = new StatusEmitter(statusSocket);
 
-  const device = await new Promise<Device>(resolve =>
-    deviceManager.on('connected', d => d.type === DeviceType.Rekordbox && resolve(d))
+  const firstDevice = await new Promise<Device>(resolve =>
+    deviceManager.on('connected', d => resolve(d))
   );
 
-  const iface = getMatchingInterface(device.ip);
+  deviceManager.on('connected', d =>
+    signale.star(`New device seen: ${d.name} [${d.id}] [${d.ip.address}]`)
+  );
+
+  signale.star(`Got first device: ${firstDevice.name} (${firstDevice.ip.address})`);
+
+  const iface = getMatchingInterface(firstDevice.ip);
 
   if (iface === null) {
     throw new Error('Unable to determine network interface');
@@ -71,43 +82,60 @@ async function test() {
     }
 
     if (dbHyrdated === false) {
-      console.log('Downloading PDB database...');
+      const downlaodLog = new signale.Signale({interactive: true});
+
+      signale.info('Downloading PDB database...');
       const pdbData = await fetchFile({
         device,
         slot: trackSlot,
         path: '.PIONEER/rekordbox/export.pdb',
-        onProgress: console.log,
+        onProgress: p => downlaodLog.await(`${p.read} / ${p.total} bytes`),
       });
+      downlaodLog.success('Successfully fetched PDB database from CDJ!');
 
-      console.log('Hydrating database');
-      await hydrateDatabase({conn: dbConn, pdbData});
+      const hydrateLog = new signale.Signale({interactive: true});
+
+      signale.info('Hydrating SQLite database');
+      await hydrateDatabase({
+        conn: dbConn,
+        pdbData,
+        onProgress: p => hydrateLog.await(`Hydrating: ${p.complete} / ${p.total}`),
+      });
+      hydrateLog.success('Successfully hydrated SQLite database from Rekordbox export!');
 
       dbHyrdated = true;
     }
 
+    signale.info(`Locating track id: ${trackId}`);
     const track = await dbConn
       .getRepository(entities.Track)
       .findOne({where: {id: trackId}});
 
     if (!track) {
-      console.log('No track like that');
+      signale.error('No track found in database');
       return;
     }
 
+    signale.success(`Found track!`);
+
+    signale.info('Hydrating track ANLZ data just in time');
     await hydrateAnlz(track, 'DAT', async path =>
       fetchFile({device, slot: trackSlot, path})
     );
 
-    console.log('new track loaded...', track);
+    track.beatGrid = track.beatGrid?.slice(0, 5)!;
+
+    signale.star(track);
   }
 
   let didConnect = false;
   async function lookupOnRekordbox(device: Device, trackId: number) {
     if (!didConnect) {
+      signale.info(`Connecting to remotedb of device ${device.id} (${device.name})...`);
       await remotedb.connectToDevice(device);
       didConnect = true;
+      signale.success(`Connected!`);
     }
-    console.log('connected');
 
     const queryDescriptor = {
       hostDevice: vcdj,
@@ -117,14 +145,16 @@ async function test() {
       menuTarget: MenuTarget.Main,
     };
 
-    console.log('querying for track...');
+    signale.info(`Querying remotedb for track id: ${trackId}`);
     const track = await remotedb.query({
       queryDescriptor,
       query: Query.GetMetadata,
       args: {trackId},
     });
 
-    console.log(track);
+    signale.info(`Got track from remoteDB!`);
+
+    signale.star(track);
   }
 
   let currentTrack = 0;
@@ -145,16 +175,20 @@ async function test() {
       return;
     }
 
+    signale.star(`Track changed!`);
+
     const {trackSlot, trackId} = status;
     currentTrack = trackId;
 
     // Lookup track from CDJ
     if (device.type === DeviceType.CDJ) {
+      signale.fav('Track loaded on CDJ.. Using Rekordbox DB brainsuck strategy');
       lookupOnCDJ(device, trackSlot, trackId);
       return;
     }
 
     if (device.type === DeviceType.Rekordbox) {
+      signale.fav('Track loaded on Rekordbox.. Using remotedb protocol');
       lookupOnRekordbox(device, trackId);
       return;
     }
