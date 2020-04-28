@@ -40,7 +40,7 @@ export function statusFromPacket(packet: Buffer) {
  * 0x200000 (+100%).
  */
 function calcPitch(pitch: Buffer) {
-  const value = new Buffer([0x0, ...pitch]).readUInt32BE();
+  const value = Buffer.from([0x0, ...pitch]).readUInt32BE();
   const relativeZero = 0x100000;
 
   const computed = ((value - relativeZero) / relativeZero) * 100;
