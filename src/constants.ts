@@ -20,7 +20,7 @@ export const PROLINK_HEADER = Uint8Array.of(
 /**
  * VirtualCDJName is the name given to the Virtual CDJ device.
  */
-export const VIRTUAL_CDJ_NAME = 'prolink-go';
+export const VIRTUAL_CDJ_NAME = 'prolink-typescript';
 
 /**
  * VirtualCDJFirmware is a string indicating the firmware version reported with
