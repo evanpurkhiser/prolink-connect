@@ -52,11 +52,15 @@ async function test() {
 
   const iface = getMatchingInterface(firstDevice.ip);
 
+  signale.warn(`Selected interface: ${iface?.name}`);
+
   if (iface === null) {
     throw new Error('Unable to determine network interface');
   }
 
   const broadcastAddr = getBroadcastAddress(iface);
+
+  signale.star(`Using broadcast address: ${broadcastAddr}`);
 
   const vcdj = getVirtualCDJ(iface, 0x05);
 
