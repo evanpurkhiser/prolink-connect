@@ -95,6 +95,10 @@ class DeviceManager {
   #handleAnnounce = (message: Buffer) => {
     const device = deviceFromPacket(message);
 
+    if (device === null) {
+      return;
+    }
+
     // Device has not checked in before
     if (this.#deviceTimeouts[device.id] === undefined) {
       this.#devices[device.id] = device;

@@ -6,13 +6,13 @@ import {Device} from 'src/types';
 /**
  * Converts a announce packet to a device object.
  */
-export function deviceFromPacket(packet: Buffer): Device {
+export function deviceFromPacket(packet: Buffer) {
   if (packet.indexOf(PROLINK_HEADER) !== 0) {
     throw new Error('Announce packet does not start with expected header');
   }
 
   if (packet[0x0a] != 0x06) {
-    throw new Error('Packet is not an announce packet');
+    return null;
   }
 
   const name = packet
@@ -20,11 +20,13 @@ export function deviceFromPacket(packet: Buffer): Device {
     .toString()
     .replace(/\0/g, '');
 
-  return {
+  const device: Device = {
     name,
     id: packet[0x24],
     type: packet[0x34],
     macAddr: new Uint8Array(packet.slice(0x26, 0x26 + 6)),
     ip: ip.Address4.fromInteger(packet.readUInt32BE(0x2c)),
   };
+
+  return device;
 }
