@@ -1,7 +1,7 @@
-import {DeviceID, CDJStatus} from 'src/types';
+import {CDJStatus} from 'src/types';
 import {PROLINK_HEADER} from 'src/constants';
 
-export function packetToStatus(packet: Buffer) {
+export function statusFromPacket(packet: Buffer) {
   if (packet.indexOf(PROLINK_HEADER) !== 0) {
     throw new Error('CDJ status packet does not start with the expected header');
   }
@@ -11,12 +11,10 @@ export function packetToStatus(packet: Buffer) {
     return;
   }
 
-  console.log(packet[0x8d]);
-
   const status: CDJStatus.State = {
-    playerID: packet[0x21],
-    trackID: packet.readUInt32BE(0x2c),
-    trackDevice: packet[0x28],
+    deviceId: packet[0x21],
+    trackId: packet.readUInt32BE(0x2c),
+    trackDeviceId: packet[0x28],
     trackSlot: packet[0x29],
     trackType: packet[0x2a],
     playState: packet[0x7b],
