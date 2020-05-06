@@ -17,7 +17,7 @@ type Config = {
 };
 
 const defaultConfig = {
-  deviceTimeout: 5000,
+  deviceTimeout: 10000,
 };
 
 /**
