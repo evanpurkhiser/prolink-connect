@@ -65,6 +65,14 @@ async function test() {
 
   const vcdj = getVirtualCDJ(iface, 0x05);
 
+  const ms = await statusEmitter.queryMediaSlot({
+    hostDevice: vcdj,
+    device: firstDevice,
+    slot: MediaSlot.USB,
+  });
+
+  console.log(ms);
+
   // Start announcing self as a Virtual CDJ so we may lookup track metadata
   const announcePacket = makeAnnouncePacket(vcdj);
   setInterval(
