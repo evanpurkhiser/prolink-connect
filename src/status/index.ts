@@ -2,10 +2,11 @@ import {SocketAsPromised} from 'dgram-as-promised';
 import {EventEmitter} from 'events';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
+import {STATUS_PORT} from 'src/constants';
 import {CDJStatus, MediaSlotInfo} from 'src/types';
 
 import {statusFromPacket, mediaSlotFromPacket} from './utils';
-import {sendMediaSlotRequest} from './media';
+import {makeMediaSlotRequest} from './media';
 
 type StatusEvents = {
   /**
@@ -18,7 +19,7 @@ type StatusEvents = {
   mediaSlot: (info: MediaSlotInfo) => void;
 };
 
-type MediaSlotOptions = Omit<Parameters<typeof sendMediaSlotRequest>[0], 'statusSocket'>;
+type MediaSlotOptions = Parameters<typeof makeMediaSlotRequest>[0];
 
 /**
  * The status emitter will report every time a device status is recieved
@@ -48,16 +49,14 @@ class StatusEmitter {
     const status = statusFromPacket(message);
 
     if (status !== undefined) {
-      this.#emitter.emit('status', status);
-      return;
+      return this.#emitter.emit('status', status);
     }
 
     // Media slot status is also reported on this socket
     const mediaSlot = mediaSlotFromPacket(message);
 
     if (mediaSlot !== undefined) {
-      this.#emitter.emit('mediaSlot', mediaSlot);
-      return;
+      return this.#emitter.emit('mediaSlot', mediaSlot);
     }
   };
 
@@ -65,7 +64,9 @@ class StatusEmitter {
    * Retrieve media slot status information.
    */
   async queryMediaSlot(options: MediaSlotOptions) {
-    await sendMediaSlotRequest({...options, statusSocket: this.#statusSocket});
+    const request = makeMediaSlotRequest(options);
+
+    await this.#statusSocket.send(request, STATUS_PORT, options.device.ip.address);
     return await new Promise<MediaSlotInfo>(resolve => this.once('mediaSlot', resolve));
   }
 }
