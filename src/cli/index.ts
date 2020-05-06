@@ -12,6 +12,7 @@ import {getVirtualCDJ, makeAnnouncePacket} from 'src/virtualcdj';
 import StatusEmitter from 'src/status';
 import DeviceManager from 'src/devices';
 import {RemoteDatabase, MenuTarget, Query} from 'src/remotedb';
+import {Mutex} from 'async-mutex';
 
 async function test() {
   const dbConn = await createConnection({
@@ -75,6 +76,8 @@ async function test() {
 
   // Setup functions to lookup metadata for CDJ targets / RB targets
 
+  const hydrationLock = new Mutex();
+
   let dbHyrdated = false;
   async function lookupOnCDJ(device: Device, trackSlot: TrackSlot, trackId: number) {
     if (
@@ -84,6 +87,8 @@ async function test() {
     ) {
       return;
     }
+
+    const releaseHydrateLock = await hydrationLock.acquire();
 
     if (dbHyrdated === false) {
       const downlaodLog = new signale.Signale({interactive: true});
@@ -109,6 +114,8 @@ async function test() {
 
       dbHyrdated = true;
     }
+
+    releaseHydrateLock();
 
     signale.info(`Locating track id: ${trackId}`);
     const track = await dbConn
