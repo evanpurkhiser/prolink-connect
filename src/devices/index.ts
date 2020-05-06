@@ -55,18 +55,18 @@ class DeviceManager {
    */
   #config: Required<Config>;
   /**
+   * The map of all active devices currently available on the network.
+   */
+  #devices = new Map<DeviceID, Device>();
+  /**
    * Tracks device timeout handlers, as devices announce themselves these
    * timeouts will be updated.
    */
-  #deviceTimeouts: Record<DeviceID, NodeJS.Timeout> = {};
+  #deviceTimeouts = new Map<DeviceID, NodeJS.Timeout>();
   /**
    * The EventEmitter which will be used to trigger device lifecycle events
    */
   #emitter: StrictEventEmitter<EventEmitter, DeviceEvents> = new EventEmitter();
-  /**
-   * The map of all active devices currently available on the network.
-   */
-  #devices: Partial<Record<DeviceID, Device>> = {};
 
   constructor(announceSocket: SocketAsPromised, config?: Config) {
     this.#config = {...defaultConfig, ...config};
@@ -76,7 +76,6 @@ class DeviceManager {
   }
 
   // Bind public event emitter interface
-
   on = this.#emitter.addListener.bind(this.#emitter);
   off = this.#emitter.removeListener.bind(this.#emitter);
   once = this.#emitter.once.bind(this.#emitter);
@@ -100,22 +99,25 @@ class DeviceManager {
     }
 
     // Device has not checked in before
-    if (this.#deviceTimeouts[device.id] === undefined) {
-      this.#devices[device.id] = device;
+    if (!this.#devices.has(device.id)) {
+      this.#devices.set(device.id, device);
       this.#emitter.emit('connected', device);
     }
 
     this.#emitter.emit('announced', device);
 
     // Reset the device timeout handler
+    const activeTimeout = this.#deviceTimeouts.get(device.id);
+    activeTimeout && clearTimeout(activeTimeout);
+
     const timeout = this.#config.deviceTimeout;
-    clearTimeout(this.#deviceTimeouts[device.id]);
-    this.#deviceTimeouts[device.id] = setTimeout(this.#handleDisconnect, timeout, device);
+    const newTimeout = setTimeout(this.#handleDisconnect, timeout, device);
+    this.#deviceTimeouts.set(device.id, newTimeout);
   };
 
   #handleDisconnect = (removedDevice: Device) => {
-    delete this.#devices[removedDevice.id];
-    delete this.#deviceTimeouts[removedDevice.id];
+    this.#devices.delete(removedDevice.id);
+    this.#deviceTimeouts.delete(removedDevice.id);
 
     this.#emitter.emit('disconnected', removedDevice);
   };

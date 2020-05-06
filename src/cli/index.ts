@@ -176,7 +176,7 @@ async function test() {
     }
 
     // We're going to lookup a device, where is it
-    const device = deviceManager.devices[status.trackDeviceId];
+    const device = deviceManager.devices.get(status.trackDeviceId);
 
     if (device === undefined) {
       return;
