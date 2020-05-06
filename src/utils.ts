@@ -65,3 +65,10 @@ export function getBroadcastAddress(iface: NetworkInterfaceInfoIPv4) {
     .map((e, i) => (~maskSplit[i] & 0xff) | Number(e))
     .join('.');
 }
+
+/**
+ * Given a BPM and pitch value, convert 1 beat to seconds
+ */
+export function bpmToSeconds(bpm: number, pitch: number) {
+  return ((pitch / 100) * bpm + bpm) / 60;
+}
