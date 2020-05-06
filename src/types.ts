@@ -27,6 +27,61 @@ export type Device = {
 };
 
 /**
+ * Details of a particular media slot on the CDJ
+ */
+export type MediaSlotInfo = {
+  /**
+   * The name of the media connected
+   */
+  name: string;
+  /**
+   * The rekordbox configured color of the media connected
+   */
+  color: MediaColor;
+  /**
+   * Creation date
+   */
+  createdDate: Date;
+  /**
+   * Number of free bytes available on the media
+   */
+  freeBytes: BigInt;
+  /**
+   * Number of bytes used on the media
+   */
+  totalBytes: BigInt;
+  /**
+   * Specifies the available tracks type on the media
+   */
+  tracksType: TrackType;
+  /**
+   * Total number of rekordbox tracks on the media. Will be zero if there is
+   * no rekordbox database on the media
+   */
+  trackCount: number;
+  /**
+   * Same as track count, except for playlists
+   */
+  playlistCount: number;
+  /**
+   * True when a rekordbox 'my settings' file has been exported to the media
+   */
+  hasSettings: boolean;
+};
+
+export enum MediaColor {
+  Default = 0x00,
+  Pink = 0x01,
+  Red = 0x02,
+  Orange = 0x03,
+  Yellow = 0x04,
+  Green = 0x05,
+  Aqua = 0x06,
+  Blue = 0x07,
+  Purple = 0x08,
+}
+
+/**
  * A slot where media is present on the CDJ
  */
 export enum MediaSlot {

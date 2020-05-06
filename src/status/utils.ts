@@ -1,4 +1,4 @@
-import {CDJStatus} from 'src/types';
+import {CDJStatus, MediaSlotInfo} from 'src/types';
 import {PROLINK_HEADER} from 'src/constants';
 
 export function statusFromPacket(packet: Buffer) {
@@ -31,6 +31,50 @@ export function statusFromPacket(packet: Buffer) {
   };
 
   return status;
+}
+
+export function mediaSlotFromPacket(packet: Buffer) {
+  if (packet.indexOf(PROLINK_HEADER) !== 0) {
+    throw new Error('CDJ media slot packet does not start with the expected header');
+  }
+
+  if (packet[0x0a] !== 0x06) {
+    return;
+  }
+
+  const name = packet
+    .slice(0x2c, 0x0c + 40)
+    .toString()
+    .replace(/\0/g, '');
+
+  const createdDate = new Date(
+    packet
+      .slice(0x6c, 0x6c + 24)
+      .toString()
+      .replace(/\0/g, '')
+  );
+
+  const trackCount = packet.readUInt16BE(0xa6);
+  const tracksType = packet[0xaa];
+  const hasSettings = !!packet[0xab];
+  const playlistCount = packet.readUInt16BE(0xae);
+  const color = packet.readUInt8(0xa8);
+  const totalBytes = packet.readBigUInt64BE(0xb0);
+  const freeBytes = packet.readBigUInt64BE(0xb8);
+
+  const info: MediaSlotInfo = {
+    name,
+    color,
+    createdDate,
+    freeBytes,
+    totalBytes,
+    tracksType,
+    trackCount,
+    playlistCount,
+    hasSettings,
+  };
+
+  return info;
 }
 
 /**
