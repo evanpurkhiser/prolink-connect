@@ -5,7 +5,7 @@ import signale from 'signale';
 import * as entities from 'src/entities';
 import {hydrateDatabase, hydrateAnlz} from 'src/localdb/rekordbox';
 import {fetchFile} from 'src/nfs';
-import {TrackSlot, TrackType, Device, DeviceType, DeviceID} from 'src/types';
+import {MediaSlot, TrackType, Device, DeviceType, DeviceID} from 'src/types';
 import {ANNOUNCE_PORT, STATUS_PORT} from 'src/constants';
 import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
 import {getVirtualCDJ, makeAnnouncePacket} from 'src/virtualcdj';
@@ -79,11 +79,11 @@ async function test() {
   const hydrationLock = new Mutex();
 
   let dbHyrdated = false;
-  async function lookupOnCDJ(device: Device, trackSlot: TrackSlot, trackId: number) {
+  async function lookupOnCDJ(device: Device, trackSlot: MediaSlot, trackId: number) {
     if (
-      trackSlot === TrackSlot.Empty ||
-      trackSlot === TrackSlot.CD ||
-      trackSlot === TrackSlot.RB
+      trackSlot === MediaSlot.Empty ||
+      trackSlot === MediaSlot.CD ||
+      trackSlot === MediaSlot.RB
     ) {
       return;
     }
@@ -151,7 +151,7 @@ async function test() {
     const queryDescriptor = {
       hostDevice: vcdj,
       targetDevice: device,
-      trackSlot: TrackSlot.RB,
+      trackSlot: MediaSlot.RB,
       trackType: TrackType.RB,
       menuTarget: MenuTarget.Main,
     };

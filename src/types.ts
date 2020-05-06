@@ -27,9 +27,9 @@ export type Device = {
 };
 
 /**
- * Track load slot flags
+ * A slot where media is present on the CDJ
  */
-export enum TrackSlot {
+export enum MediaSlot {
   Empty = 0x00,
   CD = 0x01,
   SD = 0x02,
@@ -81,7 +81,7 @@ export module CDJStatus {
     deviceId: number;
     trackId: number;
     trackDeviceId: DeviceID;
-    trackSlot: TrackSlot;
+    trackSlot: MediaSlot;
     trackType: TrackType;
     playState: PlayState;
     isOnAir: boolean;

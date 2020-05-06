@@ -3,7 +3,7 @@ import PromiseSocket from 'promise-socket';
 import {Socket} from 'net';
 import {Mutex} from 'async-mutex';
 
-import {Device, DeviceID, TrackType, TrackSlot} from 'src/types';
+import {Device, DeviceID, TrackType, MediaSlot} from 'src/types';
 
 import {REMOTEDB_SERVER_QUERY_PORT} from './constants';
 import {UInt32, readField} from './fields';
@@ -25,7 +25,7 @@ export enum MenuTarget {
 export type QueryDescriptor = {
   targetDevice: Device;
   menuTarget: MenuTarget;
-  trackSlot: TrackSlot;
+  trackSlot: MediaSlot;
   trackType: TrackType;
 };
 

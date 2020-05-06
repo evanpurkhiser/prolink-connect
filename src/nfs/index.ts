@@ -1,4 +1,4 @@
-import {Device, TrackSlot} from 'src/types';
+import {Device, MediaSlot} from 'src/types';
 
 import {RpcConnection, RpcProgram, RetryConfig} from './rpc';
 import {nfs, mount} from './xdr';
@@ -20,9 +20,9 @@ type ClientSet = {
  * The slot <-> mount name mapping is well known.
  */
 const slotMountMapping = {
-  [TrackSlot.USB]: '/C/',
-  [TrackSlot.SD]: '/B/',
-  [TrackSlot.RB]: '/',
+  [MediaSlot.USB]: '/C/',
+  [MediaSlot.SD]: '/B/',
+  [MediaSlot.RB]: '/',
 } as const;
 
 /**
@@ -85,7 +85,7 @@ type GetRootHandleOptions = {
  * handles. The file handles may become stale in this list should the devices
  * connected to the players slot change.
  */
-const rootHandleCache: Map<string, Map<TrackSlot, Buffer>> = new Map();
+const rootHandleCache: Map<string, Map<MediaSlot, Buffer>> = new Map();
 
 /**
  * Locate the root filehandle of the given device slot.
@@ -98,7 +98,7 @@ const rootHandleCache: Map<string, Map<TrackSlot, Buffer>> = new Map();
 async function getRootHandle({device, slot, mountClient}: GetRootHandleOptions) {
   const {address} = device.ip;
 
-  const deviceSlotCache = rootHandleCache.get(address) ?? new Map<TrackSlot, Buffer>();
+  const deviceSlotCache = rootHandleCache.get(address) ?? new Map<MediaSlot, Buffer>();
   const cachedRootHandle = deviceSlotCache.get(slot);
 
   if (cachedRootHandle !== undefined) {

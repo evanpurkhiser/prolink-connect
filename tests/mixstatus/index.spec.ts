@@ -1,5 +1,5 @@
 import MixstatusProcessor from 'src/mixstaus';
-import {CDJStatus, TrackSlot, TrackType} from 'src/types';
+import {CDJStatus, MediaSlot, TrackType} from 'src/types';
 import {bpmToSeconds} from 'src/utils';
 
 const MOCK_BPM = 60;
@@ -8,7 +8,7 @@ const makeState = (state?: Partial<CDJStatus.State>): CDJStatus.State => ({
   deviceId: 0,
   trackId: 0,
   trackDeviceId: 1,
-  trackSlot: TrackSlot.USB,
+  trackSlot: MediaSlot.USB,
   trackType: TrackType.RB,
   playState: CDJStatus.PlayState.Empty,
   isOnAir: false,
