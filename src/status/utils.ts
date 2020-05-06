@@ -54,6 +54,9 @@ export function mediaSlotFromPacket(packet: Buffer) {
       .replace(/\0/g, '')
   );
 
+  const deviceId = packet[0x27];
+  const slot = packet[0x2b];
+
   const trackCount = packet.readUInt16BE(0xa6);
   const tracksType = packet[0xaa];
   const hasSettings = !!packet[0xab];
@@ -63,6 +66,8 @@ export function mediaSlotFromPacket(packet: Buffer) {
   const freeBytes = packet.readBigUInt64BE(0xb8);
 
   const info: MediaSlotInfo = {
+    deviceId,
+    slot,
     name,
     color,
     createdDate,

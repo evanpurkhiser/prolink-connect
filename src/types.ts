@@ -31,6 +31,14 @@ export type Device = {
  */
 export type MediaSlotInfo = {
   /**
+   * The device the slot physically exists on
+   */
+  deviceId: DeviceID;
+  /**
+   * The slot type
+   */
+  slot: MediaSlot;
+  /**
    * The name of the media connected
    */
   name: string;
