@@ -1,6 +1,7 @@
 import {RpcConnection, RpcProgram} from './rpc';
 import {portmap, mount, nfs} from './xdr';
 import {flattenLinkedList} from './utils';
+import {FetchProgress} from '.';
 
 /**
  * How many bytes of a file should we read at once.
@@ -149,8 +150,6 @@ export async function lookupPath(conn: RpcProgram, rootHandle: Buffer, filepath:
   return info!;
 }
 
-type ProgressFunc = (progress: {read: number; total: number}) => void;
-
 /**
  * Fetch the specified file the remote NFS server. This will read the entire
  * file into memory.
@@ -158,7 +157,7 @@ type ProgressFunc = (progress: {read: number; total: number}) => void;
 export async function fetchFile(
   conn: RpcProgram,
   file: FileInfo,
-  onProgress?: ProgressFunc
+  onProgress?: (progress: FetchProgress) => void
 ) {
   const {handle, size} = file;
   const data = Buffer.alloc(size);

@@ -54,13 +54,6 @@ export function mediaSlotFromPacket(packet: Buffer) {
       .replace(/\0/g, '')
   );
 
-  const unknownText = packet
-    .slice(0x84, 0x84 + 20)
-    .toString()
-    .replace(/\0/g, '');
-
-  console.log(`unknown value: '${unknownText}'`);
-
   const deviceId = packet[0x27];
   const slot = packet[0x2b];
 

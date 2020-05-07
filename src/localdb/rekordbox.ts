@@ -32,7 +32,7 @@ type AnlzResolver = (path: string) => Promise<Buffer>;
 /**
  * Details about the current state of the hydtration task
  */
-type Progress = {
+export type HydrationProgress = {
   /**
    * The specific table that progress is being reported for
    */
@@ -65,7 +65,7 @@ type Options = {
    * especially when limited by IO. When hydration progresses this function
    * will be called.
    */
-  onProgress?: (progress: Progress) => void;
+  onProgress?: (progress: HydrationProgress) => void;
 };
 
 /**
@@ -103,12 +103,12 @@ export async function hydrateAnlz(
  * analysis (ANLZ) files into the common entity types used in this library.
  */
 class RekordboxHydrator {
-  conn: Connection;
-  onProgress: (progress: Progress) => void;
+  #conn: Connection;
+  #onProgress: (progress: HydrationProgress) => void;
 
   constructor({conn, onProgress}: Omit<Options, 'pdbData'>) {
-    this.conn = conn;
-    this.onProgress = onProgress ?? (_ => null);
+    this.#conn = conn;
+    this.#onProgress = onProgress ?? (_ => null);
   }
 
   /**
@@ -122,14 +122,14 @@ class RekordboxHydrator {
     // TODO: Not sure why the transaction doesn't handle differing foreign key
     //       constraints, without this we will get FK constraint errors
     //       (despite the comment above the transaction call below).
-    await this.conn.query('PRAGMA foreign_keys = OFF;');
+    await this.#conn.query('PRAGMA foreign_keys = OFF;');
 
     const doHydration = async (em: EntityManager) => {
       await Promise.all(db.tables.map((table: any) => this.hydrateFromTable(table, em)));
     };
 
     // Execute within a transaction to allow for deferred foreign key constraints.
-    await this.conn.transaction(doHydration);
+    await this.#conn.transaction(doHydration);
   }
 
   /**
@@ -157,7 +157,7 @@ class RekordboxHydrator {
         }
 
         finished();
-        this.onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
+        this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
       });
 
     const savingEntities: Promise<never>[] = [];

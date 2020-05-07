@@ -13,17 +13,9 @@ import StatusEmitter from 'src/status';
 import DeviceManager from 'src/devices';
 import {RemoteDatabase, MenuTarget, Query} from 'src/remotedb';
 import {Mutex} from 'async-mutex';
+import DatabaseManager from 'src/localdb/manager';
 
 async function test() {
-  const dbConn = await createConnection({
-    type: 'sqlite',
-    database: ':memory:',
-    dropSchema: true,
-    entities: Object.values(entities),
-    synchronize: true,
-    logging: false,
-  });
-
   signale.info('Opening announce connection...');
   // Socket used to listen for devices on the network
   const announceSocket = dgram.createSocket('udp4');
@@ -41,18 +33,16 @@ async function test() {
   const deviceManager = new DeviceManager(announceSocket);
   const statusEmitter = new StatusEmitter(statusSocket);
 
-  const firstDevice = await new Promise<Device>(resolve =>
-    deviceManager.on('connected', d => resolve(d))
-  );
-
   deviceManager.on('connected', d =>
     signale.star(`New device seen: ${d.name} [${d.id}] [${d.ip.address}]`)
   );
 
+  const firstDevice = await new Promise<Device>(resolve =>
+    deviceManager.on('connected', d => resolve(d))
+  );
   signale.star(`Got first device: ${firstDevice.name} (${firstDevice.ip.address})`);
 
   const iface = getMatchingInterface(firstDevice.ip);
-
   signale.warn(`Selected interface: ${iface?.name}`);
 
   if (iface === null) {
@@ -60,18 +50,14 @@ async function test() {
   }
 
   const broadcastAddr = getBroadcastAddress(iface);
-
   signale.star(`Using broadcast address: ${broadcastAddr}`);
 
   const vcdj = getVirtualCDJ(iface, 0x05);
 
-  const ms = await statusEmitter.queryMediaSlot({
-    hostDevice: vcdj,
-    device: firstDevice,
-    slot: MediaSlot.USB,
-  });
+  const dbManager = new DatabaseManager(vcdj, deviceManager, statusEmitter);
 
-  console.log(ms);
+  dbManager.on('fetchProgress', p => console.log(p.progress));
+  dbManager.on('hydrationProgress', p => console.log(p.progress));
 
   // Start announcing self as a Virtual CDJ so we may lookup track metadata
   const announcePacket = makeAnnouncePacket(vcdj);
@@ -86,7 +72,6 @@ async function test() {
 
   const hydrationLock = new Mutex();
 
-  let dbHyrdated = false;
   async function lookupOnCDJ(device: Device, trackSlot: MediaSlot, trackId: number) {
     if (
       trackSlot === MediaSlot.Empty ||
@@ -98,35 +83,17 @@ async function test() {
 
     const releaseHydrateLock = await hydrationLock.acquire();
 
-    if (dbHyrdated === false) {
-      const downlaodLog = new signale.Signale({interactive: true});
+    console.log('doing hydration now....');
+    const conn = await dbManager.get(device.id, trackSlot);
 
-      signale.info('Downloading PDB database...');
-      const pdbData = await fetchFile({
-        device,
-        slot: trackSlot,
-        path: '.PIONEER/rekordbox/export.pdb',
-        onProgress: p => downlaodLog.await(`${p.read} / ${p.total} bytes`),
-      });
-      downlaodLog.success('Successfully fetched PDB database from CDJ!');
-
-      const hydrateLog = new signale.Signale({interactive: true});
-
-      signale.info('Hydrating SQLite database');
-      await hydrateDatabase({
-        conn: dbConn,
-        pdbData,
-        onProgress: p => hydrateLog.await(`Hydrating: ${p.complete} / ${p.total}`),
-      });
-      hydrateLog.success('Successfully hydrated SQLite database from Rekordbox export!');
-
-      dbHyrdated = true;
+    if (conn === null) {
+      return;
     }
 
     releaseHydrateLock();
 
     signale.info(`Locating track id: ${trackId}`);
-    const track = await dbConn
+    const track = await conn
       .getRepository(entities.Track)
       .findOne({where: {id: trackId}});
 

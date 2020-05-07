@@ -10,6 +10,11 @@ import {
   fetchFile as fetchFileCall,
 } from './programs';
 
+export type FetchProgress = {
+  read: number;
+  total: number;
+};
+
 type ClientSet = {
   conn: RpcConnection;
   mountClient: RpcProgram;
