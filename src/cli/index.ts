@@ -1,9 +1,8 @@
 import dgram from 'dgram-as-promised';
-import {createConnection} from 'typeorm';
 import signale from 'signale';
 
 import * as entities from 'src/entities';
-import {hydrateDatabase, hydrateAnlz} from 'src/localdb/rekordbox';
+import {hydrateAnlz} from 'src/localdb/rekordbox';
 import {fetchFile} from 'src/nfs';
 import {MediaSlot, TrackType, Device, DeviceType, DeviceID} from 'src/types';
 import {ANNOUNCE_PORT, STATUS_PORT} from 'src/constants';
@@ -12,7 +11,6 @@ import {getVirtualCDJ, makeAnnouncePacket} from 'src/virtualcdj';
 import StatusEmitter from 'src/status';
 import DeviceManager from 'src/devices';
 import {RemoteDatabase, MenuTarget, Query} from 'src/remotedb';
-import {Mutex} from 'async-mutex';
 import DatabaseManager from 'src/localdb/manager';
 
 async function test() {
@@ -38,7 +36,7 @@ async function test() {
   );
 
   const firstDevice = await new Promise<Device>(resolve =>
-    deviceManager.on('connected', d => resolve(d))
+    deviceManager.once('connected', d => resolve(d))
   );
   signale.star(`Got first device: ${firstDevice.name} (${firstDevice.ip.address})`);
 
@@ -54,7 +52,10 @@ async function test() {
 
   const vcdj = getVirtualCDJ(iface, 0x05);
 
+  // Setup database manager service to handle loading the database
   const dbManager = new DatabaseManager(vcdj, deviceManager, statusEmitter);
+
+  dbManager.preload();
 
   dbManager.on('fetchProgress', p => console.log(p.progress));
   dbManager.on('hydrationProgress', p => console.log(p.progress));
@@ -70,8 +71,6 @@ async function test() {
 
   // Setup functions to lookup metadata for CDJ targets / RB targets
 
-  const hydrationLock = new Mutex();
-
   async function lookupOnCDJ(device: Device, trackSlot: MediaSlot, trackId: number) {
     if (
       trackSlot === MediaSlot.Empty ||
@@ -81,16 +80,12 @@ async function test() {
       return;
     }
 
-    const releaseHydrateLock = await hydrationLock.acquire();
-
     console.log('doing hydration now....');
     const conn = await dbManager.get(device.id, trackSlot);
 
     if (conn === null) {
       return;
     }
-
-    releaseHydrateLock();
 
     signale.info(`Locating track id: ${trackId}`);
     const track = await conn
