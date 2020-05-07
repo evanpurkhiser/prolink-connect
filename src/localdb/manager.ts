@@ -4,7 +4,14 @@ import {EventEmitter} from 'events';
 import {Mutex} from 'async-mutex';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
-import {DeviceID, MediaSlot, MediaSlotInfo, Device} from 'src/types';
+import {
+  DeviceID,
+  MediaSlot,
+  MediaSlotInfo,
+  Device,
+  DeviceType,
+  TrackType,
+} from 'src/types';
 import * as entities from 'src/entities';
 import DeviceManager from 'src/devices';
 import StatusEmitter from 'src/status';
@@ -103,6 +110,10 @@ const newDatabaseConnection = () =>
 /**
  * The database manager is responsible for syncing the remote rekordbox
  * databases of media slots on a device into in-memory sqlite databases.
+ *
+ * This service will attempt to ensure the in-memory databases for each media
+ * device that is connected to a CDJ is locally kept in sync. Fetching the
+ * database for any media slot of it's not already cached.
  */
 class DatabaseManager {
   #hostDevice: Device;
@@ -180,6 +191,8 @@ class DatabaseManager {
    *
    * If the database has not already been hydrated this will first hydrate the
    * database, which may take some time depending on the size of the database.
+   *
+   * @returns null if no rekordbox media present
    */
   async get(deviceId: DeviceID, slot: DatabaseSlot) {
     const lockKey = `${deviceId}-${slot}`;
@@ -192,11 +205,19 @@ class DatabaseManager {
       return null;
     }
 
+    if (device.type !== DeviceType.CDJ) {
+      throw new Error('Cannot create database from devices that are not CDJs');
+    }
+
     const media = await this.#statusEmitter.queryMediaSlot({
       hostDevice: this.#hostDevice,
       device,
       slot,
     });
+
+    if (media.tracksType !== TrackType.RB) {
+      return null;
+    }
 
     const id = getMediaId(media);
 
@@ -209,6 +230,16 @@ class DatabaseManager {
     );
 
     return db.conn;
+  }
+
+  /**
+   * Preload the databases for all connected devices.
+   */
+  async preload() {
+    const loaders = [...this.#deviceManager.devices.keys()].map(deviceId =>
+      Promise.all([this.get(deviceId, MediaSlot.USB), this.get(deviceId, MediaSlot.SD)])
+    );
+    await Promise.all(loaders);
   }
 }
 
