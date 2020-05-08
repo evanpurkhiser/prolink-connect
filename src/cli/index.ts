@@ -12,6 +12,8 @@ import StatusEmitter from 'src/status';
 import DeviceManager from 'src/devices';
 import {RemoteDatabase, MenuTarget, Query} from 'src/remotedb';
 import LocalDatabase from 'src/localdb/';
+import Database from 'src/db';
+import MixstatusProcessor from 'src/mixstaus';
 
 async function test() {
   signale.info('Opening announce connection...');
@@ -52,14 +54,6 @@ async function test() {
 
   const vcdj = getVirtualCDJ(iface, 0x05);
 
-  // Setup database manager service to handle loading the database
-  const localDb = new LocalDatabase(vcdj, deviceManager, statusEmitter);
-
-  //localDb.preload();
-
-  localDb.on('fetchProgress', p => console.log(p.progress));
-  localDb.on('hydrationProgress', p => console.log(p.progress));
-
   // Start announcing self as a Virtual CDJ so we may lookup track metadata
   const announcePacket = makeAnnouncePacket(vcdj);
   setInterval(
@@ -68,106 +62,39 @@ async function test() {
   );
 
   const remotedb = new RemoteDatabase(deviceManager, vcdj);
+  const localdb = new LocalDatabase(vcdj, deviceManager, statusEmitter);
 
-  // Setup functions to lookup metadata for CDJ targets / RB targets
+  localdb.on('fetchProgress', p => console.log(p.progress));
+  localdb.on('hydrationProgress', p => console.log(p.progress));
 
-  async function lookupOnCDJ(device: Device, trackSlot: MediaSlot, trackId: number) {
-    if (
-      trackSlot === MediaSlot.Empty ||
-      trackSlot === MediaSlot.CD ||
-      trackSlot === MediaSlot.RB
-    ) {
-      return;
-    }
+  const db = new Database(vcdj, localdb, remotedb, deviceManager);
 
-    console.log('doing hydration now....');
-    const conn = await localDb.get(device.id, trackSlot);
+  const processor = new MixstatusProcessor();
+  statusEmitter.on('status', s => processor.handleState(s));
 
-    if (conn === null) {
-      return;
-    }
+  processor.on('nowPlaying', async state => {
+    const {trackDeviceId, trackSlot, trackType, trackId} = state;
 
-    signale.info(`Locating track id: ${trackId}`);
-    const track = await conn
-      .getRepository(entities.Track)
-      .findOne({where: {id: trackId}});
-
-    if (!track) {
-      signale.error('No track found in database');
-      return;
-    }
-
-    signale.success(`Found track!`);
-
-    signale.info('Hydrating track ANLZ data just in time');
-    await hydrateAnlz(track, 'DAT', async path =>
-      fetchFile({device, slot: trackSlot, path})
-    );
-
-    track.beatGrid = track.beatGrid?.slice(0, 5)!;
-
-    signale.star(track);
-  }
-
-  async function lookupOnRekordbox(device: Device, trackId: number) {
-    const queryDescriptor = {
-      trackSlot: MediaSlot.RB,
-      trackType: TrackType.RB,
-      menuTarget: MenuTarget.Main,
-    };
-
-    signale.info(`Querying remotedb for track id: ${trackId}`);
-    const conn = await remotedb.get(device.id);
-    if (conn === null) {
-      return;
-    }
-
-    const track = await conn.query({
-      queryDescriptor,
-      query: Query.GetMetadata,
-      args: {trackId},
+    const track = await db.getMetadata({
+      deviceId: trackDeviceId,
+      trackSlot,
+      trackType,
+      trackId,
     });
 
-    signale.info(`Got track from remoteDB!`);
-
-    signale.star(track);
-  }
-
-  let currentTrack: Record<DeviceID, number> = {};
-
-  statusEmitter.on('status', async status => {
-    if (status.trackId === currentTrack[status.deviceId]) {
+    if (track === null) {
+      signale.warn('no track');
       return;
     }
 
-    // We're going to lookup a device, where is it
-    const device = deviceManager.devices.get(status.trackDeviceId);
+    const art = await db.getArtwork({
+      deviceId: trackDeviceId,
+      trackSlot,
+      trackType,
+      track,
+    });
 
-    if (device === undefined) {
-      return;
-    }
-
-    if (device.type === DeviceType.Mixer) {
-      return;
-    }
-
-    signale.star(`Track changed on device ${status.deviceId}!`);
-
-    const {trackSlot, trackId} = status;
-    currentTrack[status.deviceId] = trackId;
-
-    // Lookup track from CDJ
-    if (device.type === DeviceType.CDJ) {
-      signale.fav('Track loaded on CDJ.. Using Rekordbox DB brainsuck strategy');
-      lookupOnCDJ(device, trackSlot, trackId);
-      return;
-    }
-
-    if (device.type === DeviceType.Rekordbox) {
-      signale.fav('Track loaded on Rekordbox.. Using remotedb protocol');
-      lookupOnRekordbox(device, trackId);
-      return;
-    }
+    console.log(trackId, track.title, art?.length);
   });
 }
 
