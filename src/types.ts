@@ -15,7 +15,7 @@ export enum DeviceType {
 export type DeviceID = number;
 
 /**
- * Represents a device on the PROLINK network.
+ * Represents a device on the prolink network.
  */
 export type Device = {
   name: string;

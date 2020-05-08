@@ -68,7 +68,7 @@ export function makeStatusPacket(device: Device): Uint8Array {
 }
 
 /**
- * constructs the announce packet that is sent on the PRO DJ LINK network to
+ * constructs the announce packet that is sent on the prolink network to
  * announce a devices existence.
  */
 export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {

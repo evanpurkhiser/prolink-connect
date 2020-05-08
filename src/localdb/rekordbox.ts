@@ -24,7 +24,7 @@ import {
 
 /**
  * The provided function should resolve ANLZ files into buffers. Typically
- * you would just read the file, but in the case of the PROLINK network, this
+ * you would just read the file, but in the case of the prolink network, this
  * would handle loading the file over NFS.
  */
 type AnlzResolver = (path: string) => Promise<Buffer>;
