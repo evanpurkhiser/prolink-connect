@@ -138,17 +138,17 @@ const transformItem = {
   [ItemType.Duration]: (a: ItemData) => ({duration: a.mainId}),
   [ItemType.Unknown01]: (_: ItemData) => null,
 
-  // TODO: All of these item types are missing
-  [ItemType.ColorNone]: (a: ItemData) => a,
-  [ItemType.ColorPink]: (a: ItemData) => a,
-  [ItemType.ColorRed]: (a: ItemData) => a,
-  [ItemType.ColorOrange]: (a: ItemData) => a,
-  [ItemType.ColorYellow]: (a: ItemData) => a,
-  [ItemType.ColorGreen]: (a: ItemData) => a,
-  [ItemType.ColorAqua]: (a: ItemData) => a,
-  [ItemType.ColorBlue]: (a: ItemData) => a,
-  [ItemType.ColorPurple]: (a: ItemData) => a,
+  [ItemType.ColorNone]: mapIdName,
+  [ItemType.ColorPink]: mapIdName,
+  [ItemType.ColorRed]: mapIdName,
+  [ItemType.ColorOrange]: mapIdName,
+  [ItemType.ColorYellow]: mapIdName,
+  [ItemType.ColorGreen]: mapIdName,
+  [ItemType.ColorAqua]: mapIdName,
+  [ItemType.ColorBlue]: mapIdName,
+  [ItemType.ColorPurple]: mapIdName,
 
+  // TODO: All of these item types are missing
   [ItemType.Folder]: (a: ItemData) => a,
   [ItemType.Disc]: (a: ItemData) => a,
   [ItemType.Playlist]: (a: ItemData) => a,

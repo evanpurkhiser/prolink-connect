@@ -1,7 +1,7 @@
-import {Track} from 'src/entities';
+import * as entities from 'src/entities';
 
 import {Connection, LookupDescriptor, Query} from '.';
-import {fieldFromDescriptor, renderItems} from './utils';
+import {fieldFromDescriptor, renderItems, findColor} from './utils';
 import {Request, Response} from './message/types';
 import {Items, ItemType} from './message/item';
 import {Message} from './message';
@@ -58,8 +58,7 @@ async function getMetadata(opts: TrackQueryOpts) {
     | ItemType.Tempo
     | ItemType.Label
     | ItemType.Key
-    | ItemType.Comment
-    | ItemType.DateAdded;
+    | ItemType.Comment;
 
   const items = renderItems<MetadataItems>(
     conn,
@@ -75,12 +74,42 @@ async function getMetadata(opts: TrackQueryOpts) {
   }
 
   // Translate our trackItems into a (partial) Track entity.
-  const track = new Track();
+  const track = new entities.Track();
   track.id = trackItems[ItemType.TrackTitle].id;
   track.title = trackItems[ItemType.TrackTitle].title;
+  track.duration = trackItems[ItemType.Duration].duration;
+  track.tempo = trackItems[ItemType.Tempo].bpm;
+  track.rating = trackItems[ItemType.Rating].rating;
+  track.comment = trackItems[ItemType.Comment].comment;
+  track.comment = trackItems[ItemType.Comment].comment;
 
-  // TODO: Fill tihs all out
-  // TODO: Color lookup
+  track.artwork = new entities.Artwork();
+  track.artwork.id = trackItems[ItemType.TrackTitle].artworkId;
+
+  track.album = new entities.Album();
+  track.album.id = trackItems[ItemType.AlbumTitle].id;
+  track.album.name = trackItems[ItemType.AlbumTitle].name;
+
+  track.artist = new entities.Artist();
+  track.artist.id = trackItems[ItemType.Artist].id;
+  track.artist.name = trackItems[ItemType.Artist].name;
+
+  track.genre = new entities.Genre();
+  track.genre.id = trackItems[ItemType.Genre].id;
+  track.genre.name = trackItems[ItemType.Genre].name;
+
+  track.label = new entities.Label();
+  track.label.id = trackItems[ItemType.Label].id;
+  track.label.name = trackItems[ItemType.Label].name;
+
+  track.key = new entities.Key();
+  track.key.id = trackItems[ItemType.Key].id;
+  track.key.name = trackItems[ItemType.Key].name;
+
+  const color = findColor(Object.values(trackItems))!;
+  track.color = new entities.Color();
+  track.color.id = color.id;
+  track.color.name = color.name;
 
   return track;
 }
@@ -127,12 +156,34 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
   }
 
   // Translate our fileItems into a (partial) Track entity.
-  const track = new Track();
+  const track = new entities.Track();
   track.id = fileItems[ItemType.TrackTitle].id;
   track.title = fileItems[ItemType.TrackTitle].title;
+  track.duration = fileItems[ItemType.Duration].duration;
+  track.tempo = fileItems[ItemType.Tempo].bpm;
+  track.rating = fileItems[ItemType.Rating].rating;
+  track.comment = fileItems[ItemType.Comment].comment;
+  track.bitrate = fileItems[ItemType.BitRate].bitrate;
 
-  // TODO: Fill tihs all out
-  // TODO: Color lookup
+  track.artwork = new entities.Artwork();
+  track.artwork.id = fileItems[ItemType.TrackTitle].artworkId;
+
+  track.album = new entities.Album();
+  track.album.id = fileItems[ItemType.AlbumTitle].id;
+  track.album.name = fileItems[ItemType.AlbumTitle].name;
+
+  track.artist = new entities.Artist();
+  track.artist.id = fileItems[ItemType.Artist].id;
+  track.artist.name = fileItems[ItemType.Artist].name;
+
+  track.genre = new entities.Genre();
+  track.genre.id = fileItems[ItemType.Genre].id;
+  track.genre.name = fileItems[ItemType.Genre].name;
+
+  const color = findColor(Object.values(fileItems))!;
+  track.color = new entities.Color();
+  track.color.id = color.id;
+  track.color.name = color.name;
 
   return track;
 }

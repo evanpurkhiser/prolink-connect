@@ -35,6 +35,10 @@ export const makeRenderMessage = (
     ],
   });
 
+/**
+ * Async generator to page through menu results after a successful lookup
+ * request.
+ */
 export async function* renderItems<T extends ItemType = ItemType>(
   conn: Connection,
   descriptor: LookupDescriptor,
@@ -63,3 +67,25 @@ export async function* renderItems<T extends ItemType = ItemType>(
     }
   }
 }
+
+const colors = [
+  ItemType.ColorNone,
+  ItemType.ColorPink,
+  ItemType.ColorRed,
+  ItemType.ColorOrange,
+  ItemType.ColorYellow,
+  ItemType.ColorGreen,
+  ItemType.ColorAqua,
+  ItemType.ColorBlue,
+  ItemType.ColorPurple,
+] as const;
+
+const colorSet = new Set(colors);
+
+type ColorType = typeof colors[number];
+
+/**
+ * Locate the color item in an item list
+ */
+export const findColor = (items: Items[ItemType][]) =>
+  items.filter(item => colorSet.has(item.type as any)).pop() as Items[ColorType];
