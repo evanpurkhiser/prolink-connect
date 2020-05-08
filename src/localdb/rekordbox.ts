@@ -262,7 +262,7 @@ function createTrack(trackRow: any) {
   //
   // We noramlize this path by trimming the DAT extension off. Later we will
   // try and read whatever is available.
-  track.analyzePath = track.analyzePath.substring(0, track.analyzePath.length - 4);
+  track.analyzePath = track.analyzePath?.substring(0, track.analyzePath.length - 4);
 
   // This implicitly bypasses typescripts checks since these would expect to be
   // assigned to objects. In this case we are _okay_ with this as the entity

@@ -13,7 +13,7 @@ import {BeatGrid, CueAndLoop} from 'src/types';
 export class Artwork {
   @PrimaryColumn() id: number;
   @OneToMany(() => Track, track => track.artwork) tracks: Track[];
-  @Column() path: string;
+  @Column() path?: string;
 }
 
 @Entity()
@@ -78,26 +78,26 @@ export class Playlist {
 export class Track {
   @PrimaryColumn() id: number;
   @Column() title: string;
-  @Column() trackNumber: number;
-  @Column() discNumber: number;
   @Column() duration: number;
-  @Column() sampleRate: number;
-  @Column() sampleDepth: number;
   @Column() bitrate: number;
   @Column() tempo: number;
-  @Column() playCount: number;
-  @Column() year: number;
   @Column() rating: number;
-  @Column() mixName: string;
   @Column() comment: string;
-  @Column() autoloadHotcues: boolean;
-  @Column() kuvoPublic: boolean;
   @Column() filePath: string;
   @Column() fileName: string;
-  @Column() fileSize: number;
-  @Column() analyzePath: string;
-  @Column() releaseDate: string;
-  @Column('date') analyzeDate: Date;
+  @Column() trackNumber?: number;
+  @Column() discNumber?: number;
+  @Column() sampleRate?: number;
+  @Column() sampleDepth?: number;
+  @Column() playCount?: number;
+  @Column() year?: number;
+  @Column() mixName?: string;
+  @Column() autoloadHotcues?: boolean;
+  @Column() kuvoPublic?: boolean;
+  @Column() fileSize?: number;
+  @Column() analyzePath?: string;
+  @Column() releaseDate?: string;
+  @Column('date') analyzeDate?: Date;
   @Column('date') dateAdded: Date;
 
   /**

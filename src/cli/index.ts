@@ -67,7 +67,7 @@ async function test() {
     1500
   );
 
-  const remotedb = new RemoteDatabase(vcdj);
+  const remotedb = new RemoteDatabase(deviceManager, vcdj);
 
   // Setup functions to lookup metadata for CDJ targets / RB targets
 
@@ -109,25 +109,20 @@ async function test() {
     signale.star(track);
   }
 
-  let didConnect = false;
   async function lookupOnRekordbox(device: Device, trackId: number) {
-    if (!didConnect) {
-      signale.info(`Connecting to remotedb of device ${device.id} (${device.name})...`);
-      await remotedb.connectToDevice(device);
-      didConnect = true;
-      signale.success(`Connected!`);
-    }
-
     const queryDescriptor = {
-      hostDevice: vcdj,
-      targetDevice: device,
       trackSlot: MediaSlot.RB,
       trackType: TrackType.RB,
       menuTarget: MenuTarget.Main,
     };
 
     signale.info(`Querying remotedb for track id: ${trackId}`);
-    const track = await remotedb.query({
+    const conn = await remotedb.get(device.id);
+    if (conn === null) {
+      return;
+    }
+
+    const track = await conn.query({
       queryDescriptor,
       query: Query.GetMetadata,
       args: {trackId},

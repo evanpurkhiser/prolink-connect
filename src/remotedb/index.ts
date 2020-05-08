@@ -10,6 +10,7 @@ import {UInt32, readField} from './fields';
 import {Response, MessageType, DataRequest} from './message/types';
 import {Message} from './message';
 import {queryHandlers, HandlerArgs, HandlerReturn} from './queries';
+import DeviceManager from 'src/devices';
 
 /**
  * Menu target specifies where a menu should be "rendered" This differes based
@@ -23,7 +24,6 @@ export enum MenuTarget {
  * Used to specify where to lookup data when making queries
  */
 export type QueryDescriptor = {
-  targetDevice: Device;
   menuTarget: MenuTarget;
   trackSlot: MediaSlot;
   trackType: TrackType;
@@ -32,7 +32,10 @@ export type QueryDescriptor = {
 /**
  * Used internally when making queries.
  */
-export type LookupDescriptor = QueryDescriptor & {hostDevice: Device};
+export type LookupDescriptor = QueryDescriptor & {
+  targetDevice: Device;
+  hostDevice: Device;
+};
 
 // TODO: This should be expanded to extend Requset once we have all the rest in
 // the queryHandlers
@@ -91,23 +94,62 @@ async function getRemoteDBServerPort(deviceIp: ip.Address4) {
  * Manages a connection to a single device
  */
 export class Connection {
-  socket: PromiseSocket<Socket>;
-  txId: number;
-  lock: Mutex;
+  #socket: PromiseSocket<Socket>;
+  #txId = 0;
+  #lock = new Mutex();
 
-  constructor(socket: PromiseSocket<Socket>) {
-    this.socket = socket;
-    this.txId = 0;
-    this.lock = new Mutex();
+  device: Device;
+
+  constructor(device: Device, socket: PromiseSocket<Socket>) {
+    this.#socket = socket;
+    this.device = device;
   }
 
   async writeMessage(message: Message) {
-    message.transactionId = ++this.txId;
-    await this.socket.write(message.buffer);
+    message.transactionId = ++this.#txId;
+    await this.#socket.write(message.buffer);
   }
 
   readMessage<T extends Response>(expect: T) {
-    return this.lock.runExclusive(() => Message.fromStream(this.socket, expect));
+    return this.#lock.runExclusive(() => Message.fromStream(this.#socket, expect));
+  }
+
+  close() {
+    this.#socket.destroy();
+  }
+}
+
+export class QueryInterface {
+  #conn: Connection;
+  #hostDevice: Device;
+
+  constructor(conn: Connection, hostDevice: Device) {
+    this.#conn = conn;
+    this.#hostDevice = hostDevice;
+  }
+
+  /**
+   * Make a query to the remote database connection.
+   */
+  async query<T extends Query>(opts: QueryOpts<T>) {
+    const {query, queryDescriptor, args} = opts;
+    const conn = this.#conn;
+
+    const lookupDescriptor: LookupDescriptor = {
+      ...queryDescriptor,
+      hostDevice: this.#hostDevice,
+      targetDevice: this.#conn.device,
+    };
+
+    // TODO: Figure out why typescirpt can't understand our query type discriminate
+    // for args here. The interface for this actual query funciton discrimites just
+    // fine.
+    const anyArgs = args as any;
+
+    const handler = queryHandlers[query];
+    const response = await handler({conn, lookupDescriptor, args: anyArgs});
+
+    return response as HandlerReturn<T>;
   }
 }
 
@@ -115,24 +157,25 @@ export class Connection {
  * Service that maintains remote database connections with devices on the network.
  */
 export class RemoteDatabase {
-  /**
-   * Our host device that is talking to the remotedb server.
-   */
-  hostDevice: Device;
+  #hostDevice: Device;
+  #deviceManager: DeviceManager;
 
   /**
    * Active device connection map
    */
-  connections: Map<DeviceID, Connection> = new Map();
+  #connections: Map<DeviceID, Connection> = new Map();
 
-  constructor(hostDevice: Device) {
-    this.hostDevice = hostDevice;
+  constructor(deviceManager: DeviceManager, hostDevice: Device) {
+    this.#deviceManager = deviceManager;
+    this.#hostDevice = hostDevice;
+
+    deviceManager.on('disconnected', this.disconnectFromDevice);
   }
 
   /**
    * Open a connection to the specified device for querying
    */
-  async connectToDevice(device: Device) {
+  connectToDevice = async (device: Device) => {
     const {ip} = device;
 
     const dbPort = await getRemoteDBServerPort(ip);
@@ -156,7 +199,7 @@ export class RemoteDatabase {
     const intro = new Message({
       transactionId: 0xfffffffe,
       type: MessageType.Introduce,
-      args: [new UInt32(this.hostDevice.id)],
+      args: [new UInt32(this.#hostDevice.id)],
     });
 
     await socket.write(intro.buffer);
@@ -166,14 +209,14 @@ export class RemoteDatabase {
       throw new Error(`Failed to introduce self to device ID: ${device.id}`);
     }
 
-    this.connections.set(device.id, new Connection(socket));
-  }
+    this.#connections.set(device.id, new Connection(device, socket));
+  };
 
   /**
    * Disconnect from the specified device
    */
-  async disconnectDevice(device: Device) {
-    const conn = this.connections.get(device.id);
+  disconnectFromDevice = async (device: Device) => {
+    const conn = this.#connections.get(device.id);
 
     if (conn === undefined) {
       return;
@@ -187,33 +230,31 @@ export class RemoteDatabase {
 
     await conn.writeMessage(goodbye);
 
-    this.connections;
-  }
+    conn.close();
+    this.#connections.delete(device.id);
+  };
 
   /**
-   * Make a query to the remote database connection.
+   * Gets the remote database query interface for the given device.
+   *
+   * If we have not already established a connection with the specified device,
+   * we will attempt to first connect.
+   *
+   * @returns null if the device does not export a remote database service
    */
-  async query<T extends Query>(opts: QueryOpts<T>) {
-    const {hostDevice, connections} = this;
-    const {query, queryDescriptor, args} = opts;
-    const {targetDevice} = queryDescriptor;
-
-    const conn = connections.get(targetDevice.id);
-
-    if (conn === undefined) {
-      throw new Error(`Device ${targetDevice.id} is not connected`);
+  async get(deviceId: DeviceID) {
+    const device = this.#deviceManager.devices.get(deviceId);
+    if (device === undefined) {
+      return null;
     }
 
-    const lookupDescriptor = {...queryDescriptor, hostDevice};
+    let conn = this.#connections.get(deviceId);
+    if (conn === undefined) {
+      await this.connectToDevice(device);
+    }
 
-    // TODO: Figure out why typescirpt can't understand our query type discriminate
-    // for args here. The interface for this actual query funciton discrimites just
-    // fine.
-    const anyArgs = args as any;
+    conn = this.#connections.get(deviceId)!;
 
-    const handler = queryHandlers[query];
-    const response = await handler({conn, lookupDescriptor, args: anyArgs});
-
-    return response as HandlerReturn<T>;
+    return new QueryInterface(this.#connections.get(deviceId)!, this.#hostDevice);
   }
 }
