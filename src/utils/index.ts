@@ -67,8 +67,9 @@ export function getBroadcastAddress(iface: NetworkInterfaceInfoIPv4) {
 }
 
 /**
- * Given a BPM and pitch value, convert 1 beat to seconds
+ * Given a BPM and pitch value, compute how many seconds per beat
  */
 export function bpmToSeconds(bpm: number, pitch: number) {
-  return ((pitch / 100) * bpm + bpm) / 60;
+  const bps = ((pitch / 100) * bpm + bpm) / 60;
+  return 1 / bps;
 }
