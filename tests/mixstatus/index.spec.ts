@@ -24,6 +24,8 @@ const makeState = (state?: Partial<CDJStatus.State>): CDJStatus.State => ({
   ...state,
 });
 
+const oc = expect.objectContaining;
+
 describe('mixstatus processor', function () {
   let currentNow = 0;
   let lastFedState = new Map<number, CDJStatus.State>();
@@ -78,7 +80,7 @@ describe('mixstatus processor', function () {
       isOnAir: true,
       playState: CDJStatus.PlayState.Playing,
     });
-    expect(npHandler).toBeCalledWith({deviceId: 5, trackId: 123});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 5, trackId: 123}));
   });
 
   it('reports the stopping of a single device', function () {
@@ -120,7 +122,7 @@ describe('mixstatus processor', function () {
     // Start 2nd player playing
     feedState(2, {playState: CDJStatus.PlayState.Playing});
 
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 321});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 321}));
   });
 
   it('reports that a set has started when a player starts', function () {
@@ -166,7 +168,7 @@ describe('mixstatus processor', function () {
 
     // Only first player is playing on air
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).lastCalledWith({deviceId: 1, trackId: 123});
+    expect(npHandler).lastCalledWith(oc({deviceId: 1, trackId: 123}));
   });
 
   it('reports next device after the configured beats pass and both are live', function () {
@@ -186,7 +188,7 @@ describe('mixstatus processor', function () {
     feedState(2, {});
 
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 234});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
   it('reports the next device early if the first is stopped', function () {
@@ -203,7 +205,7 @@ describe('mixstatus processor', function () {
     feedState(1, {playState: CDJStatus.PlayState.Cued});
 
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 234});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
   it('reports the next device early if the first is paused', function () {
@@ -224,7 +226,7 @@ describe('mixstatus processor', function () {
     feedState(1, {});
 
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 234});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
   it('reports the next device early if the first goes off air', function () {
@@ -253,7 +255,7 @@ describe('mixstatus processor', function () {
     expect(stoppedHandler).toBeCalledWith({deviceId: 1});
 
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 234});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
   it('reports the device playing the longest if the playing track stops', function () {
@@ -278,7 +280,7 @@ describe('mixstatus processor', function () {
     feedState(1, {playState: CDJStatus.PlayState.Cued});
 
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 234});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
   it('allow pause interrupts before the next device is reported live', function () {
@@ -302,7 +304,7 @@ describe('mixstatus processor', function () {
     feedState(2, {});
 
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 234});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
   it('allow onair interrupts before the next device is reported live', function () {
@@ -326,10 +328,10 @@ describe('mixstatus processor', function () {
     feedState(2, {});
 
     expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith({deviceId: 2, trackId: 234});
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports that a set has ended when all players stop', function () {
+  it('reports that a set has ended when all players stop', async function () {
     const seHandler = jest.fn();
     processor.on('setEnded', seHandler);
     setupTwoTracks();
@@ -339,12 +341,39 @@ describe('mixstatus processor', function () {
 
     expect(seHandler).not.toHaveBeenCalled();
 
-    // Set ending does not happen in beat intervals
-    jest.advanceTimersByTime(300000);
-    jest.runOnlyPendingTimers();
+    // Set ending does not happen in beat intervals, so we don't use the
+    // advanceByBeatCount helper
+    jest.advanceTimersByTime(30 * 1000);
 
-    console.log('checking set end');
-
+    await new Promise(r => setImmediate(r));
     expect(seHandler).toHaveBeenCalled();
+  });
+
+  it('reports the next track on a previously played player', function () {
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Player 2 comes onair after 64 beats
+    advanceByBeatCount(64);
+    feedState(2, {isOnAir: true});
+
+    // Player 1 stops, player 2 reports early
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+
+    expect(npHandler).toBeCalledTimes(1);
+    npHandler.mockReset();
+
+    // Player 1 loads a new track and begins playing
+    feedState(1, {trackId: 456});
+    feedState(1, {playState: CDJStatus.PlayState.Playing});
+    expect(npHandler).not.toBeCalled();
+
+    // 128 beats later player 1 should be reported
+    advanceByBeatCount(128);
+    feedState(1, {});
+
+    expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 456}));
   });
 });

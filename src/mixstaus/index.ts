@@ -54,7 +54,7 @@ type MixstatusEvents = {
    * Fired when a track is considered to be on-air and is being heard by the
    * audiance
    */
-  nowPlaying: (opt: {deviceId: DeviceID; trackId: number}) => void;
+  nowPlaying: (state: CDJStatus.State) => void;
   /**
    * Fired when a track has stopped and is completley offair
    */
@@ -157,7 +157,9 @@ class MixstatusProcessor {
    * Report a player as 'live'. Will not report the state if the player has
    * already previously been reported as live.
    */
-  #promotePlayer = ({deviceId, trackId}: CDJStatus.State) => {
+  #promotePlayer = (state: CDJStatus.State) => {
+    const {deviceId} = state;
+
     if (this.#livePlayers.has(deviceId)) {
       return;
     }
@@ -173,7 +175,7 @@ class MixstatusProcessor {
 
     this.#livePlayers.add(deviceId);
 
-    this.#emitter.emit('nowPlaying', {deviceId, trackId});
+    this.#emitter.emit('nowPlaying', state);
   };
 
   /**
@@ -182,8 +184,13 @@ class MixstatusProcessor {
    */
   #promoteNextPlayer = () => {
     const longestPlayingId = [...this.#lastStartTime.entries()]
-      .map(([deviceId, startedAt]) => ({deviceId, startedAt}))
+      .map(([deviceId, startedAt]) => ({
+        deviceId,
+        startedAt,
+        state: this.#lastState.get(deviceId),
+      }))
       .filter(s => !this.#livePlayers.has(s.deviceId))
+      .filter(s => s.state && isPlaying(s.state))
       .sort((a, b) => b.startedAt - a.startedAt)
       .pop()?.deviceId;
 
@@ -200,6 +207,9 @@ class MixstatusProcessor {
 
   #markPlayerStopped = ({deviceId}: CDJStatus.State) => {
     this.#lastStoppedTimes.delete(deviceId);
+    this.#lastStartTime.delete(deviceId);
+    this.#livePlayers.delete(deviceId);
+
     this.#promoteNextPlayer();
     this.#emitter.emit('stopped', {deviceId});
   };
@@ -231,15 +241,12 @@ class MixstatusProcessor {
       };
     });
 
-    console.log(shouldEnd);
-
     this.#cancelSetEnding = undefined;
 
-    if (!shouldEnd) {
+    if (!shouldEnd || !this.#isSetActive) {
       return;
     }
 
-    console.log('EMITTING');
     this.#emitter.emit('setEnded');
   };
 
