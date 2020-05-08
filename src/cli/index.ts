@@ -11,7 +11,7 @@ import {getVirtualCDJ, makeAnnouncePacket} from 'src/virtualcdj';
 import StatusEmitter from 'src/status';
 import DeviceManager from 'src/devices';
 import {RemoteDatabase, MenuTarget, Query} from 'src/remotedb';
-import DatabaseManager from 'src/localdb/manager';
+import LocalDatabase from 'src/localdb/';
 
 async function test() {
   signale.info('Opening announce connection...');
@@ -53,12 +53,12 @@ async function test() {
   const vcdj = getVirtualCDJ(iface, 0x05);
 
   // Setup database manager service to handle loading the database
-  const dbManager = new DatabaseManager(vcdj, deviceManager, statusEmitter);
+  const localDb = new LocalDatabase(vcdj, deviceManager, statusEmitter);
 
-  dbManager.preload();
+  //localDb.preload();
 
-  dbManager.on('fetchProgress', p => console.log(p.progress));
-  dbManager.on('hydrationProgress', p => console.log(p.progress));
+  localDb.on('fetchProgress', p => console.log(p.progress));
+  localDb.on('hydrationProgress', p => console.log(p.progress));
 
   // Start announcing self as a Virtual CDJ so we may lookup track metadata
   const announcePacket = makeAnnouncePacket(vcdj);
@@ -81,7 +81,7 @@ async function test() {
     }
 
     console.log('doing hydration now....');
-    const conn = await dbManager.get(device.id, trackSlot);
+    const conn = await localDb.get(device.id, trackSlot);
 
     if (conn === null) {
       return;

@@ -50,7 +50,7 @@ type HydrationPrgoressOpts = CommonProgressOpts & {
 };
 
 /**
- * Events that may be triggered  by the DatabaseManager emitter
+ * Events that may be triggered  by the LocalDatabase emitter
  */
 type DatabaseEvents = {
   /**
@@ -108,14 +108,14 @@ const newDatabaseConnection = () =>
   });
 
 /**
- * The database manager is responsible for syncing the remote rekordbox
- * databases of media slots on a device into in-memory sqlite databases.
+ * The local database is responsible for syncing the remote rekordbox databases
+ * of media slots on a device into in-memory sqlite databases.
  *
  * This service will attempt to ensure the in-memory databases for each media
  * device that is connected to a CDJ is locally kept in sync. Fetching the
  * database for any media slot of it's not already cached.
  */
-class DatabaseManager {
+class LocalDatabase {
   #hostDevice: Device;
   #deviceManager: DeviceManager;
   #statusEmitter: StatusEmitter;
@@ -236,11 +236,17 @@ class DatabaseManager {
    * Preload the databases for all connected devices.
    */
   async preload() {
-    const loaders = [...this.#deviceManager.devices.keys()].map(deviceId =>
-      Promise.all([this.get(deviceId, MediaSlot.USB), this.get(deviceId, MediaSlot.SD)])
-    );
+    const loaders = [...this.#deviceManager.devices.values()]
+      .filter(device => device.type === DeviceType.CDJ)
+      .map(device =>
+        Promise.all([
+          this.get(device.id, MediaSlot.USB),
+          this.get(device.id, MediaSlot.SD),
+        ])
+      );
+
     await Promise.all(loaders);
   }
 }
 
-export default DatabaseManager;
+export default LocalDatabase;
