@@ -1,4 +1,5 @@
 import {SocketAsPromised} from 'dgram-as-promised';
+import {Mutex} from 'async-mutex';
 import {EventEmitter} from 'events';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
@@ -27,9 +28,13 @@ type MediaSlotOptions = Parameters<typeof makeMediaSlotRequest>[0];
 class StatusEmitter {
   #statusSocket: SocketAsPromised;
   /**
-   * The EventEmitter which
+   * The EventEmitter which reports the device status
    */
   #emitter: StrictEventEmitter<EventEmitter, StatusEvents> = new EventEmitter();
+  /**
+   * Lock used to avoid media slot query races
+   */
+  #mediaSlotQueryLock = new Mutex();
 
   /**
    * @param statusSocket A UDP socket to recieve CDJ status packets on
@@ -40,7 +45,6 @@ class StatusEmitter {
   }
 
   // Bind public event emitter interface
-
   on = this.#emitter.addListener.bind(this.#emitter);
   off = this.#emitter.removeListener.bind(this.#emitter);
   once = this.#emitter.once.bind(this.#emitter);
@@ -66,8 +70,12 @@ class StatusEmitter {
   async queryMediaSlot(options: MediaSlotOptions) {
     const request = makeMediaSlotRequest(options);
 
-    await this.#statusSocket.send(request, STATUS_PORT, options.device.ip.address);
-    return await new Promise<MediaSlotInfo>(resolve => this.once('mediaSlot', resolve));
+    const media = await this.#mediaSlotQueryLock.runExclusive(async () => {
+      await this.#statusSocket.send(request, STATUS_PORT, options.device.ip.address);
+      return await new Promise<MediaSlotInfo>(resolve => this.once('mediaSlot', resolve));
+    });
+
+    return media;
   }
 }
 
