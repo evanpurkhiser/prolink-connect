@@ -44,6 +44,8 @@ type DeviceEvents = {
   announced: (device: Device) => void;
 };
 
+type Emitter = StrictEventEmitter<EventEmitter, DeviceEvents>;
+
 /**
  * The device manager is responsible for tracking devices that appear on the
  * prolink network, providing an API to react to devices livecycle events as
@@ -66,7 +68,7 @@ class DeviceManager {
   /**
    * The EventEmitter which will be used to trigger device lifecycle events
    */
-  #emitter: StrictEventEmitter<EventEmitter, DeviceEvents> = new EventEmitter();
+  #emitter: Emitter = new EventEmitter();
 
   constructor(announceSocket: SocketAsPromised, config?: Config) {
     this.#config = {...defaultConfig, ...config};
@@ -76,9 +78,9 @@ class DeviceManager {
   }
 
   // Bind public event emitter interface
-  on = this.#emitter.addListener.bind(this.#emitter);
-  off = this.#emitter.removeListener.bind(this.#emitter);
-  once = this.#emitter.once.bind(this.#emitter);
+  on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
+  off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
+  once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   /**
    * Get active devices on the network.

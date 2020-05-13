@@ -69,6 +69,8 @@ type MixstatusEvents = {
   setEnded: () => void;
 };
 
+type Emitter = StrictEventEmitter<EventEmitter, MixstatusEvents>;
+
 /**
  * MixstatusProcessor is a configurable processor which when fed device state
  * will attempt to accurately determine events that happen within the DJ set.
@@ -113,7 +115,7 @@ class MixstatusProcessor {
   /**
    * Used to fire track mix status events
    */
-  #emitter: StrictEventEmitter<EventEmitter, MixstatusEvents> = new EventEmitter();
+  #emitter: Emitter = new EventEmitter();
   /**
    * Records the most recent state of each player
    */
@@ -149,9 +151,9 @@ class MixstatusProcessor {
   }
 
   // Bind public event emitter interface
-  on = this.#emitter.addListener.bind(this.#emitter);
-  off = this.#emitter.removeListener.bind(this.#emitter);
-  once = this.#emitter.once.bind(this.#emitter);
+  on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
+  off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
+  once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   /**
    * Report a player as 'live'. Will not report the state if the player has

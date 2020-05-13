@@ -16,7 +16,7 @@ export enum FieldType {
 /**
  * The generic interface for all field types
  */
-interface BaseField {
+export interface BaseField {
   /**
    * The raw field data
    */
@@ -28,7 +28,7 @@ interface BaseField {
   readonly buffer: Buffer;
 }
 
-class BaseField {
+export class BaseField {
   /**
    * Declares the type of field this class represents
    */

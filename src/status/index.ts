@@ -20,6 +20,8 @@ type StatusEvents = {
   mediaSlot: (info: MediaSlotInfo) => void;
 };
 
+type Emitter = StrictEventEmitter<EventEmitter, StatusEvents>;
+
 type MediaSlotOptions = Parameters<typeof makeMediaSlotRequest>[0];
 
 /**
@@ -30,7 +32,7 @@ class StatusEmitter {
   /**
    * The EventEmitter which reports the device status
    */
-  #emitter: StrictEventEmitter<EventEmitter, StatusEvents> = new EventEmitter();
+  #emitter: Emitter = new EventEmitter();
   /**
    * Lock used to avoid media slot query races
    */
@@ -45,9 +47,9 @@ class StatusEmitter {
   }
 
   // Bind public event emitter interface
-  on = this.#emitter.addListener.bind(this.#emitter);
-  off = this.#emitter.removeListener.bind(this.#emitter);
-  once = this.#emitter.once.bind(this.#emitter);
+  on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
+  off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
+  once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   #handleStatus = (message: Buffer) => {
     const status = statusFromPacket(message);

@@ -8,7 +8,7 @@ import {Message} from './message';
 import {UInt32, Binary} from './fields';
 
 /**
- * This module contains logic for each type of query to udnerstand what
+ * This module contains logic for each type of query to understand what
  * arguments are required, and how to transform the resulting Items into
  * something useful.
  */

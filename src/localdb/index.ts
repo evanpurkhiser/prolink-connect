@@ -1,5 +1,5 @@
-import {createHash} from 'crypto';
 import {Connection, createConnection} from 'typeorm';
+import {createHash} from 'crypto';
 import {EventEmitter} from 'events';
 import {Mutex} from 'async-mutex';
 import StrictEventEmitter from 'strict-event-emitter-types';
@@ -64,6 +64,8 @@ type DatabaseEvents = {
   hydrationProgress: (opts: HydrationPrgoressOpts) => void;
 };
 
+type Emitter = StrictEventEmitter<EventEmitter, DatabaseEvents>;
+
 type DatabaseItem = {
   /**
    * The uniquity identifier of the database
@@ -122,7 +124,7 @@ class LocalDatabase {
   /**
    * The EventEmitter that will report database events
    */
-  #emitter: StrictEventEmitter<EventEmitter, DatabaseEvents> = new EventEmitter();
+  #emitter: Emitter = new EventEmitter();
   /**
    * Locks for each device slot: ${device.id}-${slot}. Used when making track
    * requets.
@@ -146,9 +148,9 @@ class LocalDatabase {
   }
 
   // Bind public event emitter interface
-  on = this.#emitter.addListener.bind(this.#emitter);
-  off = this.#emitter.removeListener.bind(this.#emitter);
-  once = this.#emitter.once.bind(this.#emitter);
+  on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
+  off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
+  once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   /**
    * Closes the database connection and removes the database entry when a
