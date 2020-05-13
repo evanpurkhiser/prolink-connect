@@ -156,7 +156,7 @@ export class QueryInterface {
 /**
  * Service that maintains remote database connections with devices on the network.
  */
-export class RemoteDatabase {
+export default class RemoteDatabase {
   #hostDevice: Device;
   #deviceManager: DeviceManager;
 

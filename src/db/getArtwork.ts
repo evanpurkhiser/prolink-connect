@@ -1,4 +1,4 @@
-import {RemoteDatabase, MenuTarget, Query} from 'src/remotedb';
+import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';
 import {Track} from 'src/entities';
 import {fetchFile} from 'src/nfs';

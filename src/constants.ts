@@ -8,6 +8,11 @@ export const ANNOUNCE_PORT = 50000;
  */
 export const STATUS_PORT = 50002;
 
+/**
+ * The ammount of time in ms between sending each announcment packet.
+ */
+export const ANNOUNCE_INTERVAL = 1500;
+
 // prettier-ignore
 /**
  * All UDP packets on the PRO DJ LINK network start with this magic header.

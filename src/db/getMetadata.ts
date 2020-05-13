@@ -1,8 +1,8 @@
-import {RemoteDatabase, MenuTarget, Query} from 'src/remotedb';
+import LocalDatabase from 'src/localdb';
+import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';
 import {Track} from 'src/entities';
 import {fetchFile} from 'src/nfs';
-import LocalDatabase from 'src/localdb';
 import {hydrateAnlz} from 'src/localdb/rekordbox';
 
 export type Options = {

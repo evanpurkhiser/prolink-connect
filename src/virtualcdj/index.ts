@@ -1,9 +1,16 @@
+import {SocketAsPromised} from 'dgram-as-promised';
 import {NetworkInterfaceInfoIPv4} from 'os';
 import ip from 'ip-address';
 
-import {DeviceID, Device, DeviceType} from 'src/types';
-import {VIRTUAL_CDJ_NAME, PROLINK_HEADER, VIRTUAL_CDJ_FIRMWARE} from 'src/constants';
 import {buildName} from 'src/utils';
+import {DeviceID, Device, DeviceType} from 'src/types';
+import {
+  VIRTUAL_CDJ_NAME,
+  PROLINK_HEADER,
+  VIRTUAL_CDJ_FIRMWARE,
+  ANNOUNCE_PORT,
+  ANNOUNCE_INTERVAL,
+} from 'src/constants';
 
 /**
  * Constructs a virtual CDJ Device.
@@ -109,4 +116,45 @@ export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
   ];
 
   return Uint8Array.from(parts);
+}
+
+/**
+ * the announcer service is used to report our fake CDJ to the prolink network,
+ * as if it was a real CDJ.
+ */
+export class Announcer {
+  /**
+   * The announce socket to use to make the announcments
+   */
+  #announceSocket: SocketAsPromised;
+  /**
+   * The broadcast address to make the announcments on
+   */
+  #broadcastAddr: string;
+  /**
+   * The virtual CDJ device to announce
+   */
+  #vcdj: Device;
+  /**
+   * The interval handle used to stop announcing
+   */
+  #intervalHandle: NodeJS.Timeout;
+
+  constructor(vcdj: Device, announceSocket: SocketAsPromised, broadcastAddr: string) {
+    this.#vcdj = vcdj;
+    this.#announceSocket = announceSocket;
+    this.#broadcastAddr = broadcastAddr;
+  }
+
+  start() {
+    const announcePacket = makeAnnouncePacket(this.#vcdj);
+    this.#intervalHandle = setInterval(
+      () => this.#announceSocket.send(announcePacket, ANNOUNCE_PORT, this.#broadcastAddr),
+      ANNOUNCE_INTERVAL
+    );
+  }
+
+  stop() {
+    clearInterval(this.#intervalHandle);
+  }
 }
