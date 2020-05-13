@@ -1,7 +1,7 @@
 {
   "name": "prolink",
   "version": "0.0.1",
-  "main": "index.js",
+  "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
   "license": "MIT",
   "scripts": {
@@ -9,6 +9,9 @@
     "build": "webpack",
     "test": "jest",
     "run-cli": "node dist/index.js"
+  },
+  "bin": {
+    "prolink-connect": "./lib/cli.js"
   },
   "dependencies": {
     "@sentry/apm": "^5.15.5",

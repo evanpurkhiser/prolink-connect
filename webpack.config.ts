@@ -4,12 +4,15 @@ import path from 'path';
 
 const config: webpack.Configuration = {
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-  entry: './src/index.ts',
+  entry: {
+    index: './src/index.ts',
+    cli: 'src/cli/index',
+  },
   target: 'node',
   externals: [nodeExternals()],
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'index.js',
+    path: path.resolve(__dirname, 'lib'),
+    filename: '[name].js',
   },
   resolve: {
     extensions: ['.ts', '.js'],
