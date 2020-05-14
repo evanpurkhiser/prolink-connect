@@ -1,5 +1,5 @@
 <p align="center">
-<img src=".github/logo.png" alt="prolink-connect" />
+<img src="https://user-images.githubusercontent.com/1421724/81906669-75e9e400-957b-11ea-8f1f-38ca25dd5bed.png" alt="prolink-connect" />
 </p>
 
 <h3 align="center">
