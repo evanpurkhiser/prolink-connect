@@ -1,5 +1,5 @@
 import {KaitaiStream} from 'kaitai-struct';
-import {Connection, EntityManager} from 'typeorm';
+import {MikroORM, EntityManager} from 'mikro-orm';
 
 import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
@@ -54,7 +54,7 @@ type Options = {
   /**
    * The database connection of which the tables will be hydrated
    */
-  conn: Connection;
+  orm: MikroORM;
   /**
    * This buffer should contain the Rekordbox pdb file contents. It will be
    * used to do the hydration
@@ -103,11 +103,11 @@ export async function hydrateAnlz(
  * analysis (ANLZ) files into the common entity types used in this library.
  */
 class RekordboxHydrator {
-  #conn: Connection;
+  #orm: MikroORM;
   #onProgress: (progress: HydrationProgress) => void;
 
-  constructor({conn, onProgress}: Omit<Options, 'pdbData'>) {
-    this.#conn = conn;
+  constructor({orm, onProgress}: Omit<Options, 'pdbData'>) {
+    this.#orm = orm;
     this.#onProgress = onProgress ?? (_ => null);
   }
 
@@ -122,14 +122,17 @@ class RekordboxHydrator {
     // TODO: Not sure why the transaction doesn't handle differing foreign key
     //       constraints, without this we will get FK constraint errors
     //       (despite the comment above the transaction call below).
-    await this.#conn.query('PRAGMA foreign_keys = OFF;');
+    const driver = await this.#orm.connect();
+    const conn = await driver.connect();
+    await conn.execute('PRAGMA foreign_keys = OFF;');
 
     const doHydration = async (em: EntityManager) => {
       await Promise.all(db.tables.map((table: any) => this.hydrateFromTable(table, em)));
+      await em.flush();
     };
 
     // Execute within a transaction to allow for deferred foreign key constraints.
-    await this.#conn.transaction(doHydration);
+    await this.#orm.em.transactional(doHydration);
   }
 
   /**
@@ -153,7 +156,7 @@ class RekordboxHydrator {
     const saveEntity = (entity: ReturnType<typeof createEntity>) =>
       new Promise<never>(async finished => {
         if (entity) {
-          await em.save(entity);
+          await em.persist(entity);
         }
 
         finished();

@@ -138,7 +138,7 @@ export class Announcer {
   /**
    * The interval handle used to stop announcing
    */
-  #intervalHandle: NodeJS.Timeout;
+  #intervalHandle?: NodeJS.Timeout;
 
   constructor(vcdj: Device, announceSocket: SocketAsPromised, broadcastAddr: string) {
     this.#vcdj = vcdj;
@@ -155,6 +155,8 @@ export class Announcer {
   }
 
   stop() {
-    clearInterval(this.#intervalHandle);
+    if (this.#intervalHandle !== undefined) {
+      clearInterval(this.#intervalHandle);
+    }
   }
 }

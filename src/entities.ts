@@ -1,137 +1,147 @@
 import {
   Entity,
-  PrimaryColumn,
-  Column,
-  ManyToOne,
+  PrimaryKey,
   OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+  ManyToOne,
+  Property,
+  Collection,
+  QueryOrder,
+} from 'mikro-orm';
 
 import {BeatGrid, CueAndLoop} from 'src/types';
 
 @Entity()
 export class Artwork {
-  @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.artwork) tracks: Track[];
-  @Column() path?: string;
+  @PrimaryKey() id!: number;
+  @Property() path?: string;
+  @OneToMany(() => Track, track => track.artwork)
+  tracks = new Collection<Track>(this);
 }
 
 @Entity()
 export class Key {
-  @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.key) tracks: Track[];
-  @Column() name: string;
+  @PrimaryKey() id!: number;
+  @Property() name!: string;
+  @OneToMany(() => Track, track => track.key)
+  tracks = new Collection<Track>(this);
 }
 
 @Entity()
 export class Label {
-  @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.label) tracks: Track[];
-  @Column() name: string;
+  @PrimaryKey() id!: number;
+  @Property() name!: string;
+  @OneToMany(() => Track, track => track.label)
+  tracks = new Collection<Track>(this);
 }
 
 @Entity()
 export class Color {
-  @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.color) tracks: Track[];
-  @Column() name: string;
+  @PrimaryKey() id!: number;
+  @Property() name!: string;
+  @OneToMany(() => Track, track => track.color)
+  tracks = new Collection<Track>(this);
 }
 
 @Entity()
 export class Genre {
-  @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.genre) tracks: Track[];
-  @Column() name: string;
+  @PrimaryKey() id!: number;
+  @Property() name!: string;
+  @OneToMany(() => Track, track => track.genre)
+  tracks = new Collection<Track>(this);
 }
 
 @Entity()
 export class Album {
-  @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.album) tracks: Track[];
-  @Column() name: string;
+  @PrimaryKey() id!: number;
+  @Property() name!: string;
+  @OneToMany(() => Track, track => track.album)
+  tracks = new Collection<Track>(this);
 }
 
 @Entity()
 export class Artist {
-  @PrimaryColumn() id: number;
-  @OneToMany(() => Track, track => track.artist) tracks: Track[];
-  @Column() name: string;
+  @PrimaryKey() id!: number;
+  @Property() name!: string;
+  @OneToMany(() => Track, track => track.artist)
+  tracks = new Collection<Track>(this);
 }
 
 @Entity()
 export class Playlist {
-  @PrimaryColumn() id: number;
-  @Column() isFolder: boolean;
-  @Column() name: string;
+  @PrimaryKey() id!: number;
+  @Property() isFolder!: boolean;
+  @Property() name!: string;
 
-  @ManyToOne(() => Playlist, playlist => playlist.children)
-  parent: Playlist | null;
+  @ManyToOne(() => Playlist)
+  parent!: Playlist | null;
 
   @OneToMany(() => Playlist, playlist => playlist.parent)
-  children: Playlist[];
+  children = new Collection<Playlist>(this);
 
-  @OneToMany(() => PlaylistEntry, entry => entry.playlist)
-  entries: PlaylistEntry[];
+  @OneToMany(() => PlaylistEntry, entry => entry.playlist, {
+    orderBy: {sortIndex: QueryOrder.DESC},
+  })
+  entries = new Collection<PlaylistEntry>(this);
 }
 
 @Entity()
 export class Track {
-  @PrimaryColumn() id: number;
-  @Column() title: string;
-  @Column() duration: number;
-  @Column() bitrate: number;
-  @Column() tempo: number;
-  @Column() rating: number;
-  @Column() comment: string;
-  @Column() filePath: string;
-  @Column() fileName: string;
-  @Column() trackNumber?: number;
-  @Column() discNumber?: number;
-  @Column() sampleRate?: number;
-  @Column() sampleDepth?: number;
-  @Column() playCount?: number;
-  @Column() year?: number;
-  @Column() mixName?: string;
-  @Column() autoloadHotcues?: boolean;
-  @Column() kuvoPublic?: boolean;
-  @Column() fileSize?: number;
-  @Column() analyzePath?: string;
-  @Column() releaseDate?: string;
-  @Column('date') analyzeDate?: Date;
-  @Column('date') dateAdded: Date;
+  @PrimaryKey() id!: number;
+  @Property() title!: string;
+  @Property() duration!: number;
+  @Property() bitrate!: number;
+  @Property() tempo!: number;
+  @Property() rating!: number;
+  @Property() comment!: string;
+  @Property() filePath!: string;
+  @Property() fileName!: string;
+  @Property() trackNumber?: number;
+  @Property() discNumber?: number;
+  @Property() sampleRate?: number;
+  @Property() sampleDepth?: number;
+  @Property() playCount?: number;
+  @Property() year?: number;
+  @Property() mixName?: string;
+  @Property() autoloadHotcues?: boolean;
+  @Property() kuvoPublic?: boolean;
+  @Property() fileSize?: number;
+  @Property() analyzePath?: string;
+  @Property() releaseDate?: string;
+  @Property() analyzeDate?: Date;
+  @Property() dateAdded!: Date;
 
   /**
    * Embedded beat grid information
    */
-  @Column({type: 'simple-json', nullable: true})
-  beatGrid: BeatGrid | null;
+  @Property({nullable: true})
+  beatGrid!: BeatGrid | null;
 
   /**
    * Embedded cue and loop information
    */
-  @Column({type: 'simple-json', nullable: true})
-  cueAndLoops: CueAndLoop[] | null;
+  @Property({nullable: true})
+  cueAndLoops!: CueAndLoop[] | null;
 
-  @ManyToOne(() => Artwork, {eager: true}) artwork: Artwork | null;
-  @ManyToOne(() => Artist, {eager: true}) artist: Artist | null;
-  @ManyToOne(() => Artist, {eager: true}) originalArtist: Artist | null;
-  @ManyToOne(() => Artist, {eager: true}) remixer: Artist | null;
-  @ManyToOne(() => Artist, {eager: true}) composer: Artist | null;
-  @ManyToOne(() => Album, {eager: true}) album: Album | null;
-  @ManyToOne(() => Label, {eager: true}) label: Label | null;
-  @ManyToOne(() => Genre, {eager: true}) genre: Genre | null;
-  @ManyToOne(() => Color, {eager: true}) color: Color | null;
-  @ManyToOne(() => Key, {eager: true}) key: Key | null;
+  @ManyToOne(() => Artwork, {eager: true}) artwork!: Artwork | null;
+  @ManyToOne(() => Artist, {eager: true}) artist!: Artist | null;
+  @ManyToOne(() => Artist, {eager: true}) originalArtist!: Artist | null;
+  @ManyToOne(() => Artist, {eager: true}) remixer!: Artist | null;
+  @ManyToOne(() => Artist, {eager: true}) composer!: Artist | null;
+  @ManyToOne(() => Album, {eager: true}) album!: Album | null;
+  @ManyToOne(() => Label, {eager: true}) label!: Label | null;
+  @ManyToOne(() => Genre, {eager: true}) genre!: Genre | null;
+  @ManyToOne(() => Color, {eager: true}) color!: Color | null;
+  @ManyToOne(() => Key, {eager: true}) key!: Key | null;
 }
 
-@Entity({orderBy: {sortIndex: 'DESC'}})
+@Entity()
 export class PlaylistEntry {
-  @PrimaryGeneratedColumn() id: number;
-  @Column() sortIndex: number;
+  @PrimaryKey() id!: number;
+  @Property() sortIndex!: number;
 
-  @ManyToOne(() => Playlist, playlist => playlist)
-  playlist: Playlist;
+  @ManyToOne(() => Playlist)
+  playlist!: Playlist;
 
   @ManyToOne(() => Track)
-  track: Track;
+  track!: Track;
 }

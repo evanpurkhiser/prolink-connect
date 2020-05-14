@@ -1,4 +1,4 @@
-import {Connection, createConnection} from 'typeorm';
+import {MikroORM} from 'mikro-orm';
 import {createHash} from 'crypto';
 import {EventEmitter} from 'events';
 import {Mutex} from 'async-mutex';
@@ -78,7 +78,7 @@ type DatabaseItem = {
   /**
    * The open sqlite database connection
    */
-  conn: Connection;
+  orm: MikroORM;
 };
 
 /**
@@ -99,14 +99,13 @@ const getMediaId = (info: MediaSlotInfo) => {
   return createHash('sha256').update(inputs.join('.'), 'utf8').digest().toString();
 };
 
-const newDatabaseConnection = () =>
-  createConnection({
+const newDatabase = (deviceId: DeviceID, slot: MediaSlot) =>
+  MikroORM.init({
     type: 'sqlite',
-    database: ':memory:',
-    dropSchema: true,
+    dbName: `prolink-${deviceId}-${slot}`,
+    clientUrl: ':memory:',
     entities: Object.values(entities),
-    synchronize: true,
-    logging: false,
+    discovery: {disableDynamicFileAccess: true},
   });
 
 /**
@@ -157,7 +156,7 @@ class LocalDatabase {
    * device is removed.
    */
   #handleDeviceRemoved = (device: Device) => {
-    this.#dbs.find(db => db.media.deviceId === device.id)?.conn.close();
+    this.#dbs.find(db => db.media.deviceId === device.id)?.orm.close();
     this.#dbs = this.#dbs.filter(db => db.media.deviceId !== device.id);
   };
 
@@ -173,15 +172,18 @@ class LocalDatabase {
         this.#emitter.emit('fetchProgress', {device, slot, progress}),
     });
 
-    const conn = await newDatabaseConnection();
+    const orm = await newDatabase(device.id, slot);
+    await orm.getSchemaGenerator().dropSchema();
+    await orm.getSchemaGenerator().createSchema();
+
     await hydrateDatabase({
-      conn,
+      orm,
       pdbData,
       onProgress: progress =>
         this.#emitter.emit('hydrationProgress', {device, slot, progress}),
     });
 
-    const db = {conn, media, id: getMediaId(media)};
+    const db = {orm, media, id: getMediaId(media)};
     this.#dbs.push(db);
 
     return db;
@@ -231,7 +233,7 @@ class LocalDatabase {
         (await this.#hydrateDatabase(device, slot, media))
     );
 
-    return db.conn;
+    return db.orm;
   }
 
   /**

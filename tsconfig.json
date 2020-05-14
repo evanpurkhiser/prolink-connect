@@ -6,7 +6,7 @@
     "allowJs": true,
     "downlevelIteration": true,
     "strict": true,
-    "strictPropertyInitialization": false,
+    "strictPropertyInitialization": true,
     "moduleResolution": "node",
     "declaration": true,
     "outDir": "./lib",

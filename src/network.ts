@@ -23,12 +23,12 @@ export default class ProlinkNetwork {
     return network;
   }
 
-  #deviceManager: DeviceManager;
-  #statusEmitter: StatusEmitter;
-  #announcer: Announcer;
-  #remotedb: RemoteDatabase;
-  #localdb: LocalDatabase;
-  #database: Database;
+  #deviceManager!: DeviceManager;
+  #statusEmitter!: StatusEmitter;
+  #announcer!: Announcer;
+  #remotedb!: RemoteDatabase;
+  #localdb!: LocalDatabase;
+  #database!: Database;
 
   #connect = async () => {
     // Socket used to listen for devices on the network

@@ -66,14 +66,14 @@ export async function viaLocal(local: LocalDatabase, device: Device, opts: Optio
     throw new Error('Expected USB or SD slot for remote database query');
   }
 
-  const conn = await local.get(deviceId, trackSlot);
-  if (conn === null) {
+  const orm = await local.get(deviceId, trackSlot);
+  if (orm === null) {
     return null;
   }
 
-  const track = await conn.getRepository(Track).findOne({where: {id: trackId}});
+  const track = await orm.em.findOne(Track, {id: trackId});
 
-  if (track === undefined) {
+  if (track === null) {
     return null;
   }
 
