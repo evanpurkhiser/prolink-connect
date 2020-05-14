@@ -55,6 +55,9 @@ type Options<T extends MessageType> = {
   args: Field[];
 };
 
+type ResponseType<T> = T extends Response ? T : never;
+type Data<T> = ReturnType<typeof responseTransform[ResponseType<T>]>;
+
 /**
  * Representation of a set of fields sequenced into a known message format.
  */
@@ -165,16 +168,13 @@ export class Message<T extends MessageType = MessageType> {
    *
    * Currently only supports representing response messages.
    */
-  get data() {
-    type ResponseType = T extends Response ? T : never;
-    type Data = ReturnType<typeof responseTransform[ResponseType]>;
-
-    const type = this.type as ResponseType;
+  get data(): Data<T> {
+    const type = this.type as ResponseType<T>;
 
     if (!Object.values(Response).includes(type)) {
       throw new Error('Representation of non-responses is not currently supported');
     }
 
-    return responseTransform[type](this.args) as Data;
+    return responseTransform[type](this.args) as Data<T>;
   }
 }

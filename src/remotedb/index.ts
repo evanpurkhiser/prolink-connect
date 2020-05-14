@@ -131,7 +131,7 @@ export class QueryInterface {
   /**
    * Make a query to the remote database connection.
    */
-  async query<T extends Query>(opts: QueryOpts<T>) {
+  async query<T extends Query>(opts: QueryOpts<T>): Promise<HandlerReturn<T>> {
     const {query, queryDescriptor, args} = opts;
     const conn = this.#conn;
 
