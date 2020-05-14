@@ -1,5 +1,5 @@
 {
-  "name": "prolink",
+  "name": "prolink-connect",
   "version": "0.0.1",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
@@ -10,17 +10,13 @@
     "test": "jest",
     "run-cli": "node lib/cli.js"
   },
-  "files": [
-    "lib/index.js",
-    "lib/index.d.ts"
-  ],
+  "files": ["lib/index.js", "lib/index.d.ts"],
   "bin": {
     "prolink-connect": "./lib/cli.js"
   },
   "dependencies": {
     "@sentry/apm": "^5.15.5",
     "@sentry/node": "^5.15.4",
-    "@types/signale": "^1.4.1",
     "async-mutex": "^0.1.4",
     "dgram-as-promised": "^3.0.3",
     "ip-address": "^6.3.0",
@@ -36,6 +32,7 @@
     "typeorm": "^0.2.24"
   },
   "devDependencies": {
+    "@types/signale": "^1.4.1",
     "@types/ip-address": "^5.8.2",
     "@types/jest": "^25.2.1",
     "@types/node": "^13.11.0",
