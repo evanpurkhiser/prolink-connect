@@ -10,7 +10,7 @@
     "moduleResolution": "node",
     "declaration": true,
     "outDir": "./lib",
-    "rootDir": "./",
+    "rootDirs": ["src", "tests"],
     "baseUrl": "./",
     "paths": {
       "src/*": ["src/*"]
@@ -20,5 +20,6 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "sourceMap": true
-  }
+  },
+  "include": ["src/", "tests/"]
 }
