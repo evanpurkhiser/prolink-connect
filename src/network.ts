@@ -1,4 +1,4 @@
-import dgram, {SocketAsPromised} from 'dgram-as-promised';
+import dgram from 'dgram-as-promised';
 
 import DeviceManager from 'src/devices';
 import StatusEmitter from 'src/status';
