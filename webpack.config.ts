@@ -17,7 +17,8 @@ const config: webpack.Configuration = {
   output: {
     path: path.resolve(__dirname, 'lib'),
     filename: '[name].js',
-    library: 'prolink-connect',
+    library: 'prolinkConnect',
+    libraryTarget: 'umd',
   },
   resolve: {
     extensions: ['.ts', '.js'],
