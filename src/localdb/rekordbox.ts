@@ -149,11 +149,14 @@ class RekordboxHydrator {
 
     let totalSaved = 0;
     let totalItems = 0;
-    for await (const _ of tableRows(table)) {
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for (const _ of tableRows(table)) {
       totalItems++;
     }
 
     const saveEntity = (entity: ReturnType<typeof createEntity>) =>
+      // eslint-disable-next-line no-async-promise-executor
       new Promise<never>(async finished => {
         if (entity) {
           await em.persist(entity);
@@ -165,7 +168,7 @@ class RekordboxHydrator {
 
     const savingEntities: Promise<never>[] = [];
 
-    for await (const row of tableRows(table)) {
+    for (const row of tableRows(table)) {
       const entity = createEntity(row);
       const savePromise = saveEntity(entity);
 
@@ -323,7 +326,7 @@ function createArtworkEntry(artworkRow: any) {
   return art;
 }
 
-function createHistoryEntry(historyRow: any) {
+function createHistoryEntry(_historyRow: any) {
   // TODO
   return null;
 }

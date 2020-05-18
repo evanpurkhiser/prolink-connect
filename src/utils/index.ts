@@ -35,7 +35,7 @@ export function getMatchingInterface(ipAddr: ip.Address4) {
   );
 
   let matchedIface: (NetworkInterfaceInfoIPv4 & {name: string}) | null = null;
-  let subnetMask = 0;
+  let matchedSubnet = 0;
 
   for (const iface of flatList) {
     const {internal, cidr} = iface;
@@ -46,9 +46,9 @@ export function getMatchingInterface(ipAddr: ip.Address4) {
 
     const ifaceAddr = new ip.Address4(cidr);
 
-    if (ipAddr.isInSubnet(ifaceAddr) && ifaceAddr.subnetMask > subnetMask) {
+    if (ipAddr.isInSubnet(ifaceAddr) && ifaceAddr.subnetMask > matchedSubnet) {
       matchedIface = iface;
-      subnetMask = ifaceAddr.subnetMask;
+      matchedSubnet = ifaceAddr.subnetMask;
     }
   }
 

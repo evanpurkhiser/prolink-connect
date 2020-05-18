@@ -309,7 +309,6 @@ class MixstatusProcessor {
 
     if (wasPlaying && !nowPlaying) {
       this.#playerMayStop(state);
-      return;
     }
   };
 

@@ -76,7 +76,7 @@ export class Playlist {
   parent!: Playlist | null;
 
   @OneToMany(() => Playlist, playlist => playlist.parent)
-  children = new Collection<Playlist>(this);
+  children: Collection<Playlist> = new Collection(this);
 
   @OneToMany(() => PlaylistEntry, entry => entry.playlist, {
     orderBy: {sortIndex: QueryOrder.DESC},
