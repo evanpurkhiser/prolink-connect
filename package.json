@@ -1,5 +1,5 @@
 {
-  "name": "prolink-connect",
+  "name": "@evanpurkhiser/prolink-connect",
   "version": "0.0.1",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
