@@ -8,6 +8,7 @@
     "watch": "webpack --watch",
     "build": "webpack",
     "test": "jest",
+    "lint": "eslint src/**/*.ts",
     "run-cli": "node lib/cli.js"
   },
   "files": ["lib/index.js", "lib/index.d.ts"],
