@@ -15,8 +15,6 @@
     "prolink-connect": "./lib/cli.js"
   },
   "dependencies": {
-    "@sentry/apm": "^5.15.5",
-    "@sentry/node": "^5.15.4",
     "async-mutex": "^0.1.4",
     "dgram-as-promised": "^3.0.3",
     "ip-address": "^6.3.0",
