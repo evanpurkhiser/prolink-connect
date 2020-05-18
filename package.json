@@ -46,13 +46,13 @@
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.1",
     "ts-loader": "^7.0.1",
-    "ts-node": "^8.8.1",
-    "typescript": "^3.8.3",
+    "ts-node": "^8.10.1",
+    "typescript": "^3.9.2",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-node-externals": "^1.7.2"
   },
   "volta": {
-    "node": "13.12.0"
+    "node": "14.2.0"
   }
 }
