@@ -92,8 +92,8 @@ const convertWaveformDetailed = (args: Field[]): WaveformDetailed => {
   //
   // |  7  6  5  |  4  3  2  1  0 |
   // [ whiteness |     height     ]
-  const whitenessMask = 0b11100000; //prettier-ignore
-  const heightMask    = 0b00011111; //prettier-ignore
+  const whitenessMask = 0b11100000; // prettier-ignore
+  const heightMask    = 0b00011111; // prettier-ignore
 
   return Array.from(data).map(b => ({
     height: extractBitMask(b, heightMask),

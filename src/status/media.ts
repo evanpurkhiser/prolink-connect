@@ -1,6 +1,4 @@
-import {SocketAsPromised} from 'dgram-as-promised';
-
-import {PROLINK_HEADER, STATUS_PORT} from 'src/constants';
+import {PROLINK_HEADER} from 'src/constants';
 import {Device, MediaSlot} from 'src/types';
 import {buildName} from 'src/utils';
 

@@ -66,7 +66,7 @@ class Database {
   /**
    * Retrieve metadata for a track on a specfic device slot.
    */
-  async getMetadata(opts: GetMetadata.Options) {
+  getMetadata(opts: GetMetadata.Options) {
     const {deviceId, trackType} = opts;
 
     const device = this.#deviceManager.devices.get(deviceId);
@@ -90,7 +90,7 @@ class Database {
   /**
    * Retrives the artwork for a track on a specific device slot.
    */
-  async getArtwork(opts: GetArtwork.Options) {
+  getArtwork(opts: GetArtwork.Options) {
     const {deviceId, trackType} = opts;
 
     const device = this.#deviceManager.devices.get(deviceId);

@@ -110,7 +110,9 @@ class DeviceManager {
 
     // Reset the device timeout handler
     const activeTimeout = this.#deviceTimeouts.get(device.id);
-    activeTimeout && clearTimeout(activeTimeout);
+    if (activeTimeout) {
+      clearTimeout(activeTimeout);
+    }
 
     const timeout = this.#config.deviceTimeout;
     const newTimeout = setTimeout(this.#handleDisconnect, timeout, device);

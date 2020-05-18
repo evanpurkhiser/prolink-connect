@@ -255,6 +255,6 @@ export default class RemoteDatabase {
 
     conn = this.#connections.get(deviceId)!;
 
-    return new QueryInterface(this.#connections.get(deviceId)!, this.#hostDevice);
+    return new QueryInterface(conn, this.#hostDevice);
   }
 }

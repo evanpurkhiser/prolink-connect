@@ -11,7 +11,7 @@ export function deviceFromPacket(packet: Buffer) {
     throw new Error('Announce packet does not start with expected header');
   }
 
-  if (packet[0x0a] != 0x06) {
+  if (packet[0x0a] !== 0x06) {
     return null;
   }
 

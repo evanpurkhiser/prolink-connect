@@ -110,18 +110,17 @@ export class RpcConnection {
     // Function to execute the transaction
     const executeCall = async () => {
       await this.socket.send(callData, 0, callData.length, port, this.address);
-      return await udpRead(this.socket);
+      return udpRead(this.socket);
     };
 
     const {transactionTimeout, ...retryConfig} = this.retryConfig;
 
     // Function to execute the transaction, with timeout if the transaction
     // does not resolve after RESPONSE_RETRY_TIMEOUT.
-    const executeWithTimeout = async () =>
-      timeout(executeCall(), transactionTimeout ?? 1000);
+    const executeWithTimeout = () => timeout(executeCall(), transactionTimeout ?? 1000);
 
     // Function to execute the transaction, with retries if the transaction times out.
-    const executeWithRetry = async () =>
+    const executeWithRetry = () =>
       promiseRetry(retryConfig, async retry => {
         try {
           return await executeWithTimeout();
@@ -132,6 +131,7 @@ export class RpcConnection {
             throw err;
           }
         }
+        return undefined;
       });
 
     // Execute the transaction exclusively to avoid async call races

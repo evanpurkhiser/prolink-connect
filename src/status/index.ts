@@ -64,6 +64,8 @@ class StatusEmitter {
     if (mediaSlot !== undefined) {
       return this.#emitter.emit('mediaSlot', mediaSlot);
     }
+
+    return undefined;
   };
 
   /**
@@ -74,7 +76,7 @@ class StatusEmitter {
 
     const media = await this.#mediaSlotQueryLock.runExclusive(async () => {
       await this.#statusSocket.send(request, STATUS_PORT, options.device.ip.address);
-      return await new Promise<MediaSlotInfo>(resolve => this.once('mediaSlot', resolve));
+      return new Promise<MediaSlotInfo>(resolve => this.once('mediaSlot', resolve));
     });
 
     return media;

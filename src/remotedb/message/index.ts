@@ -92,7 +92,7 @@ export class Message<T extends MessageType = MessageType> {
       // XXX: There is a small quirk in a few message response types that send
       //      binary data, but if the binary data is empty the field will not
       //      be sent.
-      if (argList.value[i] == ArgumentType.Binary && args[i - 1]?.value === 0) {
+      if (argList.value[i] === ArgumentType.Binary && args[i - 1]?.value === 0) {
         args[i] = new Binary(Buffer.alloc(0));
         continue;
       }

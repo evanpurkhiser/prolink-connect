@@ -111,7 +111,7 @@ async function getRootHandle({device, slot, mountClient}: GetRootHandleOptions) 
   }
 
   const exports = await getExports(mountClient);
-  const targetExport = exports.find(e => e.filesystem == slotMountMapping[slot]);
+  const targetExport = exports.find(e => e.filesystem === slotMountMapping[slot]);
 
   if (targetExport === undefined) {
     return null;

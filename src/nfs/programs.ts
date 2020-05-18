@@ -70,7 +70,7 @@ export async function getExports(conn: RpcProgram) {
     data: Buffer.alloc(0),
   });
 
-  let entry = mount.ExportListResponse.fromXDR(data).next();
+  const entry = mount.ExportListResponse.fromXDR(data).next();
   if (entry === undefined) {
     return [];
   }

@@ -7,8 +7,8 @@ import {Device} from 'src/types';
 /**
  * Async version of udp socket read
  */
-export async function udpRead(conn: SocketAsPromised) {
-  return await new Promise<Buffer>(resolve => conn.socket.once('message', resolve));
+export function udpRead(conn: SocketAsPromised) {
+  return new Promise<Buffer>(resolve => conn.socket.once('message', resolve));
 }
 
 /**

@@ -77,9 +77,7 @@ export async function viaLocal(local: LocalDatabase, device: Device, opts: Optio
     return null;
   }
 
-  await hydrateAnlz(track, 'DAT', async path =>
-    fetchFile({device, slot: trackSlot, path})
-  );
+  await hydrateAnlz(track, 'DAT', path => fetchFile({device, slot: trackSlot, path}));
 
   return track;
 }

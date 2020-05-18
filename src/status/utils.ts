@@ -8,7 +8,7 @@ export function statusFromPacket(packet: Buffer) {
 
   // Rekordbox sends some short status packets that we can just ignore.
   if (packet.length < 0xff) {
-    return;
+    return undefined;
   }
 
   const status: CDJStatus.State = {
@@ -39,7 +39,7 @@ export function mediaSlotFromPacket(packet: Buffer) {
   }
 
   if (packet[0x0a] !== 0x06) {
-    return;
+    return undefined;
   }
 
   const name = packet

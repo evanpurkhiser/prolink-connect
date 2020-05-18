@@ -228,9 +228,8 @@ class LocalDatabase {
     // Aquire a lock for this device slot that will not release until we've
     // guarnteed the existance of the database.
     const db = await lock.runExclusive(
-      async () =>
-        this.#dbs.find(db => db.id === id) ??
-        (await this.#hydrateDatabase(device, slot, media))
+      () =>
+        this.#dbs.find(db => db.id === id) ?? this.#hydrateDatabase(device, slot, media)
     );
 
     return db.orm;

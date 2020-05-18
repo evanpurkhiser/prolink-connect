@@ -10,8 +10,6 @@ import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
 import {Device} from 'src/types';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 
-type ConnectOptions = {};
-
 export default class ProlinkNetwork {
   /**
    * Connect to the prolink network

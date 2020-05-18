@@ -41,7 +41,7 @@ export async function viaRemote(remote: RemoteDatabase, opts: Options) {
     menuTarget: MenuTarget.Main,
   };
 
-  return await conn.query({
+  return conn.query({
     queryDescriptor,
     query: Query.GetArtwork,
     args: {artworkId: track.artwork.id},
@@ -64,5 +64,5 @@ export async function viaLocal(local: LocalDatabase, device: Device, opts: Optio
     return null;
   }
 
-  return await fetchFile({device, slot: trackSlot, path: track.artwork.path});
+  return fetchFile({device, slot: trackSlot, path: track.artwork.path});
 }
