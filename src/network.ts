@@ -88,8 +88,6 @@ export async function bringOnline(config?: NetworkConfig) {
   await announceSocket.bind(ANNOUNCE_PORT, '0.0.0.0');
   announceSocket.setBroadcast(true);
 
-  announceSocket.socket.on('message', console.log);
-
   // Socket used to listen for status packets
   const statusSocket = dgram.createSocket('udp4');
   await statusSocket.bind(STATUS_PORT, '0.0.0.0');
