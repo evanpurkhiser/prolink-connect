@@ -5,6 +5,7 @@ import StrictEventEmitter from 'strict-event-emitter-types';
 import {Device, DeviceID} from 'src/types';
 
 import {deviceFromPacket} from './utils';
+import {VIRTUAL_CDJ_NAME} from 'src/constants';
 
 type Config = {
   /**
@@ -97,6 +98,10 @@ class DeviceManager {
     const device = deviceFromPacket(message);
 
     if (device === null) {
+      return;
+    }
+
+    if (device.name === VIRTUAL_CDJ_NAME) {
       return;
     }
 
