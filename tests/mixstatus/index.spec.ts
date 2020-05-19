@@ -26,9 +26,9 @@ const makeState = (state?: Partial<CDJStatus.State>): CDJStatus.State => ({
 
 const oc = expect.objectContaining;
 
-describe('mixstatus processor', function () {
+describe('mixstatus processor', () => {
   let currentNow = 0;
-  let lastFedState = new Map<number, CDJStatus.State>();
+  const lastFedState = new Map<number, CDJStatus.State>();
 
   jest.useFakeTimers();
   global.Date.now = jest.fn(() => currentNow);
@@ -54,13 +54,13 @@ describe('mixstatus processor', function () {
     currentNow += ms;
   };
 
-  beforeEach(function () {
+  beforeEach(() => {
     lastFedState.clear();
     processor = new MixstatusProcessor();
     currentNow = 0;
   });
 
-  it('does not report first state if not onair and playing', function () {
+  it('does not report first state if not onair and playing', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
 
@@ -71,7 +71,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).not.toBeCalled();
   });
 
-  it('reports an immediate on-air playing device as nowPlaying', function () {
+  it('reports an immediate on-air playing device as nowPlaying', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
 
@@ -83,7 +83,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 5, trackId: 123}));
   });
 
-  it('reports the stopping of a single device', function () {
+  it('reports the stopping of a single device', () => {
     const stoppedHandler = jest.fn();
     processor.on('stopped', stoppedHandler);
 
@@ -101,7 +101,7 @@ describe('mixstatus processor', function () {
     expect(stoppedHandler).toBeCalledWith({deviceId: 5});
   });
 
-  it('reports the first device as playing when no others are', function () {
+  it('reports the first device as playing when no others are', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
 
@@ -125,7 +125,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 321}));
   });
 
-  it('reports that a set has started when a player starts', function () {
+  it('reports that a set has started when a player starts', () => {
     const ssHandler = jest.fn();
     processor.on('setStarted', ssHandler);
 
@@ -161,7 +161,7 @@ describe('mixstatus processor', function () {
     });
   };
 
-  it('does not report offair tracks when played', function () {
+  it('does not report offair tracks when played', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
@@ -171,7 +171,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).lastCalledWith(oc({deviceId: 1, trackId: 123}));
   });
 
-  it('reports next device after the configured beats pass and both are live', function () {
+  it('reports next device after the configured beats pass and both are live', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
@@ -191,7 +191,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports the next device early if the first is stopped', function () {
+  it('reports the next device early if the first is stopped', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
@@ -208,7 +208,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports the next device early if the first is paused', function () {
+  it('reports the next device early if the first is paused', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
@@ -229,7 +229,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports the next device early if the first goes off air', function () {
+  it('reports the next device early if the first goes off air', () => {
     const npHandler = jest.fn();
     const stoppedHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
@@ -258,7 +258,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports the device playing the longest if the playing track stops', function () {
+  it('reports the device playing the longest if the playing track stops', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
@@ -283,7 +283,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('allow pause interrupts before the next device is reported live', function () {
+  it('allow pause interrupts before the next device is reported live', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
@@ -307,7 +307,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('allow onair interrupts before the next device is reported live', function () {
+  it('allow onair interrupts before the next device is reported live', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
@@ -331,7 +331,7 @@ describe('mixstatus processor', function () {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports that a set has ended when all players stop', async function () {
+  it('reports that a set has ended when all players stop', async () => {
     const seHandler = jest.fn();
     processor.on('setEnded', seHandler);
     setupTwoTracks();
@@ -349,7 +349,7 @@ describe('mixstatus processor', function () {
     expect(seHandler).toHaveBeenCalled();
   });
 
-  it('reports the next track on a previously played player', function () {
+  it('reports the next track on a previously played player', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
