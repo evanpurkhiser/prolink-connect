@@ -1,5 +1,5 @@
 {
-  "name": "@evanpurkhiser/prolink-connect",
+  "name": "prolink-connect",
   "version": "0.0.1",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
@@ -11,7 +11,7 @@
     "lint": "eslint src/**/*.ts",
     "run-cli": "node lib/cli.js"
   },
-  "files": ["lib/index.js", "lib/index.d.ts"],
+  "files": ["lib/index.js", "lib/src/**/*.d.ts"],
   "bin": {
     "prolink-connect": "./lib/cli.js"
   },
@@ -41,7 +41,6 @@
     "@types/webpack": "^4.41.12",
     "@types/webpack-node-externals": "^1.7.1",
     "@zerollup/ts-transform-paths": "^1.7.17",
-    "dts-bundle-webpack": "^1.0.2",
     "eslint": "^7.0.0",
     "jest": "^25.2.7",
     "jest-each": "^25.2.6",

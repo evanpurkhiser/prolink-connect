@@ -3,9 +3,6 @@ import nodeExternals from 'webpack-node-externals';
 import path from 'path';
 import tsTransformPaths from '@zerollup/ts-transform-paths';
 
-// @ts-ignore
-import DtsBundleWebpack from 'dts-bundle-webpack';
-
 const config: webpack.Configuration = {
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   entry: {
@@ -47,13 +44,6 @@ const config: webpack.Configuration = {
       },
     ],
   },
-  plugins: [
-    new DtsBundleWebpack({
-      name: 'prolink-connect',
-      main: path.resolve(__dirname, 'lib/src/index.d.ts'),
-      out: path.resolve(__dirname, 'lib/index.d.ts'),
-    }),
-  ],
 };
 
 export default config;
