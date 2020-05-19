@@ -1,12 +1,30 @@
 import signale from 'signale';
 
 import MixstatusProcessor from 'src/mixstaus';
-import ProlinkNetwork from 'src/network';
+import {bringOnline} from 'src/network';
 
-async function test() {
-  signale.await('Connecting to network');
-  const network = await ProlinkNetwork.connect();
-  signale.success('Connected to network!');
+async function cli() {
+  signale.await('Bringing up prolink network');
+  const network = await bringOnline();
+  signale.success('Network online, preparing to connect');
+
+  signale.await('Autoconfiguring network.. waiting for devices');
+  await network.autoconfigFromPeers();
+  signale.await('Autoconfigure successfull!');
+
+  signale.await('Connecting to network!');
+  network.connect();
+
+  if (!network.isConnected()) {
+    signale.error('Failed to connect to the network');
+    return;
+  }
+
+  signale.star('Network connected! Network services initalized');
+
+  const onlineDevices = [...network.deviceManager.devices.values()];
+  const deviceList = onlineDevices.map(d => `${d.name} [${d.id}]`).join(', ');
+  signale.note(`Found devices: ${deviceList}`);
 
   const processor = new MixstatusProcessor();
   network.statusEmitter.on('status', s => processor.handleState(s));
@@ -37,4 +55,4 @@ async function test() {
   });
 }
 
-test();
+cli();

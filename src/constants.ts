@@ -1,4 +1,12 @@
 /**
+ * The default virtual CDJ ID to use.
+ *
+ * This particular ID is out of the 1-4 range, thus will not be able to request
+ * metadata via the remotedb for CDJs.
+ */
+export const DEFAULT_VCDJ_ID = 0x05;
+
+/**
  * The port on which devices on the prolink network announce themselves.
  */
 export const ANNOUNCE_PORT = 50000;
