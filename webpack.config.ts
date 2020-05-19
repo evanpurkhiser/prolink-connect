@@ -21,7 +21,7 @@ const config: webpack.Configuration = {
     extensions: ['.ts', '.js'],
     alias: {src: path.join(__dirname, 'src')},
   },
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
   module: {
     rules: [
       {

@@ -1,25 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
+    "target": "ES2019",
     "module": "CommonJS",
-    "lib": ["ScriptHost", "ES2019"],
+    "lib": ["ScriptHost", "ES2020"],
     "allowJs": true,
     "downlevelIteration": true,
     "strict": true,
     "strictPropertyInitialization": true,
     "moduleResolution": "node",
-    "declaration": true,
-    "outDir": "./lib",
-    "rootDirs": ["src", "tests"],
-    "baseUrl": "./",
-    "paths": {
-      "src/*": ["src/*"]
-    },
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "sourceMap": true
-  },
-  "include": ["src/", "tests/"]
+    "skipLibCheck": true
+  }
 }

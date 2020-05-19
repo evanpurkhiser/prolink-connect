@@ -8,8 +8,7 @@
     "watch": "webpack --watch",
     "build": "webpack",
     "test": "jest",
-    "lint": "eslint src/**/*.ts",
-    "run-cli": "node lib/cli.js"
+    "lint": "eslint src/**/*.ts tests/**/*.ts"
   },
   "files": ["lib/index.js", "lib/src/**/*.d.ts"],
   "bin": {
@@ -42,6 +41,7 @@
     "@types/webpack-node-externals": "^1.7.1",
     "@zerollup/ts-transform-paths": "^1.7.17",
     "eslint": "^7.0.0",
+    "eslint-plugin-jest": "^23.13.1",
     "jest": "^25.2.7",
     "jest-each": "^25.2.6",
     "kaitai-struct-loader": "https://github.com/EvanPurkhiser/kaitai-struct-loader",
