@@ -21,6 +21,7 @@ export enum PlayState {
   Paused = 0x05,
   Cued = 0x06,
   Cuing = 0x07,
+  PlatterHeld = 0x08,
   Searching = 0x09,
   SpunDown = 0x0e,
   Ended = 0x11,
