@@ -122,6 +122,7 @@ export class Connection {
 export class QueryInterface {
   #conn: Connection;
   #hostDevice: Device;
+  #lock = new Mutex();
 
   constructor(conn: Connection, hostDevice: Device) {
     this.#conn = conn;
@@ -147,7 +148,10 @@ export class QueryInterface {
     const anyArgs = args as any;
 
     const handler = queryHandlers[query];
+
+    const releaseLock = await this.#lock.acquire();
     const response = await handler({conn, lookupDescriptor, args: anyArgs});
+    releaseLock();
 
     return response as HandlerReturn<T>;
   }
