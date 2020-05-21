@@ -172,13 +172,33 @@ class LocalDatabase {
    * Downloads and hydrates a new in-memory sqlite database
    */
   #hydrateDatabase = async (device: Device, slot: DatabaseSlot, media: MediaSlotInfo) => {
-    const pdbData = await fetchFile({
-      device,
-      slot,
-      path: '.PIONEER/rekordbox/export.pdb',
-      onProgress: progress =>
-        this.#emitter.emit('fetchProgress', {device, slot, progress}),
-    });
+    let pdbData = Buffer.alloc(0);
+
+    const fetchPdbData = async (path: string) =>
+      (pdbData = await fetchFile({
+        device,
+        slot,
+        path,
+        onProgress: progress =>
+          this.#emitter.emit('fetchProgress', {device, slot, progress}),
+      }));
+
+    // Rekordbox exports to both the `.PIONEER` and `PIONEER` folder, depending
+    // on the media devices filesystem (HFS, FAT32, etc). Unfortuantely there's no
+    // way for us to know the type of filesystem, so we have to try both
+    const path = 'PIONEER/rekordbox/export.pdb';
+
+    // Attempt to be semi-smart and first try the path coorelating to the OS
+    // they're running this on. The assumption is they may have used the same
+    // machine to export their tracks on.
+    const attemptOrder =
+      process.platform === 'win32' ? [path, `.${path}`] : [`.${path}`, path];
+
+    try {
+      await fetchPdbData(attemptOrder[0]);
+    } catch {
+      await fetchPdbData(attemptOrder[1]);
+    }
 
     const orm = await newDatabase();
     await orm.getSchemaGenerator().createSchema();
