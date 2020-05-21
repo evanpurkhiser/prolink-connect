@@ -99,13 +99,21 @@ const getMediaId = (info: MediaSlotInfo) => {
   return createHash('sha256').update(inputs.join('.'), 'utf8').digest().toString();
 };
 
-const newDatabase = (deviceId: DeviceID, slot: MediaSlot) =>
+// Avoid idle connection dropping (which would drop in memory dbs)
+const noRefreshPool = {
+  idleTimeoutMillis: Infinity,
+  refreshIdle: false,
+  min: 1,
+  max: 1,
+};
+
+const newDatabase = () =>
   MikroORM.init({
     type: 'sqlite',
-    dbName: `prolink-${deviceId}-${slot}`,
-    clientUrl: ':memory:',
+    dbName: ':memory:',
     entities: Object.values(entities),
     discovery: {disableDynamicFileAccess: true},
+    pool: noRefreshPool,
   });
 
 /**
@@ -172,8 +180,7 @@ class LocalDatabase {
         this.#emitter.emit('fetchProgress', {device, slot, progress}),
     });
 
-    const orm = await newDatabase(device.id, slot);
-    await orm.getSchemaGenerator().dropSchema();
+    const orm = await newDatabase();
     await orm.getSchemaGenerator().createSchema();
 
     await hydrateDatabase({

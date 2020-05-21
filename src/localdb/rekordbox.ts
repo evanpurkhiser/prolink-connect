@@ -119,16 +119,8 @@ class RekordboxHydrator {
     const stream = new KaitaiStream(pdbData);
     const db = new RekordboxPdb(stream);
 
-    // TODO: Not sure why the transaction doesn't handle differing foreign key
-    //       constraints, without this we will get FK constraint errors
-    //       (despite the comment above the transaction call below).
-    const driver = await this.#orm.connect();
-    const conn = await driver.connect();
-    await conn.execute('PRAGMA foreign_keys = OFF;');
-
     const doHydration = async (em: EntityManager) => {
       await Promise.all(db.tables.map((table: any) => this.hydrateFromTable(table, em)));
-      await em.flush();
     };
 
     // Execute within a transaction to allow for deferred foreign key constraints.
@@ -160,6 +152,7 @@ class RekordboxHydrator {
       new Promise<never>(async finished => {
         if (entity) {
           await em.persist(entity);
+          await em.flush();
         }
 
         finished();
