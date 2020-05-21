@@ -10,6 +10,7 @@
 
 <p align="center">
 	<img src="https://github.com/EvanPurkhiser/prolink-connect/workflows/build/badge.svg" alt="build" />
+	<a href="https://badge.fury.io/js/prolink-connect"><img src="https://badge.fury.io/js/prolink-connect.svg" alt="npm version" height="18"></a>
 </p>
 
 ---
