@@ -8,6 +8,10 @@
 	Consume CDJ states + Retrieve complete track metadata.
 </h3>
 
+<p align="center">
+	<img src="https://github.com/EvanPurkhiser/prolink-connect/workflows/build/badge.svg" alt="build" />
+</p>
+
 ---
 
 This library implments the Pioneer PROLINK network protocol +
