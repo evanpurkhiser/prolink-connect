@@ -122,10 +122,11 @@ export class Connection {
 export class QueryInterface {
   #conn: Connection;
   #hostDevice: Device;
-  #lock = new Mutex();
+  #lock: Mutex;
 
-  constructor(conn: Connection, hostDevice: Device) {
+  constructor(conn: Connection, lock: Mutex, hostDevice: Device) {
     this.#conn = conn;
+    this.#lock = lock;
     this.#hostDevice = hostDevice;
   }
 
@@ -168,6 +169,10 @@ export default class RemoteDatabase {
    * Active device connection map
    */
   #connections: Map<DeviceID, Connection> = new Map();
+  /**
+   * Locks for each device when locating the connection
+   */
+  #deviceLocks = new Map<DeviceID, Mutex>();
 
   constructor(deviceManager: DeviceManager, hostDevice: Device) {
     this.#deviceManager = deviceManager;
@@ -252,13 +257,23 @@ export default class RemoteDatabase {
       return null;
     }
 
+    const lock =
+      this.#deviceLocks.get(device.id) ??
+      this.#deviceLocks.set(device.id, new Mutex()).get(device.id)!;
+
+    const releaseLock = await lock.acquire();
+
     let conn = this.#connections.get(deviceId);
     if (conn === undefined) {
       await this.connectToDevice(device);
     }
 
     conn = this.#connections.get(deviceId)!;
+    releaseLock();
 
-    return new QueryInterface(conn, this.#hostDevice);
+    // NOTE: We pass the same lock we use for this device to the query
+    // interface to ensure all query interfaces use the same lock.
+
+    return new QueryInterface(conn, lock, this.#hostDevice);
   }
 }
