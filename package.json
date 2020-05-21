@@ -3,6 +3,15 @@
   "version": "0.1.0-prerelease.0",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
+  "keywords": [
+    "prolink-network",
+    "CDJ",
+    "pioneer",
+    "DJ",
+    "reverse-engineer",
+    "cdj",
+    "djm"
+  ],
   "license": "MIT",
   "scripts": {
     "watch": "webpack --watch",
@@ -10,10 +19,7 @@
     "test": "jest",
     "lint": "eslint src/**/*.ts tests/**/*.ts"
   },
-  "files": [
-    "lib/index.js",
-    "lib/src/**/*.d.ts"
-  ],
+  "files": ["lib/index.js", "lib/src/**/*.d.ts"],
   "bin": {
     "prolink-connect": "./lib/cli.js"
   },
