@@ -151,8 +151,7 @@ class RekordboxHydrator {
       // eslint-disable-next-line no-async-promise-executor
       new Promise<never>(async finished => {
         if (entity) {
-          await em.persist(entity);
-          await em.flush();
+          await em.persistAndFlush(entity);
         }
 
         finished();
