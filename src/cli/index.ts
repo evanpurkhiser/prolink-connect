@@ -1,6 +1,6 @@
 import signale from 'signale';
 
-import MixstatusProcessor from 'src/mixstatus';
+import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';
 
 async function cli() {

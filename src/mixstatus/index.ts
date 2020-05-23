@@ -6,7 +6,7 @@ import {CDJStatus, DeviceID} from 'src/types';
 import {isStopping, isPlaying} from './utils';
 import {bpmToSeconds} from 'src/utils';
 
-type Config = {
+export type MixstatusConfig = {
   /**
    * Configures how many beats a track may not be live or playing for it to
    * still be considered active.
@@ -39,7 +39,7 @@ type Config = {
   hasOnAirCapabilities: boolean;
 };
 
-const defaultConfig: Config = {
+const defaultConfig: MixstatusConfig = {
   allowedInterruptBeats: 8,
   beatsUntilReported: 128,
   timeBetweenSets: 30,
@@ -111,7 +111,7 @@ type Emitter = StrictEventEmitter<EventEmitter, MixstatusEvents>;
  * - A track will be reported as stopped when it was NowPlaying and was stopped
  *   (cued, reached the end of the track, or a new track was loaded.
  */
-class MixstatusProcessor {
+export class MixstatusProcessor {
   /**
    * Used to fire track mix status events
    */
@@ -144,9 +144,9 @@ class MixstatusProcessor {
   /**
    * The configuration for this instance of the processor
    */
-  #config: Config;
+  #config: MixstatusConfig;
 
-  constructor(config?: Partial<Config>) {
+  constructor(config?: Partial<MixstatusConfig>) {
     this.#config = {...defaultConfig, ...config};
   }
 
@@ -380,5 +380,3 @@ class MixstatusProcessor {
     }
   }
 }
-
-export default MixstatusProcessor;
