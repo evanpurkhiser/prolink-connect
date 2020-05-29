@@ -19,10 +19,7 @@
     "test": "jest",
     "lint": "eslint src/**/*.ts tests/**/*.ts"
   },
-  "files": [
-    "lib/index.js",
-    "lib/src/**/*.d.ts"
-  ],
+  "files": ["lib/"],
   "bin": {
     "prolink-connect": "./lib/cli.js"
   },
