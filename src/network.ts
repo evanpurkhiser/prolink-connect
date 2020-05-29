@@ -16,6 +16,11 @@ const connectErrorHelp =
 
 export enum NetworkState {
   /**
+   * The network is offline when we don't have an open connection to the network
+   * (no connection to the announcment and or status UDP socket is present).
+   */
+  Offline,
+  /**
    * The network is online when we have opened sockets to the network, but have
    * not yet started announcing ourselves as a virtual CDJ.
    */
@@ -24,6 +29,11 @@ export enum NetworkState {
    * The network is connected once we have heard from another device on the network
    */
   Connected,
+  /**
+   * The network may have failed to connect if we aren't able to open the
+   * announcment and or status UDP socket.
+   */
+  Failed,
 }
 
 export type NetworkConfig = {
