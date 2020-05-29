@@ -1,4 +1,4 @@
-import MixstatusProcessor from 'src/mixstatus';
+import {MixstatusProcessor} from 'src/mixstatus';
 import {CDJStatus, MediaSlot, TrackType} from 'src/types';
 import {bpmToSeconds} from 'src/utils';
 
