@@ -1,6 +1,6 @@
 {
   "name": "prolink-connect",
-  "version": "0.1.0-prerelease.0",
+  "version": "0.1.0-prerelease.1",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
   "keywords": [
@@ -19,7 +19,10 @@
     "test": "jest",
     "lint": "eslint src/**/*.ts tests/**/*.ts"
   },
-  "files": ["lib/index.js", "lib/src/**/*.d.ts"],
+  "files": [
+    "lib/index.js",
+    "lib/src/**/*.d.ts"
+  ],
   "bin": {
     "prolink-connect": "./lib/cli.js"
   },
