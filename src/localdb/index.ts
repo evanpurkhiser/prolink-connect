@@ -49,6 +49,8 @@ type HydrationProgressOpts = CommonProgressOpts & {
   progress: HydrationProgress;
 };
 
+type HydrationDoneOpts = CommonProgressOpts;
+
 /**
  * Events that may be triggered  by the LocalDatabase emitter
  */
@@ -69,7 +71,7 @@ type DatabaseEvents = {
    * and the database being flushed, so it may be useful to wait for this event
    * before considering the databas to be fully hydrated.
    */
-  hydrationDone: () => void;
+  hydrationDone: (opts: HydrationDoneOpts) => void;
 };
 
 type Emitter = StrictEventEmitter<EventEmitter, DatabaseEvents>;
@@ -217,7 +219,7 @@ class LocalDatabase {
       onProgress: progress =>
         this.#emitter.emit('hydrationProgress', {device, slot, progress}),
     });
-    this.#emitter.emit('hydrationDone');
+    this.#emitter.emit('hydrationDone', {device, slot});
 
     const db = {orm, media, id: getMediaId(media)};
     this.#dbs.push(db);
