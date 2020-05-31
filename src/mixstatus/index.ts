@@ -360,7 +360,7 @@ export class MixstatusProcessor {
     const startedAt = this.#lastStartTime.get(deviceId);
     const requiredPlayTime =
       this.#config.beatsUntilReported *
-      bpmToSeconds(state.trackBPM, state.sliderPitch) *
+      bpmToSeconds(state.trackBPM!, state.sliderPitch) *
       1000;
 
     if (startedAt !== undefined && requiredPlayTime <= Date.now() - startedAt) {
@@ -372,7 +372,7 @@ export class MixstatusProcessor {
     const stoppedAt = this.#lastStoppedTimes.get(deviceId);
     const requiredStopTime =
       this.#config.allowedInterruptBeats *
-      bpmToSeconds(state.trackBPM, state.sliderPitch) *
+      bpmToSeconds(state.trackBPM!, state.sliderPitch) *
       1000;
 
     if (stoppedAt !== undefined && requiredStopTime <= Date.now() - stoppedAt) {

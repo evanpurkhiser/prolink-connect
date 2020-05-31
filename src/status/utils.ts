@@ -1,6 +1,10 @@
 import {CDJStatus, MediaSlotInfo} from 'src/types';
 import {PROLINK_HEADER} from 'src/constants';
 
+const MAX_INT32 = Math.pow(2, 32) - 1;
+const MAX_INT16 = Math.pow(2, 16) - 1;
+const MAX_INT9 = Math.pow(2, 9) - 1;
+
 export function statusFromPacket(packet: Buffer) {
   if (packet.indexOf(PROLINK_HEADER) !== 0) {
     throw new Error('CDJ status packet does not start with the expected header');
@@ -10,6 +14,18 @@ export function statusFromPacket(packet: Buffer) {
   if (packet.length < 0xff) {
     return undefined;
   }
+
+  // No track loaded: BPM = MAX_INT16
+  const rawBPM = packet.readUInt16BE(0x92);
+  const trackBPM = rawBPM === MAX_INT16 ? null : rawBPM / 100;
+
+  // No next cue: beatsUntilCue = MAX_INT9
+  const rawBeatsUntilCue = packet.readUInt16BE(0xa4);
+  const beatsUntilCue = rawBeatsUntilCue === MAX_INT9 ? null : rawBeatsUntilCue;
+
+  // No track loaded: beat = MAX_INT32
+  const rawBeat = packet.readUInt32BE(0xa0);
+  const beat = rawBeat === MAX_INT32 ? null : rawBeat;
 
   const status: CDJStatus.State = {
     deviceId: packet[0x21],
@@ -21,12 +37,12 @@ export function statusFromPacket(packet: Buffer) {
     isOnAir: (packet[0x89] & CDJStatus.StatusFlag.OnAir) !== 0,
     isSync: (packet[0x89] & CDJStatus.StatusFlag.Sync) !== 0,
     isMaster: (packet[0x89] & CDJStatus.StatusFlag.Master) !== 0,
-    trackBPM: packet.readUInt16BE(0x92) / 100,
+    trackBPM,
     sliderPitch: calcPitch(packet.slice(0x8d, 0x8d + 3)),
     effectivePitch: calcPitch(packet.slice(0x99, 0x99 + 3)),
     beatInMeasure: packet[0xa6],
-    beatsUntilCue: packet.readUInt16BE(0xa4),
-    beat: packet.readUInt32BE(0xa0),
+    beatsUntilCue,
+    beat,
     packetNum: packet.readUInt32BE(0xc8),
   };
 
