@@ -42,7 +42,7 @@ type DownloadProgressOpts = CommonProgressOpts & {
   progress: FetchProgress;
 };
 
-type HydrationPrgoressOpts = CommonProgressOpts & {
+type HydrationProgressOpts = CommonProgressOpts & {
   /**
    * The current progress of the database hydration
    */
@@ -61,7 +61,15 @@ type DatabaseEvents = {
    * Triggered when we are hydrating a rekordbox database into the in-memory
    * sqlite database.
    */
-  hydrationProgress: (opts: HydrationPrgoressOpts) => void;
+  hydrationProgress: (opts: HydrationProgressOpts) => void;
+  /**
+   * Triggered when the database has been fully hydrated.
+   *
+   * There is a period of time between hydrationProgress reporting 100% copletion,
+   * and the database being flushed, so it may be useful to wait for this event
+   * before considering the databas to be fully hydrated.
+   */
+  hydrationDone: () => void;
 };
 
 type Emitter = StrictEventEmitter<EventEmitter, DatabaseEvents>;
@@ -209,6 +217,7 @@ class LocalDatabase {
       onProgress: progress =>
         this.#emitter.emit('hydrationProgress', {device, slot, progress}),
     });
+    this.#emitter.emit('hydrationDone');
 
     const db = {orm, media, id: getMediaId(media)};
     this.#dbs.push(db);
