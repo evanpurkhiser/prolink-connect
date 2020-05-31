@@ -66,6 +66,10 @@ type Options = {
    * will be called.
    */
   onProgress?: (progress: HydrationProgress) => void;
+  /**
+   * Reports when the database has been fully hydrated.
+   */
+  onComplete?: () => void;
 };
 
 /**
@@ -105,10 +109,12 @@ export async function hydrateAnlz(
 class RekordboxHydrator {
   #orm: MikroORM;
   #onProgress: (progress: HydrationProgress) => void;
+  #onComplete: () => void;
 
-  constructor({orm, onProgress}: Omit<Options, 'pdbData'>) {
+  constructor({orm, onProgress, onComplete}: Omit<Options, 'pdbData'>) {
     this.#orm = orm;
-    this.#onProgress = onProgress ?? (_ => null);
+    this.#onProgress = onProgress ?? (() => null);
+    this.#onComplete = onComplete ?? (() => null);
   }
 
   /**
@@ -126,6 +132,7 @@ class RekordboxHydrator {
 
     // Execute within a transaction to allow for deferred foreign key constraints.
     await this.#orm.em.transactional(doHydration);
+    this.#onComplete();
   }
 
   /**
