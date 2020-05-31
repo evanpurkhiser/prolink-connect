@@ -121,6 +121,7 @@ class RekordboxHydrator {
 
     const doHydration = async (em: EntityManager) => {
       await Promise.all(db.tables.map((table: any) => this.hydrateFromTable(table, em)));
+      await em.flush();
     };
 
     // Execute within a transaction to allow for deferred foreign key constraints.
@@ -151,7 +152,7 @@ class RekordboxHydrator {
       // eslint-disable-next-line no-async-promise-executor
       new Promise<never>(async finished => {
         if (entity) {
-          await em.persistAndFlush(entity);
+          await em.persist(entity);
         }
 
         finished();
