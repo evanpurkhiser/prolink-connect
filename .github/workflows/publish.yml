@@ -13,6 +13,8 @@ jobs:
     - run: yarn install
     - run: yarn test
     - run: yarn build
-    - run: npm publish --access public
+    - run: |
+        npm set registry https://registry.npmjs.org/
+        npm publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
