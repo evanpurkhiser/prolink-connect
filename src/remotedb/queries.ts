@@ -1,3 +1,5 @@
+import {Span} from '@sentry/apm';
+
 import * as entities from 'src/entities';
 
 import {Connection, LookupDescriptor, Query} from '.';
@@ -16,6 +18,7 @@ import {UInt32, Binary} from './fields';
 type HandlerOpts<A extends object = {}> = {
   conn: Connection;
   lookupDescriptor: LookupDescriptor;
+  span: Span;
   args: A;
 };
 
@@ -33,7 +36,7 @@ type TrackQueryOpts = HandlerOpts<{
  * Lookup track metadata from rekordbox and coerce it into a Track entity
  */
 async function getMetadata(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -41,8 +44,8 @@ async function getMetadata(opts: TrackQueryOpts) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(trackId)],
   });
 
-  await conn.writeMessage(request);
-  const resp = await conn.readMessage(Response.Success);
+  await conn.writeMessage(request, span);
+  const resp = await conn.readMessage(Response.Success, span);
 
   // We'll get back these specific items when rendering out the items
   //
@@ -63,7 +66,8 @@ async function getMetadata(opts: TrackQueryOpts) {
   const items = renderItems<MetadataItems>(
     conn,
     lookupDescriptor,
-    resp.data.itemsAvailable
+    resp.data.itemsAvailable,
+    span
   );
 
   // NOTE: We do a bit of any-ing here to help typescript understand we're
@@ -118,7 +122,7 @@ async function getMetadata(opts: TrackQueryOpts) {
  * Lookup generic metadata for an unanalyzed track
  */
 async function getGenericMetadata(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -126,8 +130,8 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(trackId)],
   });
 
-  await conn.writeMessage(request);
-  const resp = await conn.readMessage(Response.Success);
+  await conn.writeMessage(request, span);
+  const resp = await conn.readMessage(Response.Success, span);
 
   // NOTE: We actually also get back a color, but we'll find that one later,
   // since each color is it's own item type.
@@ -145,7 +149,8 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
   const items = renderItems<GenericMetadtaItems>(
     conn,
     lookupDescriptor,
-    resp.data.itemsAvailable
+    resp.data.itemsAvailable,
+    span
   );
 
   // NOTE: We do a bit of any-ing here to help typescript understand we're
@@ -192,7 +197,7 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
  * Lookup the artwork image given the artworkId obtained from a track
  */
 async function getArtwork(opts: HandlerOpts<{artworkId: number}>) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {artworkId} = args;
 
   const request = new Message({
@@ -200,8 +205,8 @@ async function getArtwork(opts: HandlerOpts<{artworkId: number}>) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(artworkId)],
   });
 
-  await conn.writeMessage(request);
-  const art = await conn.readMessage(Response.Artwork);
+  await conn.writeMessage(request, span);
+  const art = await conn.readMessage(Response.Artwork, span);
 
   return art.data;
 }
@@ -210,7 +215,7 @@ async function getArtwork(opts: HandlerOpts<{artworkId: number}>) {
  * Lookup the beatgrid for the specified trackId
  */
 async function getBeatgrid(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -218,8 +223,8 @@ async function getBeatgrid(opts: TrackQueryOpts) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(trackId)],
   });
 
-  await conn.writeMessage(request);
-  const grid = await conn.readMessage(Response.BeatGrid);
+  await conn.writeMessage(request, span);
+  const grid = await conn.readMessage(Response.BeatGrid, span);
 
   return grid.data;
 }
@@ -228,7 +233,7 @@ async function getBeatgrid(opts: TrackQueryOpts) {
  * Lookup the waveform preview for the specified trackId
  */
 async function getWaveformPreview(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -242,8 +247,8 @@ async function getWaveformPreview(opts: TrackQueryOpts) {
     ],
   });
 
-  await conn.writeMessage(request);
-  const waveformPreview = await conn.readMessage(Response.WaveformPreview);
+  await conn.writeMessage(request, span);
+  const waveformPreview = await conn.readMessage(Response.WaveformPreview, span);
 
   return waveformPreview.data;
 }
@@ -252,7 +257,7 @@ async function getWaveformPreview(opts: TrackQueryOpts) {
  * Lookup the detailed waveform for the specified trackId
  */
 async function getWaveformDetailed(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -260,8 +265,8 @@ async function getWaveformDetailed(opts: TrackQueryOpts) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(trackId), new UInt32(0)],
   });
 
-  await conn.writeMessage(request);
-  const waveformDetailed = await conn.readMessage(Response.WaveformDetailed);
+  await conn.writeMessage(request, span);
+  const waveformDetailed = await conn.readMessage(Response.WaveformDetailed, span);
 
   return waveformDetailed.data;
 }
@@ -270,7 +275,7 @@ async function getWaveformDetailed(opts: TrackQueryOpts) {
  * Lookup the HD (nexus2) waveform for the specified trackId
  */
 async function getWaveformHD(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -283,8 +288,8 @@ async function getWaveformHD(opts: TrackQueryOpts) {
     ],
   });
 
-  await conn.writeMessage(request);
-  const waveformHD = await conn.readMessage(Response.WaveformHD);
+  await conn.writeMessage(request, span);
+  const waveformHD = await conn.readMessage(Response.WaveformHD, span);
 
   return waveformHD.data;
 }
@@ -293,7 +298,7 @@ async function getWaveformHD(opts: TrackQueryOpts) {
  * Lookup the [hot]cue points and [hot]loops for a track
  */
 async function getCueAndLoops(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -301,8 +306,8 @@ async function getCueAndLoops(opts: TrackQueryOpts) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(trackId)],
   });
 
-  await conn.writeMessage(request);
-  const cueAndLoops = await conn.readMessage(Response.CueAndLoop);
+  await conn.writeMessage(request, span);
+  const cueAndLoops = await conn.readMessage(Response.CueAndLoop, span);
 
   return cueAndLoops.data;
 }
@@ -311,7 +316,7 @@ async function getCueAndLoops(opts: TrackQueryOpts) {
  * Lookup the "advanced" (nexus2) [hot]cue points and [hot]loops for a track
  */
 async function getCueAndLoopsAdv(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -319,8 +324,8 @@ async function getCueAndLoopsAdv(opts: TrackQueryOpts) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(trackId), new UInt32(0)],
   });
 
-  await conn.writeMessage(request);
-  const advCueAndLoops = await conn.readMessage(Response.AdvCueAndLoops);
+  await conn.writeMessage(request, span);
+  const advCueAndLoops = await conn.readMessage(Response.AdvCueAndLoops, span);
 
   return advCueAndLoops.data;
 }
@@ -329,7 +334,7 @@ async function getCueAndLoopsAdv(opts: TrackQueryOpts) {
  * Lookup the track information, currently just returns the track path
  */
 async function getTrackInfo(opts: TrackQueryOpts) {
-  const {conn, lookupDescriptor, args} = opts;
+  const {conn, lookupDescriptor, span, args} = opts;
   const {trackId} = args;
 
   const request = new Message({
@@ -337,8 +342,8 @@ async function getTrackInfo(opts: TrackQueryOpts) {
     args: [fieldFromDescriptor(lookupDescriptor), new UInt32(trackId)],
   });
 
-  await conn.writeMessage(request);
-  const resp = await conn.readMessage(Response.Success);
+  await conn.writeMessage(request, span);
+  const resp = await conn.readMessage(Response.Success, span);
 
   type TrackInfoItems =
     | ItemType.TrackTitle
@@ -351,7 +356,8 @@ async function getTrackInfo(opts: TrackQueryOpts) {
   const items = renderItems<TrackInfoItems>(
     conn,
     lookupDescriptor,
-    resp.data.itemsAvailable
+    resp.data.itemsAvailable,
+    span
   );
 
   const infoItems: Pick<Items, TrackInfoItems> = {} as any;

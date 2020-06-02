@@ -1,3 +1,5 @@
+import {Span} from '@sentry/apm';
+
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';
 import {Track} from 'src/entities';
@@ -21,10 +23,14 @@ export type Options = {
    * The track to lookup artwork for
    */
   track: Track;
+  /**
+   * The Sentry transaction span
+   */
+  span?: Span;
 };
 
-export async function viaRemote(remote: RemoteDatabase, opts: Options) {
-  const {deviceId, trackSlot, trackType, track} = opts;
+export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>) {
+  const {deviceId, trackSlot, trackType, track, span} = opts;
 
   const conn = await remote.get(deviceId);
   if (conn === null) {
@@ -45,10 +51,15 @@ export async function viaRemote(remote: RemoteDatabase, opts: Options) {
     queryDescriptor,
     query: Query.GetArtwork,
     args: {artworkId: track.artwork.id},
+    span,
   });
 }
 
-export async function viaLocal(local: LocalDatabase, device: Device, opts: Options) {
+export async function viaLocal(
+  local: LocalDatabase,
+  device: Device,
+  opts: Required<Options>
+) {
   const {deviceId, trackSlot, track} = opts;
 
   if (trackSlot !== MediaSlot.USB && trackSlot !== MediaSlot.SD) {

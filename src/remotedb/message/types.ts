@@ -111,3 +111,14 @@ export const MessageType = {
   ...DataRequest,
   ...Response,
 } as const;
+
+const MessageTypeInverse = Object.fromEntries(
+  Object.entries(MessageType).map(e => [e[1], e[0]])
+);
+
+/**
+ * Returns a string representation of a message type
+ */
+export function getMessageName(type: MessageType) {
+  return MessageTypeInverse[type];
+}

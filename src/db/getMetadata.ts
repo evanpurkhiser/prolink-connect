@@ -1,3 +1,5 @@
+import {Span} from '@sentry/apm';
+
 import LocalDatabase from 'src/localdb';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';
@@ -22,10 +24,14 @@ export type Options = {
    * The track id to retrive metadata for
    */
   trackId: number;
+  /**
+   * The Sentry transaction span
+   */
+  span?: Span;
 };
 
-export async function viaRemote(remote: RemoteDatabase, opts: Options) {
-  const {deviceId, trackSlot, trackType, trackId} = opts;
+export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>) {
+  const {deviceId, trackSlot, trackType, trackId, span} = opts;
 
   const conn = await remote.get(deviceId);
   if (conn === null) {
@@ -42,24 +48,31 @@ export async function viaRemote(remote: RemoteDatabase, opts: Options) {
     queryDescriptor,
     query: Query.GetMetadata,
     args: {trackId},
+    span,
   });
 
   track.filePath = await conn.query({
     queryDescriptor,
     query: Query.GetTrackInfo,
     args: {trackId},
+    span,
   });
 
   track.beatGrid = await conn.query({
     queryDescriptor,
     query: Query.GetBeatGrid,
     args: {trackId},
+    span,
   });
 
   return track;
 }
 
-export async function viaLocal(local: LocalDatabase, device: Device, opts: Options) {
+export async function viaLocal(
+  local: LocalDatabase,
+  device: Device,
+  opts: Required<Options>
+) {
   const {deviceId, trackSlot, trackId} = opts;
 
   if (trackSlot !== MediaSlot.USB && trackSlot !== MediaSlot.SD) {

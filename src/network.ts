@@ -1,3 +1,6 @@
+import * as Sentry from '@sentry/node';
+import {SpanStatus} from '@sentry/apm';
+import {v4 as uuidv4} from 'uuid';
 import dgram, {SocketAsPromised} from 'dgram-as-promised';
 import {NetworkInterfaceInfoIPv4} from 'os';
 
@@ -93,6 +96,9 @@ export type ConnectedProlinkNetwork = ProlinkNetwork &
  * This is the primary entrypoint for connecting to the prolink network.
  */
 export async function bringOnline(config?: NetworkConfig) {
+  Sentry.setTag('connectionId', uuidv4());
+  const tx = Sentry.startTransaction({name: 'bringOnline'});
+
   // Socket used to listen for devices on the network
   const announceSocket = dgram.createSocket('udp4');
   await announceSocket.bind(ANNOUNCE_PORT, '0.0.0.0');
@@ -104,6 +110,8 @@ export async function bringOnline(config?: NetworkConfig) {
 
   const deviceManager = new DeviceManager(announceSocket);
   const statusEmitter = new StatusEmitter(statusSocket);
+
+  tx.finish();
 
   return new ProlinkNetwork({config, announceSocket, deviceManager, statusEmitter});
 }
@@ -145,17 +153,29 @@ export class ProlinkNetwork {
    * Defaults the Virtual CDJ ID to 5.
    */
   async autoconfigFromPeers() {
+    const tx = Sentry.startTransaction({name: 'autoConfigure'});
     // wait for first device to appear on the network
     const firstDevice = await new Promise<Device>(resolve =>
       this.#deviceManager.once('connected', resolve)
     );
     const iface = getMatchingInterface(firstDevice.ip);
 
+    // Log addr and iface addr / mask for cases where it may have matched the
+    // wrong interface
+    tx.setTag('deviceName', firstDevice.name);
+    tx.setData('deviceAddr', firstDevice.ip.address);
+    tx.setData('ifaceAddr', iface?.address);
+
     if (iface === null) {
+      tx.setStatus(SpanStatus.InternalError);
+      tx.setTag('noIfaceFound', 'yes');
+      tx.finish();
+
       throw new Error('Unable to determine network interface');
     }
 
     this.#config = {...this.#config, vcdjId: DEFAULT_VCDJ_ID, iface};
+    tx.finish();
   }
 
   /**
@@ -168,6 +188,8 @@ export class ProlinkNetwork {
     if (this.#config === null) {
       throw new Error(connectErrorHelp);
     }
+
+    const tx = Sentry.startTransaction({name: 'connect'});
 
     // Create VCDJ for the interface's broadcast address
     const broadcastAddr = getBroadcastAddress(this.#config.iface);
@@ -186,6 +208,8 @@ export class ProlinkNetwork {
 
     this.#state = NetworkState.Connected;
     this.#connection = {announcer, remotedb, localdb, database};
+
+    tx.finish();
   }
 
   /**

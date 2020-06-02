@@ -2,7 +2,8 @@ import {SocketAsPromised} from 'dgram-as-promised';
 import {networkInterfaces, NetworkInterfaceInfoIPv4, NetworkInterfaceInfo} from 'os';
 import ip from 'ip-address';
 
-import {Device} from 'src/types';
+import {Device, MediaSlot, TrackType} from 'src/types';
+import {Query} from 'src/remotedb';
 
 /**
  * Async version of udp socket read
@@ -73,4 +74,26 @@ export function getBroadcastAddress(iface: NetworkInterfaceInfoIPv4) {
 export function bpmToSeconds(bpm: number, pitch: number) {
   const bps = ((pitch / 100) * bpm + bpm) / 60;
   return 1 / bps;
+}
+
+const slotNames = Object.fromEntries(
+  Object.entries(MediaSlot).map(e => [e[1], e[0].toLowerCase()])
+);
+
+/**
+ * Returns a string representation of a media slot
+ */
+export function getSlotName(slot: MediaSlot) {
+  return slotNames[slot];
+}
+
+const trackTypeNames = Object.fromEntries(
+  Object.entries(MediaSlot).map(e => [e[1], e[0].toLowerCase()])
+);
+
+/**
+ * Returns a string representation of a track type
+ */
+export function getTrackTypeName(type: TrackType) {
+  return trackTypeNames[type];
 }

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import {MikroORM} from 'mikro-orm';
 import {createHash} from 'crypto';
 import {EventEmitter} from 'events';
@@ -16,6 +17,7 @@ import * as entities from 'src/entities';
 import DeviceManager from 'src/devices';
 import StatusEmitter from 'src/status';
 import {fetchFile, FetchProgress} from 'src/nfs';
+import {getSlotName} from 'src/utils';
 
 import {HydrationProgress, hydrateDatabase} from './rekordbox';
 
@@ -182,6 +184,23 @@ class LocalDatabase {
    * Downloads and hydrates a new in-memory sqlite database
    */
   #hydrateDatabase = async (device: Device, slot: DatabaseSlot, media: MediaSlotInfo) => {
+    const tx = Sentry.startTransaction({name: 'hydrateDatabase'});
+
+    tx.setTag('slot', getSlotName(media.slot));
+    tx.setData('numTracks', media.trackCount.toString());
+
+    const createOrm = async () => {
+      const dbCreateTx = tx.startChild({op: 'createSchema'});
+      const orm = await newDatabase();
+      await orm.getSchemaGenerator().createSchema();
+      dbCreateTx.finish();
+
+      return orm;
+    };
+
+    // Paralellize the ORM creating with PDB download
+    const creatingOrm = createOrm();
+
     let pdbData = Buffer.alloc(0);
 
     const fetchPdbData = async (path: string) =>
@@ -189,6 +208,7 @@ class LocalDatabase {
         device,
         slot,
         path,
+        span: tx,
         onProgress: progress =>
           this.#emitter.emit('fetchProgress', {device, slot, progress}),
       }));
@@ -210,12 +230,11 @@ class LocalDatabase {
       await fetchPdbData(attemptOrder[1]);
     }
 
-    const orm = await newDatabase();
-    await orm.getSchemaGenerator().createSchema();
-
+    const orm = await creatingOrm;
     await hydrateDatabase({
       orm,
       pdbData,
+      span: tx,
       onProgress: progress =>
         this.#emitter.emit('hydrationProgress', {device, slot, progress}),
     });
@@ -223,6 +242,8 @@ class LocalDatabase {
 
     const db = {orm, media, id: getMediaId(media)};
     this.#dbs.push(db);
+
+    tx.finish();
 
     return db;
   };

@@ -3,6 +3,7 @@ import {Message} from './message';
 import {UInt32} from './fields';
 import {MessageType} from './message/types';
 import {ItemType, Items} from './message/item';
+import {Span} from '@sentry/apm';
 
 /**
  * Specifies the number of items we should request at a time in menu render
@@ -42,7 +43,8 @@ export const makeRenderMessage = (
 export async function* renderItems<T extends ItemType = ItemType>(
   conn: Connection,
   descriptor: LookupDescriptor,
-  total: number
+  total: number,
+  span: Span
 ) {
   let itemsRead = 0;
 
@@ -50,20 +52,20 @@ export async function* renderItems<T extends ItemType = ItemType>(
     // Request another page of items
     if (itemsRead % LIMIT === 0) {
       const message = makeRenderMessage(descriptor, itemsRead, LIMIT);
-      await conn.writeMessage(message);
-      await conn.readMessage(MessageType.MenuHeader);
+      await conn.writeMessage(message, span);
+      await conn.readMessage(MessageType.MenuHeader, span);
     }
 
     // Read each item. Ignoring headers and footers, we will determine when to
     // stop by counting the items read until we reach the total items.
-    const resp = await conn.readMessage(MessageType.MenuItem);
+    const resp = await conn.readMessage(MessageType.MenuItem, span);
 
     yield resp.data as Items[T];
     itemsRead++;
 
     // When we've reached the end of a page we must read the footer
     if (itemsRead % LIMIT === 0 || itemsRead === total) {
-      await conn.readMessage(MessageType.MenuFooter);
+      await conn.readMessage(MessageType.MenuFooter, span);
     }
   }
 }

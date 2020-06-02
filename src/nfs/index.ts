@@ -1,3 +1,7 @@
+import * as Sentry from '@sentry/node';
+import {Span} from '@sentry/apm';
+
+import {getSlotName} from 'src/utils';
 import {Device, MediaSlot} from 'src/types';
 
 import {RpcConnection, RpcProgram, RetryConfig} from './rpc';
@@ -83,6 +87,7 @@ type GetRootHandleOptions = {
   device: Device;
   slot: keyof typeof slotMountMapping;
   mountClient: RpcProgram;
+  span?: Span;
 };
 
 /**
@@ -100,7 +105,9 @@ const rootHandleCache: Map<string, Map<MediaSlot, Buffer>> = new Map();
  *       verify this). It is up to the caller to clear the cache and get the
  *       new root handle in that case.
  */
-async function getRootHandle({device, slot, mountClient}: GetRootHandleOptions) {
+async function getRootHandle({device, slot, mountClient, span}: GetRootHandleOptions) {
+  const tx = span?.startChild({op: 'getRootHandle'});
+
   const {address} = device.ip;
 
   const deviceSlotCache = rootHandleCache.get(address) ?? new Map<MediaSlot, Buffer>();
@@ -110,17 +117,19 @@ async function getRootHandle({device, slot, mountClient}: GetRootHandleOptions) 
     return cachedRootHandle;
   }
 
-  const exports = await getExports(mountClient);
+  const exports = await getExports(mountClient, tx);
   const targetExport = exports.find(e => e.filesystem === slotMountMapping[slot]);
 
   if (targetExport === undefined) {
     return null;
   }
 
-  const rootHandle = await mountFilesystem(mountClient, targetExport);
+  const rootHandle = await mountFilesystem(mountClient, targetExport, tx);
 
   deviceSlotCache.set(slot, rootHandle);
   rootHandleCache.set(address, deviceSlotCache);
+
+  tx?.finish();
 
   return rootHandle;
 }
@@ -130,6 +139,7 @@ type FetchFileOptions = {
   slot: keyof typeof slotMountMapping;
   path: string;
   onProgress?: Parameters<typeof fetchFileCall>[2];
+  span?: Span;
 };
 
 /**
@@ -140,9 +150,19 @@ type FetchFileOptions = {
  *       important that when the device disconnects you call the {@link
  *       resetDeviceCache} function.
  */
-export async function fetchFile({device, slot, path, onProgress}: FetchFileOptions) {
+export async function fetchFile({
+  device,
+  slot,
+  path,
+  onProgress,
+  span,
+}: FetchFileOptions) {
+  const tx = span
+    ? span.startChild({op: 'fetchFile'})
+    : Sentry.startTransaction({name: 'fetchFile'});
+
   const {mountClient, nfsClient} = await getClients(device.ip.address);
-  const rootHandle = await getRootHandle({device, slot, mountClient});
+  const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
 
   if (rootHandle === null) {
     throw new Error(`The slot (${slot}) is not exported on Device ${device.id}`);
@@ -150,8 +170,13 @@ export async function fetchFile({device, slot, path, onProgress}: FetchFileOptio
 
   // TODO: Clear roothandle cache and retry if we fail to lookup the file path
 
-  const fileInfo = await lookupPath(nfsClient, rootHandle, path);
-  const file = await fetchFileCall(nfsClient, fileInfo, onProgress);
+  const fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+  const file = await fetchFileCall(nfsClient, fileInfo, onProgress, tx);
+
+  tx.setData('path', path);
+  tx.setData('slot', getSlotName(slot));
+  tx.setData('size', fileInfo.size);
+  tx.finish();
 
   return file;
 }

@@ -1,10 +1,15 @@
+import * as Sentry from '@sentry/node';
+
 import {Device, DeviceType, TrackType} from 'src/types';
+import {Track} from 'src/entities';
 import RemoteDatabase from 'src/remotedb';
 import LocalDatabase from 'src/localdb';
 import DeviceManager from 'src/devices';
 
 import * as GetMetadata from './getMetadata';
 import * as GetArtwork from './getArtwork';
+import {SpanStatus} from '@sentry/apm';
+import {getTrackTypeName, getSlotName} from 'src/utils';
 
 enum LookupStrategy {
   Remote,
@@ -66,8 +71,18 @@ class Database {
   /**
    * Retrieve metadata for a track on a specfic device slot.
    */
-  getMetadata(opts: GetMetadata.Options) {
-    const {deviceId, trackType} = opts;
+  async getMetadata(opts: GetMetadata.Options) {
+    const {deviceId, trackType, trackSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetMetadata'})
+      : Sentry.startTransaction({name: 'dbGetMetadata'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('trackType', getTrackTypeName(trackType));
+    tx.setTag('trackSlot', getSlotName(trackSlot));
+
+    const callOpts = {...opts, span: tx};
 
     const device = this.#deviceManager.devices.get(deviceId);
     if (device === undefined) {
@@ -75,23 +90,40 @@ class Database {
     }
 
     const strategy = this.#getLookupStrategy(device, trackType);
+    let track: Track | null = null;
 
     if (strategy === LookupStrategy.Remote) {
-      return GetMetadata.viaRemote(this.#remoteDatabase, opts);
+      track = await GetMetadata.viaRemote(this.#remoteDatabase, callOpts);
     }
 
     if (strategy === LookupStrategy.Local) {
-      return GetMetadata.viaLocal(this.#localDatabase, device, opts);
+      track = await GetMetadata.viaLocal(this.#localDatabase, device, callOpts);
     }
 
-    return null;
+    if (strategy === LookupStrategy.NoneAvailable) {
+      tx.setStatus(SpanStatus.Unavailable);
+    }
+
+    tx.finish();
+
+    return track;
   }
 
   /**
    * Retrives the artwork for a track on a specific device slot.
    */
-  getArtwork(opts: GetArtwork.Options) {
-    const {deviceId, trackType} = opts;
+  async getArtwork(opts: GetArtwork.Options) {
+    const {deviceId, trackType, trackSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetArtwork'})
+      : Sentry.startTransaction({name: 'dbGetArtwork'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('trackType', getTrackTypeName(trackType));
+    tx.setTag('trackSlot', getSlotName(trackSlot));
+
+    const callOpts = {...opts, span: tx};
 
     const device = this.#deviceManager.devices.get(deviceId);
     if (device === undefined) {
@@ -99,16 +131,23 @@ class Database {
     }
 
     const strategy = this.#getLookupStrategy(device, trackType);
+    let artwork: Buffer | null = null;
 
     if (strategy === LookupStrategy.Remote) {
-      return GetArtwork.viaRemote(this.#remoteDatabase, opts);
+      artwork = await GetArtwork.viaRemote(this.#remoteDatabase, callOpts);
     }
 
     if (strategy === LookupStrategy.Local) {
-      return GetArtwork.viaLocal(this.#localDatabase, device, opts);
+      artwork = await GetArtwork.viaLocal(this.#localDatabase, device, callOpts);
     }
 
-    return null;
+    if (strategy === LookupStrategy.NoneAvailable) {
+      tx.setStatus(SpanStatus.Unavailable);
+    }
+
+    tx.finish();
+
+    return artwork;
   }
 }
 

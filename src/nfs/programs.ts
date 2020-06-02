@@ -1,3 +1,6 @@
+import * as Sentry from '@sentry/node';
+import {Span} from '@sentry/apm';
+
 import {RpcConnection, RpcProgram} from './rpc';
 import {portmap, mount, nfs} from './xdr';
 import {flattenLinkedList} from './utils';
@@ -64,7 +67,9 @@ type FileInfo = {
 /**
  * Request a list of export entries.
  */
-export async function getExports(conn: RpcProgram) {
+export async function getExports(conn: RpcProgram, span?: Span) {
+  const tx = span?.startChild({op: 'getExports'});
+
   const data = await conn.call({
     procedure: mount.Procedure.export().value,
     data: Buffer.alloc(0),
@@ -80,13 +85,21 @@ export async function getExports(conn: RpcProgram) {
     groups: flattenLinkedList(entry.groups()).map((g: any) => g.name().toString()),
   }));
 
+  tx?.finish();
+
   return exports as Export[];
 }
 
 /**
  * Mount the specified export, returning the file handle.
  */
-export async function mountFilesystem(conn: RpcProgram, {filesystem}: Export) {
+export async function mountFilesystem(
+  conn: RpcProgram,
+  {filesystem}: Export,
+  span?: Span
+) {
+  const tx = span?.startChild({op: 'mountFilesystem', data: {filesystem}});
+
   const resp = await conn.call({
     procedure: mount.Procedure.mount().value,
     data: new mount.MountRequest({filesystem}).toXDR(),
@@ -97,6 +110,8 @@ export async function mountFilesystem(conn: RpcProgram, {filesystem}: Export) {
     throw new Error('Failed to mount filesystem');
   }
 
+  tx?.finish();
+
   return fileHandleResp.success() as Buffer;
 }
 
@@ -104,7 +119,14 @@ export async function mountFilesystem(conn: RpcProgram, {filesystem}: Export) {
  * Lookup a file within the directory of the provided file handle, returning
  * the FileInfo object if the file can be located.
  */
-export async function lookupFile(conn: RpcProgram, handle: Buffer, filename: string) {
+export async function lookupFile(
+  conn: RpcProgram,
+  handle: Buffer,
+  filename: string,
+  span?: Span
+) {
+  const tx = span?.startChild({op: 'lookupFile', description: filename});
+
   const resp = await conn.call({
     procedure: nfs.Procedure.lookup().value,
     data: new nfs.DirectoryOpArgs({handle, filename}).toXDR(),
@@ -125,13 +147,22 @@ export async function lookupFile(conn: RpcProgram, handle: Buffer, filename: str
     type: attributes.type().name,
   };
 
+  tx?.finish();
+
   return info;
 }
 
 /**
  * Lookup the absolute path to a file, given the root file handle and path,
  */
-export async function lookupPath(conn: RpcProgram, rootHandle: Buffer, filepath: string) {
+export async function lookupPath(
+  conn: RpcProgram,
+  rootHandle: Buffer,
+  filepath: string,
+  span?: Span
+) {
+  const tx = span?.startChild({op: 'lookupPath', description: filepath});
+
   const pathParts = filepath.split('/');
 
   let handle: Buffer = rootHandle;
@@ -139,11 +170,13 @@ export async function lookupPath(conn: RpcProgram, rootHandle: Buffer, filepath:
 
   while (pathParts.length !== 0) {
     const filename = pathParts.shift()!;
-    const fileInfo = await lookupFile(conn, handle, filename);
+    const fileInfo = await lookupFile(conn, handle, filename, tx);
 
     info = fileInfo;
     handle = info.handle;
   }
+
+  tx?.finish();
 
   // We can gaurentee this will be set since we will have failed to lookup the
   // file above
@@ -157,10 +190,17 @@ export async function lookupPath(conn: RpcProgram, rootHandle: Buffer, filepath:
 export async function fetchFile(
   conn: RpcProgram,
   file: FileInfo,
-  onProgress?: (progress: FetchProgress) => void
+  onProgress?: (progress: FetchProgress) => void,
+  span?: Span
 ) {
-  const {handle, size} = file;
+  const {handle, name, size} = file;
   const data = Buffer.alloc(size);
+
+  const tx = span?.startChild({
+    op: 'download',
+    description: name,
+    data: {size},
+  });
 
   let bytesRead = 0;
 
@@ -189,6 +229,8 @@ export async function fetchFile(
 
     onProgress?.({read: bytesRead, total: size});
   }
+
+  tx?.finish();
 
   return data;
 }

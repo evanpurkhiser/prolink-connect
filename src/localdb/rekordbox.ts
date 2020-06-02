@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/node';
+import {Span} from '@sentry/apm';
 import {KaitaiStream} from 'kaitai-struct';
 import {MikroORM, EntityManager} from 'mikro-orm';
 
@@ -61,6 +63,10 @@ type Options = {
    */
   pdbData: Buffer;
   /**
+   * Sentry APM span for the parent transaction
+   */
+  span?: Span;
+  /**
    * For larger music collections, it may take some time to load everything,
    * especially when limited by IO. When hydration progresses this function
    * will be called.
@@ -73,9 +79,9 @@ type Options = {
  * database with all entities from the Rekordbox database. This includes all
  * track metadata, including analyzed metadata (such as beatgrids and waveforms).
  */
-export async function hydrateDatabase({pdbData, ...options}: Options) {
+export async function hydrateDatabase({pdbData, span, ...options}: Options) {
   const hydrator = new RekordboxHydrator(options);
-  await hydrator.hydrateFromPdb(pdbData);
+  await hydrator.hydrateFromPdb(pdbData, span);
 }
 
 /**
@@ -115,26 +121,42 @@ class RekordboxHydrator {
    * Extract entries from a rekordbox pdb file and hydrate the passed database
    * connection with entities derived from the rekordbox entries.
    */
-  async hydrateFromPdb(pdbData: Buffer) {
+  async hydrateFromPdb(pdbData: Buffer, span?: Span) {
+    const tx = span
+      ? span.startChild({op: 'hydrateFromPdb'})
+      : Sentry.startTransaction({name: 'hydrateFromPdb'});
+
+    const parseTx = tx.startChild({op: 'parsePdbData', data: {size: pdbData.length}});
     const stream = new KaitaiStream(pdbData);
     const db = new RekordboxPdb(stream);
+    parseTx.finish();
 
     const doHydration = async (em: EntityManager) => {
-      await Promise.all(db.tables.map((table: any) => this.hydrateFromTable(table, em)));
+      const hydrateTx = tx.startChild({op: 'hydration'});
+      await Promise.all(
+        db.tables.map((table: any) => this.hydrateFromTable(table, em, hydrateTx))
+      );
+      hydrateTx.finish();
+
+      const flushTx = tx.startChild({op: 'flush'});
       await em.flush();
+      flushTx.finish();
     };
 
     // Execute within a transaction to allow for deferred foreign key constraints.
     await this.#orm.em.transactional(doHydration);
+    tx.finish();
   }
 
   /**
    * Hydrate the database with entities from the provided RekordboxPdb table.
    * See pdbEntityCreators for how tables are mapped into database entities.
    */
-  async hydrateFromTable(table: any, em: EntityManager) {
+  async hydrateFromTable(table: any, em: EntityManager, span: Span) {
     const tableName: string = RekordboxPdb.PageType[table.type].toLowerCase();
     const createEntity = pdbEntityCreators[table.type];
+
+    const tx = span.startChild({op: 'hydrateFromTable', description: tableName});
 
     if (createEntity === undefined) {
       return;
@@ -147,6 +169,8 @@ class RekordboxHydrator {
     for (const _ of tableRows(table)) {
       totalItems++;
     }
+
+    tx.setData('items', totalItems);
 
     const saveEntity = (entity: ReturnType<typeof createEntity>) =>
       // eslint-disable-next-line no-async-promise-executor
@@ -172,6 +196,7 @@ class RekordboxHydrator {
     }
 
     await Promise.all(savingEntities);
+    tx.finish();
   }
 }
 

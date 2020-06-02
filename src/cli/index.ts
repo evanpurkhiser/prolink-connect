@@ -1,7 +1,14 @@
 import signale from 'signale';
+import * as Sentry from '@sentry/node';
+import '@sentry/apm';
 
 import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';
+
+Sentry.init({
+  dsn: 'https://36570041fd5a4c05af76456e60a1233a@o126623.ingest.sentry.io/5205486',
+  tracesSampleRate: 1,
+});
 
 async function cli() {
   signale.await('Bringing up prolink network');
