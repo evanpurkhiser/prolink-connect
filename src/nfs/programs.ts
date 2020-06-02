@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/apm';
 
 import {RpcConnection, RpcProgram} from './rpc';

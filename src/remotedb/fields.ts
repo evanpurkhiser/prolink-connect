@@ -1,5 +1,4 @@
 import {PromiseReadable} from 'promise-readable';
-import {Span} from '@sentry/apm';
 
 const NULL_CHAR = '\0';
 

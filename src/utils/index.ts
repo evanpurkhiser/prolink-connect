@@ -3,7 +3,6 @@ import {networkInterfaces, NetworkInterfaceInfoIPv4, NetworkInterfaceInfo} from 
 import ip from 'ip-address';
 
 import {Device, MediaSlot, TrackType} from 'src/types';
-import {Query} from 'src/remotedb';
 
 /**
  * Async version of udp socket read

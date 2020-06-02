@@ -15,7 +15,7 @@ import {UInt32, Binary} from './fields';
  * something useful.
  */
 
-type HandlerOpts<A extends object = {}> = {
+type HandlerOpts<A extends Record<string, unknown> = Record<string, unknown>> = {
   conn: Connection;
   lookupDescriptor: LookupDescriptor;
   span: Span;
