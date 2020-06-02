@@ -47,7 +47,7 @@
     "uuid": "^8.1.0"
   },
   "devDependencies": {
-    "@evanpurkhiser/eslint-config": "^0.8.1",
+    "@evanpurkhiser/eslint-config": "^0.8.2",
     "@types/jest": "^25.2.1",
     "@types/node": "^13.11.0",
     "@types/signale": "^1.4.1",
