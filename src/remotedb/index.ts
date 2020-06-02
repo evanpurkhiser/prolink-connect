@@ -14,6 +14,8 @@ import {Message} from './message';
 import {queryHandlers, HandlerArgs, HandlerReturn} from './queries';
 import DeviceManager from 'src/devices';
 
+type Await<T> = T extends PromiseLike<infer U> ? U : T;
+
 /**
  * Menu target specifies where a menu should be "rendered" This differes based
  * on the request being made.
@@ -154,7 +156,7 @@ export class QueryInterface {
   /**
    * Make a query to the remote database connection.
    */
-  async query<T extends Query>(opts: QueryOpts<T>): Promise<HandlerReturn<T>> {
+  async query<T extends Query>(opts: QueryOpts<T>): Promise<Await<HandlerReturn<T>>> {
     const {query, queryDescriptor, args, span} = opts;
     const conn = this.#conn;
 
@@ -182,7 +184,7 @@ export class QueryInterface {
     releaseLock();
     tx.finish();
 
-    return response as HandlerReturn<T>;
+    return response as Await<HandlerReturn<T>>;
   }
 }
 
