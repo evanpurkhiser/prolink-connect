@@ -15,6 +15,10 @@ async function cli() {
   const network = await bringOnline();
   signale.success('Network online, preparing to connect');
 
+  network.deviceManager.on('connected', d =>
+    signale.star('New device: %s [id: %s]', d.name, d.id)
+  );
+
   signale.await('Autoconfiguring network.. waiting for devices');
   await network.autoconfigFromPeers();
   signale.await('Autoconfigure successfull!');
@@ -29,15 +33,21 @@ async function cli() {
 
   signale.star('Network connected! Network services initalized');
 
-  const onlineDevices = [...network.deviceManager.devices.values()];
-  const deviceList = onlineDevices.map(d => `${d.name} [${d.id}]`).join(', ');
-  signale.note(`Found devices: ${deviceList}`);
-
   const processor = new MixstatusProcessor();
   network.statusEmitter.on('status', s => processor.handleState(s));
 
-  processor.on('nowPlaying', async state => {
+  const lastTid = new Map();
+
+  network.statusEmitter.on('status', async state => {
     const {trackDeviceId, trackSlot, trackType, trackId} = state;
+
+    if (lastTid.get(state.deviceId) === trackId) {
+      return;
+    }
+
+    lastTid.set(state.deviceId, trackId);
+
+    console.log(trackId);
 
     const track = await network.db.getMetadata({
       deviceId: trackDeviceId,
