@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/apm';
 
 import {getSlotName} from 'src/utils';
-import {Device, MediaSlot} from 'src/types';
+import {Device, MediaSlot, DeviceID} from 'src/types';
 
 import {RpcConnection, RpcProgram, RetryConfig} from './rpc';
 import {nfs, mount} from './xdr';
@@ -12,6 +12,7 @@ import {
   mountFilesystem,
   lookupPath,
   fetchFile as fetchFileCall,
+  FileInfo,
 } from './programs';
 
 export type FetchProgress = {
@@ -142,6 +143,9 @@ type FetchFileOptions = {
   span?: Span;
 };
 
+const badRoothandleError = (slot: MediaSlot, deviceId: DeviceID) =>
+  new Error(`The slot (${slot}) is not exported on Device ${deviceId}`);
+
 /**
  * Fetch a file from a devices NFS server.
  *
@@ -165,12 +169,27 @@ export async function fetchFile({
   const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
 
   if (rootHandle === null) {
-    throw new Error(`The slot (${slot}) is not exported on Device ${device.id}`);
+    throw badRoothandleError(slot, device.id);
   }
 
-  // TODO: Clear roothandle cache and retry if we fail to lookup the file path
+  // It's possible that our roothandle is no longer valid, if we fail to lookup
+  // a path lets first try and clear our roothandle cache
+  let fileInfo: FileInfo | null = null;
 
-  const fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+  try {
+    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+  } catch {
+    rootHandleCache.delete(device.ip.address);
+    const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+
+    if (rootHandle === null) {
+      throw badRoothandleError(slot, device.id);
+    }
+
+    // Desperately try once more to lookup the file
+    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+  }
+
   const file = await fetchFileCall(nfsClient, fileInfo, onProgress, tx);
 
   tx.setData('path', path);

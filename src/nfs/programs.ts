@@ -56,7 +56,7 @@ type Export = {
 /**
  * Attributes a remote file
  */
-type FileInfo = {
+export type FileInfo = {
   handle: Buffer;
   name: string;
   size: number;
