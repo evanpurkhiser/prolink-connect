@@ -162,7 +162,8 @@ export async function lookupPath(
 ) {
   const tx = span?.startChild({op: 'lookupPath', description: filepath});
 
-  const pathParts = filepath.split('/');
+  // There are times when the path includes a leading slash, sanitize that
+  const pathParts = filepath.replace(/^\//, '').split('/');
 
   let handle: Buffer = rootHandle;
   let info: FileInfo;
