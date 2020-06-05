@@ -207,8 +207,6 @@ export default class RemoteDatabase {
   constructor(deviceManager: DeviceManager, hostDevice: Device) {
     this.#deviceManager = deviceManager;
     this.#hostDevice = hostDevice;
-
-    deviceManager.on('disconnected', this.disconnectFromDevice);
   }
 
   /**
