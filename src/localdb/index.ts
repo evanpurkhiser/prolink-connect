@@ -172,6 +172,13 @@ class LocalDatabase {
   once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   /**
+   * Disconnects the local database connection for the specified device
+   */
+  disconnectForDevice(device: Device) {
+    this.#handleDeviceRemoved(device);
+  }
+
+  /**
    * Closes the database connection and removes the database entry when a
    * device is removed.
    */

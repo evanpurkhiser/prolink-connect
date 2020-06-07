@@ -16,7 +16,7 @@ import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 import {udpBind} from 'src/utils/udp';
 
 const connectErrorHelp =
-  'Network must be configured before connected. Try using `autoconfigFromPeers` or `configure`';
+  'Network must be configured. Try using `autoconfigFromPeers` or `configure`';
 
 export enum NetworkState {
   /**
@@ -76,6 +76,7 @@ type ConnectionService = {
 type ConstructOpts = {
   config?: NetworkConfig;
   announceSocket: Socket;
+  statusSocket: Socket;
   deviceManager: DeviceManager;
   statusEmitter: StatusEmitter;
 };
@@ -123,23 +124,39 @@ export async function bringOnline(config?: NetworkConfig) {
 
   tx.finish();
 
-  return new ProlinkNetwork({config, announceSocket, deviceManager, statusEmitter});
+  const network = new ProlinkNetwork({
+    config,
+    announceSocket,
+    statusSocket,
+    deviceManager,
+    statusEmitter,
+  });
+
+  return network;
 }
 
 export class ProlinkNetwork {
   #state: NetworkState = NetworkState.Online;
 
   #announceSocket: Socket;
+  #statusSocket: Socket;
   #deviceManager: DeviceManager;
   #statusEmitter: StatusEmitter;
 
   #config: null | NetworkConfig;
   #connection: null | ConnectionService;
 
-  constructor({config, announceSocket, deviceManager, statusEmitter}: ConstructOpts) {
+  constructor({
+    config,
+    announceSocket,
+    statusSocket,
+    deviceManager,
+    statusEmitter,
+  }: ConstructOpts) {
     this.#config = config ?? null;
 
     this.#announceSocket = announceSocket;
+    this.#statusSocket = statusSocket;
     this.#deviceManager = deviceManager;
     this.#statusEmitter = statusEmitter;
 
@@ -220,6 +237,28 @@ export class ProlinkNetwork {
     this.#connection = {announcer, remotedb, localdb, database};
 
     tx.finish();
+  }
+
+  /**
+   * Disconnect from the network
+   */
+  disconnect() {
+    if (this.#config === null) {
+      throw new Error(connectErrorHelp);
+    }
+
+    // Stop announcing ourself
+    this.#connection?.announcer.stop();
+
+    // Disconnect devices from the remote and local databases
+    for (const device of this.deviceManager.devices.values()) {
+      this.remotedb?.disconnectFromDevice(device);
+      this.localdb?.disconnectForDevice(device);
+    }
+
+    // Close announce and status sockets
+    this.#announceSocket.close();
+    this.#statusSocket.close();
   }
 
   /**
