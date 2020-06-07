@@ -1,4 +1,4 @@
-import {SocketAsPromised} from 'dgram-as-promised';
+import {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';
 import ip from 'ip-address';
 
@@ -126,7 +126,7 @@ export class Announcer {
   /**
    * The announce socket to use to make the announcments
    */
-  #announceSocket: SocketAsPromised;
+  #announceSocket: Socket;
   /**
    * The broadcast address to make the announcments on
    */
@@ -140,7 +140,7 @@ export class Announcer {
    */
   #intervalHandle?: NodeJS.Timeout;
 
-  constructor(vcdj: Device, announceSocket: SocketAsPromised, broadcastAddr: string) {
+  constructor(vcdj: Device, announceSocket: Socket, broadcastAddr: string) {
     this.#vcdj = vcdj;
     this.#announceSocket = announceSocket;
     this.#broadcastAddr = broadcastAddr;

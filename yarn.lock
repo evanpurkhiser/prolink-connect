@@ -2307,13 +2307,6 @@ detect-newline@^3.0.0:
   resolved "https://registry.yarnpkg.com/detect-newline/-/detect-newline-3.1.0.tgz#576f5dfc63ae1a192ff192d8ad3af6308991b651"
   integrity sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==
 
-dgram-as-promised@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/dgram-as-promised/-/dgram-as-promised-3.0.3.tgz#c8e93fa52d979efeeb1e571d6ee0466bc3041626"
-  integrity sha512-qCiV/cnNJ+TE6hUTxEVt6V83ed0nxvw3aRp9FXOeMQp+56zgVO66VR9Y0renbm9rOuaFt+s3ykdCS9CZtpfpLw==
-  dependencies:
-    tslib "^1.10.0"
-
 diff-sequences@^25.2.6:
   version "25.2.6"
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-25.2.6.tgz#5f467c00edd35352b7bca46d7927d60e687a76dd"

@@ -1,15 +1,7 @@
-import {SocketAsPromised} from 'dgram-as-promised';
 import {networkInterfaces, NetworkInterfaceInfoIPv4, NetworkInterfaceInfo} from 'os';
 import ip from 'ip-address';
 
 import {Device, MediaSlot, TrackType} from 'src/types';
-
-/**
- * Async version of udp socket read
- */
-export function udpRead(conn: SocketAsPromised) {
-  return new Promise<Buffer>(resolve => conn.socket.once('message', resolve));
-}
 
 /**
  * Get the byte representation of the device name

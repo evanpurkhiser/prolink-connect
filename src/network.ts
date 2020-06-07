@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node';
 import {SpanStatus} from '@sentry/apm';
 import {v4 as uuidv4} from 'uuid';
-import dgram, {SocketAsPromised} from 'dgram-as-promised';
+import dgram, {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';
 
 import DeviceManager from 'src/devices';
@@ -13,6 +13,7 @@ import {ANNOUNCE_PORT, STATUS_PORT, DEFAULT_VCDJ_ID} from 'src/constants';
 import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
 import {Device} from 'src/types';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
+import {udpBind} from 'src/utils/udp';
 
 const connectErrorHelp =
   'Network must be configured before connected. Try using `autoconfigFromPeers` or `configure`';
@@ -74,7 +75,7 @@ type ConnectionService = {
 
 type ConstructOpts = {
   config?: NetworkConfig;
-  announceSocket: SocketAsPromised;
+  announceSocket: Socket;
   deviceManager: DeviceManager;
   statusEmitter: StatusEmitter;
 };
@@ -101,12 +102,21 @@ export async function bringOnline(config?: NetworkConfig) {
 
   // Socket used to listen for devices on the network
   const announceSocket = dgram.createSocket('udp4');
-  await announceSocket.bind(ANNOUNCE_PORT, '0.0.0.0');
-  announceSocket.setBroadcast(true);
 
   // Socket used to listen for status packets
   const statusSocket = dgram.createSocket('udp4');
-  await statusSocket.bind(STATUS_PORT, '0.0.0.0');
+
+  try {
+    await udpBind(announceSocket, ANNOUNCE_PORT, '0.0.0.0');
+    await udpBind(statusSocket, STATUS_PORT, '0.0.0.0');
+    announceSocket.setBroadcast(true);
+  } catch (err) {
+    Sentry.captureException(err);
+    tx.setStatus(SpanStatus.Unavailable);
+    tx.finish();
+
+    throw err;
+  }
 
   const deviceManager = new DeviceManager(announceSocket);
   const statusEmitter = new StatusEmitter(statusSocket);
@@ -119,7 +129,7 @@ export async function bringOnline(config?: NetworkConfig) {
 export class ProlinkNetwork {
   #state: NetworkState = NetworkState.Online;
 
-  #announceSocket: SocketAsPromised;
+  #announceSocket: Socket;
   #deviceManager: DeviceManager;
   #statusEmitter: StatusEmitter;
 

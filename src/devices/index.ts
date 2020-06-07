@@ -1,4 +1,4 @@
-import {SocketAsPromised} from 'dgram-as-promised';
+import {Socket} from 'dgram';
 import {EventEmitter} from 'events';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
@@ -71,11 +71,11 @@ class DeviceManager {
    */
   #emitter: Emitter = new EventEmitter();
 
-  constructor(announceSocket: SocketAsPromised, config?: Config) {
+  constructor(announceSocket: Socket, config?: Config) {
     this.#config = {...defaultConfig, ...config};
 
     // Begin listening for device announcments
-    announceSocket.socket.on('message', this.#handleAnnounce);
+    announceSocket.on('message', this.#handleAnnounce);
   }
 
   // Bind public event emitter interface

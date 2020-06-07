@@ -1,10 +1,10 @@
 import {OperationOptions} from 'retry';
 import promiseRetry from 'promise-retry';
-import dgram, {SocketAsPromised} from 'dgram-as-promised';
+import dgram, {Socket} from 'dgram';
 import {timeout, TimeoutError} from 'promise-timeout';
 import {Mutex} from 'async-mutex';
 
-import {udpRead} from 'src/utils';
+import {udpRead, udpSend, udpClose} from 'src/utils/udp';
 
 import {rpc} from './xdr';
 
@@ -50,7 +50,7 @@ export type RetryConfig = OperationOptions & {
 export class RpcConnection {
   address: string;
   retryConfig: RetryConfig;
-  socket: SocketAsPromised;
+  socket: Socket;
   mutex: Mutex;
   xid = 1;
 
@@ -109,7 +109,7 @@ export class RpcConnection {
 
     // Function to execute the transaction
     const executeCall = async () => {
-      await this.socket.send(callData, 0, callData.length, port, this.address);
+      await udpSend(this.socket, callData, 0, callData.length, port, this.address);
       return udpRead(this.socket);
     };
 
@@ -154,7 +154,7 @@ export class RpcConnection {
   }
 
   async disconnect() {
-    await this.socket.close();
+    await udpClose(this.socket);
   }
 }
 
