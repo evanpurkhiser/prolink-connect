@@ -172,18 +172,14 @@ class RekordboxHydrator {
 
     tx.setData('items', totalItems);
 
-    const saveEntity = (entity: ReturnType<typeof createEntity>) =>
-      // eslint-disable-next-line no-async-promise-executor
-      new Promise<never>(async finished => {
-        if (entity) {
-          await em.persist(entity);
-        }
+    const saveEntity = async (entity: ReturnType<typeof createEntity>) => {
+      if (entity) {
+        await em.persist(entity);
+      }
+      this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
+    };
 
-        finished();
-        this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
-      });
-
-    const savingEntities: Promise<never>[] = [];
+    const savingEntities: Promise<void>[] = [];
 
     for (const row of tableRows(table)) {
       const entity = createEntity(row);
