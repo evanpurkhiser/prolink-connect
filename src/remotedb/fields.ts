@@ -243,5 +243,7 @@ export async function readField<
     nextByteCount = Field.bytesToRead(lengthData.readUInt32BE());
   }
 
-  return new Field(await read(stream, nextByteCount)) as F;
+  const data = nextByteCount === 0 ? Buffer.alloc(0) : await read(stream, nextByteCount);
+
+  return new Field(data) as F;
 }
