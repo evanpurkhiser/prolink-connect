@@ -84,12 +84,18 @@ export class Playlist {
   entries = new Collection<PlaylistEntry>(this);
 }
 
+/**
+ * Represents a track.
+ *
+ * Note, fields that are not optional will be set for all database request
+ * methods.
+ */
 @Entity()
 export class Track {
   @PrimaryKey() id!: number;
   @Property() title!: string;
   @Property() duration!: number;
-  @Property() bitrate!: number;
+  @Property() bitrate?: number;
   @Property() tempo!: number;
   @Property() rating!: number;
   @Property() comment!: string;
@@ -108,7 +114,7 @@ export class Track {
   @Property() analyzePath?: string;
   @Property() releaseDate?: string;
   @Property() analyzeDate?: Date;
-  @Property() dateAdded!: Date;
+  @Property() dateAdded?: Date;
 
   /**
    * Embedded beat grid information

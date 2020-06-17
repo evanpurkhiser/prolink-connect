@@ -61,7 +61,11 @@ async function getMetadata(opts: TrackQueryOpts) {
     | ItemType.Tempo
     | ItemType.Label
     | ItemType.Key
-    | ItemType.Comment;
+    | ItemType.Comment
+    | ItemType.BitRate
+    | ItemType.Remixer
+    | ItemType.Year
+    | ItemType.OrigianlArtist;
 
   const items = renderItems<MetadataItems>(
     conn,
@@ -83,9 +87,8 @@ async function getMetadata(opts: TrackQueryOpts) {
   track.title = trackItems[ItemType.TrackTitle].title;
   track.duration = trackItems[ItemType.Duration].duration;
   track.tempo = trackItems[ItemType.Tempo].bpm;
+  track.comment = trackItems[ItemType.Comment].comment;
   track.rating = trackItems[ItemType.Rating].rating;
-  track.comment = trackItems[ItemType.Comment].comment;
-  track.comment = trackItems[ItemType.Comment].comment;
 
   track.artwork = new entities.Artwork();
   track.artwork.id = trackItems[ItemType.TrackTitle].artworkId;
@@ -102,10 +105,6 @@ async function getMetadata(opts: TrackQueryOpts) {
   track.genre.id = trackItems[ItemType.Genre].id;
   track.genre.name = trackItems[ItemType.Genre].name;
 
-  track.label = new entities.Label();
-  track.label.id = trackItems[ItemType.Label].id;
-  track.label.name = trackItems[ItemType.Label].name;
-
   track.key = new entities.Key();
   track.key.id = trackItems[ItemType.Key].id;
   track.key.name = trackItems[ItemType.Key].name;
@@ -114,6 +113,32 @@ async function getMetadata(opts: TrackQueryOpts) {
   track.color = new entities.Color();
   track.color.id = color.id;
   track.color.name = color.name;
+
+  if (ItemType.BitRate in trackItems) {
+    track.bitrate = trackItems[ItemType.BitRate].bitrate;
+  }
+
+  if (ItemType.Label in trackItems) {
+    track.label = new entities.Label();
+    track.label.id = trackItems[ItemType.Label].id;
+    track.label.name = trackItems[ItemType.Label].name;
+  }
+
+  if (ItemType.Year in trackItems) {
+    track.year = trackItems[ItemType.Year].year;
+  }
+
+  if (ItemType.Remixer in trackItems) {
+    track.remixer = new entities.Artist();
+    track.remixer.id = trackItems[ItemType.Remixer].id;
+    track.remixer.name = trackItems[ItemType.Remixer].name;
+  }
+
+  if (ItemType.OrigianlArtist in trackItems) {
+    track.originalArtist = new entities.Artist();
+    track.originalArtist.id = trackItems[ItemType.OrigianlArtist].id;
+    track.originalArtist.name = trackItems[ItemType.OrigianlArtist].name;
+  }
 
   return track;
 }
