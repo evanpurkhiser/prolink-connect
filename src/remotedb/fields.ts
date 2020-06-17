@@ -72,6 +72,10 @@ export type Field = NumberField | StringField | BinaryField;
 
 type NumberFieldType = FieldType.UInt32 | FieldType.UInt16 | FieldType.UInt8;
 
+const numberNameMap = Object.fromEntries(
+  Object.entries(FieldType).map(e => [e[1], e[0]])
+);
+
 const numberBufferInfo = {
   [FieldType.UInt8]: [1, 'writeUInt8', 'readUInt8'],
   [FieldType.UInt16]: [2, 'writeUInt16BE', 'readUInt16BE'],
@@ -101,8 +105,8 @@ function makeVariableBuffer(type: FieldType, fieldData: Buffer, lengthHeader?: n
   return data;
 }
 
-const makeNumberField = (type: NumberFieldType) =>
-  class Number extends BaseField implements NumberField {
+const makeNumberField = (type: NumberFieldType) => {
+  const Number = class extends BaseField implements NumberField {
     static type = type;
     static bytesToRead = numberBufferInfo[type][0];
 
@@ -119,6 +123,12 @@ const makeNumberField = (type: NumberFieldType) =>
       return Buffer.from([type, ...this.data]);
     }
   };
+
+  // We use the name property in readField to create helpful error messages
+  Object.defineProperty(Number, 'name', {value: numberNameMap[type]});
+
+  return Number;
+};
 
 /**
  * Field representing a UInt8
