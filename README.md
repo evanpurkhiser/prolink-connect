@@ -16,9 +16,15 @@
 ---
 
 This library implments the Pioneer PROLINK network protocol + additional
-functionality to interact with the prolink network.
+functionality to interact with the prolink network. This library is used as
+part of [Prolink Tools](https://prolink.tools/).
 
-Used as part of [Prolink Tools](https://prolink.tools/).
+Alternative implementations of the Prolink protocol: [Java](https://github.com/Deep-Symmetry/beat-link), [golang](https://github.com/evanpurkhiser/prolink-go).
+
+
+Thank you to [@brunchboy](https://github.com/brunchboy) for his work on [dysentery](https://github.com/brunchboy/dysentery).
+
+
 
 ## Usage
 

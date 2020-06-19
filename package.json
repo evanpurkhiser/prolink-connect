@@ -16,12 +16,11 @@
   "scripts": {
     "watch": "webpack --watch",
     "build": "webpack",
+    "build-docs": "typedoc --stripInternal --theme minimal --out docs src",
     "test": "jest",
     "lint": "eslint src/**/*.ts tests/**/*.ts"
   },
-  "files": [
-    "lib/"
-  ],
+  "files": ["lib/"],
   "bin": {
     "prolink-connect": "./lib/cli.js"
   },
@@ -65,6 +64,7 @@
     "ts-jest": "^26.1.0",
     "ts-loader": "^7.0.1",
     "ts-node": "^8.10.1",
+    "typedoc": "^0.17.7",
     "typescript": "^3.9.2",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",

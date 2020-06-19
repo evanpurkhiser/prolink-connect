@@ -146,6 +146,9 @@ export class ProlinkNetwork {
   #config: null | NetworkConfig;
   #connection: null | ConnectionService;
 
+  /**
+   * @internal
+   */
   constructor({
     config,
     announceSocket,
