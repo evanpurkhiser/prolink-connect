@@ -8,7 +8,7 @@ import {
   QueryOrder,
 } from 'mikro-orm';
 
-import {BeatGrid, CueAndLoop} from 'src/types';
+import {BeatGrid, CueAndLoop, WaveformHD} from 'src/types';
 
 @Entity()
 export class Artwork {
@@ -127,6 +127,12 @@ export class Track {
    */
   @Property({nullable: true})
   cueAndLoops!: CueAndLoop[] | null;
+
+  /**
+   * Embedded HD Waveform information
+   */
+  @Property({nullable: true})
+  waveformHd!: WaveformHD | null;
 
   @ManyToOne(() => Artwork, {eager: true}) artwork!: Artwork | null;
   @ManyToOne(() => Artist, {eager: true}) artist!: Artist | null;

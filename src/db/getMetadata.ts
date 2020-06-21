@@ -65,6 +65,13 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
     span,
   });
 
+  track.waveformHd = await conn.query({
+    queryDescriptor,
+    query: Query.GetWaveformHD,
+    args: {trackId},
+    span,
+  });
+
   return track;
 }
 
