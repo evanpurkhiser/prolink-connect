@@ -290,8 +290,9 @@ export class MixstatusProcessor {
 
     const isNowPlaying = nowPlaying && !wasPlaying;
 
-    // Was this device in a 'may stop' state?
-    if (this.#lastStoppedTimes.has(deviceId)) {
+    // Was this device in a 'may stop' state and it has begun on-air playing
+    // again?
+    if (this.#lastStoppedTimes.has(deviceId) && nowPlaying && state.isOnAir) {
       this.#lastStoppedTimes.delete(deviceId);
       return;
     }

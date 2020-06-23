@@ -376,4 +376,34 @@ describe('mixstatus processor', () => {
 
     expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 456}));
   });
+
+  it('reports subsequent tracks when first deck is taken off-air and cued', () => {
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Player 2 comes onair after 64 beats
+    advanceByBeatCount(64);
+    feedState(2, {isOnAir: true});
+
+    // Player 1 goes offair, then subsequently cues itself
+    feedState(1, {isOnAir: false});
+    advanceByBeatCount(2);
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+
+    expect(npHandler).toBeCalledTimes(1);
+    npHandler.mockReset();
+
+    // Player 1 loads a new track and begins playing
+    feedState(1, {trackId: 456});
+    feedState(1, {playState: CDJStatus.PlayState.Playing});
+    expect(npHandler).not.toBeCalled();
+
+    // 128 beats later player 1 should be reported
+    advanceByBeatCount(128);
+    feedState(1, {});
+
+    expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 456}));
+  });
 });
