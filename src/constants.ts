@@ -12,6 +12,11 @@ export const DEFAULT_VCDJ_ID = 0x05;
 export const ANNOUNCE_PORT = 50000;
 
 /**
+ * The port on which devices on the prolink network send beat timing information.
+ */
+export const BEAT_PORT = 50001;
+
+/**
  * The port on which devices on the prolink network announce themselves.
  */
 export const STATUS_PORT = 50002;

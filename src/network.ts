@@ -4,12 +4,13 @@ import {v4 as uuidv4} from 'uuid';
 import dgram, {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';
 
+import Control from 'src/control';
 import DeviceManager from 'src/devices';
 import StatusEmitter from 'src/status';
 import LocalDatabase from 'src/localdb';
 import RemoteDatabase from 'src/remotedb';
 import Database from 'src/db';
-import {ANNOUNCE_PORT, STATUS_PORT, DEFAULT_VCDJ_ID} from 'src/constants';
+import {ANNOUNCE_PORT, STATUS_PORT, DEFAULT_VCDJ_ID, BEAT_PORT} from 'src/constants';
 import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
 import {Device} from 'src/types';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
@@ -68,6 +69,7 @@ export type NetworkConfig = {
 
 type ConnectionService = {
   announcer: Announcer;
+  control: Control;
   remotedb: RemoteDatabase;
   localdb: LocalDatabase;
   database: Database;
@@ -76,6 +78,7 @@ type ConnectionService = {
 type ConstructOpts = {
   config?: NetworkConfig;
   announceSocket: Socket;
+  beatSocket: Socket;
   statusSocket: Socket;
   deviceManager: DeviceManager;
   statusEmitter: StatusEmitter;
@@ -84,7 +87,7 @@ type ConstructOpts = {
 /**
  * Services that are not accessible until connected
  */
-type ConnectedServices = 'statusEmitter' | 'localdb' | 'remotedb' | 'db';
+type ConnectedServices = 'statusEmitter' | 'control' | 'localdb' | 'remotedb' | 'db';
 
 export type ConnectedProlinkNetwork = ProlinkNetwork &
   {[P in ConnectedServices]: NonNullable<ProlinkNetwork[P]>} & {
@@ -104,11 +107,15 @@ export async function bringOnline(config?: NetworkConfig) {
   // Socket used to listen for devices on the network
   const announceSocket = dgram.createSocket('udp4');
 
+  // Socket used to listen for beat timing information
+  const beatSocket = dgram.createSocket('udp4');
+
   // Socket used to listen for status packets
   const statusSocket = dgram.createSocket('udp4');
 
   try {
     await udpBind(announceSocket, ANNOUNCE_PORT, '0.0.0.0');
+    await udpBind(beatSocket, BEAT_PORT, '0.0.0.0');
     await udpBind(statusSocket, STATUS_PORT, '0.0.0.0');
     announceSocket.setBroadcast(true);
   } catch (err) {
@@ -127,6 +134,7 @@ export async function bringOnline(config?: NetworkConfig) {
   const network = new ProlinkNetwork({
     config,
     announceSocket,
+    beatSocket,
     statusSocket,
     deviceManager,
     statusEmitter,
@@ -139,6 +147,7 @@ export class ProlinkNetwork {
   #state: NetworkState = NetworkState.Online;
 
   #announceSocket: Socket;
+  #beatSocket: Socket;
   #statusSocket: Socket;
   #deviceManager: DeviceManager;
   #statusEmitter: StatusEmitter;
@@ -152,6 +161,7 @@ export class ProlinkNetwork {
   constructor({
     config,
     announceSocket,
+    beatSocket,
     statusSocket,
     deviceManager,
     statusEmitter,
@@ -159,6 +169,7 @@ export class ProlinkNetwork {
     this.#config = config ?? null;
 
     this.#announceSocket = announceSocket;
+    this.#beatSocket = beatSocket;
     this.#statusSocket = statusSocket;
     this.#deviceManager = deviceManager;
     this.#statusEmitter = statusEmitter;
@@ -236,8 +247,11 @@ export class ProlinkNetwork {
     // Create unified database
     const database = new Database(vcdj, localdb, remotedb, this.#deviceManager);
 
+    // Create controller service
+    const control = new Control(this.#beatSocket, vcdj);
+
     this.#state = NetworkState.Connected;
-    this.#connection = {announcer, remotedb, localdb, database};
+    this.#connection = {announcer, control, remotedb, localdb, database};
 
     tx.finish();
   }
@@ -312,6 +326,14 @@ export class ProlinkNetwork {
     // network to be Connected, it does not make sense to use it unless it is. So
     // we artificially return null if we are not connected
     return this.#state === NetworkState.Connected ? this.#statusEmitter : null;
+  }
+
+  /**
+   * Get the @{link Control} service. This service can be used to control the
+   * Playstate of CDJs on the network.
+   */
+  get control() {
+    return this.#connection?.control ?? null;
   }
 
   /**
