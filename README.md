@@ -21,12 +21,22 @@ part of [Prolink Tools](https://prolink.tools/).
 
 Alternative implementations of the Prolink protocol: [Java](https://github.com/Deep-Symmetry/beat-link), [golang](https://github.com/evanpurkhiser/prolink-go).
 
+Thank you to [@brunchboy](https://github.com/brunchboy) for his work on
+[dysentery](https://github.com/brunchboy/dysentery).
 
-Thank you to [@brunchboy](https://github.com/brunchboy) for his work on [dysentery](https://github.com/brunchboy/dysentery).
+## Features
 
+ * **Written in Typescript** - Accurate typings making implementation a breeze.
+   Autocompete your DJ tools to completion.
 
+ * **CDJ Status** - Receive Player state details for each CDJ on the network.
+   The status is reported as a [`CDJStatus.State`](https://connect.prolink.tools/modules/_status_types_.html#state).
 
-## Usage
+ * **Metadata Database** - Access metadata of currently the currently playing
+   (or not!) tracks stored in the connected Rekordbox formatted USB / SD
+   device, or via Rekordbox link.
+
+## Library usage
 
 ### Connecting to the network
 
