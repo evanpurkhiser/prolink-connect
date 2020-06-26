@@ -2,6 +2,10 @@
 
 ## UNRELEASED
 
+* Introduced a method to play and cue CDJs.
+
+## v0.1.0
+
 * Fixed a bug in mixstatus when ending a track by taking the deck off-air and
   then cueing before it finished determining if the off-air action passed the
   number of interupt beats, causing the track to incorrectly NOT be cleared
