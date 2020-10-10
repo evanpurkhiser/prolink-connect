@@ -8,6 +8,10 @@
   device appears on the network before resolving. Useful for when you know a
   device should be on the netowrk, but maybe has not yet announced itself
 
+* Use `getDeviceEnsured` when querying the aggregate database. This will help
+  with situations where a device reports having a track loaded from a device
+  which has not yet announced itself on the network.
+
 ## v0.1.0
 
 * Fixed a bug in mixstatus when ending a track by taking the deck off-air and

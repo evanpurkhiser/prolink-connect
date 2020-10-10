@@ -84,8 +84,8 @@ class Database {
 
     const callOpts = {...opts, span: tx};
 
-    const device = this.#deviceManager.devices.get(deviceId);
-    if (device === undefined) {
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
       return null;
     }
 
@@ -125,8 +125,8 @@ class Database {
 
     const callOpts = {...opts, span: tx};
 
-    const device = this.#deviceManager.devices.get(deviceId);
-    if (device === undefined) {
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
       return null;
     }
 
