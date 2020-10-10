@@ -4,6 +4,10 @@
 
 * Introduced a method to play and cue CDJs.
 
+* Device manager has learned `getDeviceEnsured`, which will wait until the
+  device appears on the network before resolving. Useful for when you know a
+  device should be on the netowrk, but maybe has not yet announced itself
+
 ## v0.1.0
 
 * Fixed a bug in mixstatus when ending a track by taking the deck off-air and

@@ -22,6 +22,12 @@ const defaultConfig = {
 };
 
 /**
+ * The upper bound in milliseconds to wait when looking for a device to be on
+ * the network when using the `getDeviceEnsured` method.
+ */
+const ENSURED_TIMEOUT = 2000;
+
+/**
  * The configuration object that may be passed to reconfigure the manager
  */
 type ConfigEditable = Omit<Config, 'announceSocket'>;
@@ -88,6 +94,34 @@ class DeviceManager {
    */
   get devices() {
     return this.#devices;
+  }
+
+  /**
+   * Waits for a specific device ID to appear on the network, with a
+   * configurable timeout, in which case it will resolve with null.
+   */
+  async getDeviceEnsured(id: DeviceID, timeout: number = ENSURED_TIMEOUT) {
+    const existingDevice = this.devices.get(id);
+
+    if (existingDevice !== undefined) {
+      return existingDevice;
+    }
+
+    let handler: ((device: Device) => void) | undefined;
+
+    // Wait for the device to be connected
+    const devicePromise = new Promise<Device>(resolve => {
+      handler = (device: Device) => device.id === id && resolve(device);
+      this.on('connected', handler);
+    });
+
+    const device = await Promise.race([
+      devicePromise,
+      new Promise<null>(r => setTimeout(() => r(null), timeout)),
+    ]);
+    this.off('connected', handler!);
+
+    return device;
   }
 
   reconfigure(config: ConfigEditable) {
