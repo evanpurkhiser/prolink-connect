@@ -24,7 +24,7 @@ describe('deviceFromPacket', () => {
       type: DeviceType.CDJ,
       name: 'CDJ-2000nexus',
       ip: expect.objectContaining({address: '10.0.0.207'}),
-      macAddr: new Uint8Array([116, 94, 28, 87, 130, 216]),
+      macAddr: Uint8Array.of(116, 94, 28, 87, 130, 216),
     };
 
     expect(deviceFromPacket(packet)).toEqual(expected);
