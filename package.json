@@ -26,6 +26,7 @@
   "bin": {
     "prolink-connect": "./lib/cli.js"
   },
+  "sideEffects": false,
   "dependencies": {
     "@sentry/node": "^5.16.1",
     "@sentry/tracing": "^5.25.0",
