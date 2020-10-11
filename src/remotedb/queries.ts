@@ -1,4 +1,4 @@
-import {Span} from '@sentry/apm';
+import {Span} from '@sentry/tracing';
 
 import * as entities from 'src/entities';
 

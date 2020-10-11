@@ -1,4 +1,4 @@
-import {Span} from '@sentry/apm';
+import {Span} from '@sentry/tracing';
 
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';

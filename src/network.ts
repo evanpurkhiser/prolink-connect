@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import {SpanStatus} from '@sentry/apm';
+import {SpanStatus} from '@sentry/tracing';
 import {v4 as uuidv4} from 'uuid';
 import dgram, {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';

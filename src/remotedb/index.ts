@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/apm';
+import {Span} from '@sentry/tracing';
 import ip from 'ip-address';
 import PromiseSocket from 'promise-socket';
 import {Socket} from 'net';

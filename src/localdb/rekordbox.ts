@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/apm';
+import {Span} from '@sentry/tracing';
 import {KaitaiStream} from 'kaitai-struct';
 import {MikroORM, EntityManager} from 'mikro-orm';
 
@@ -63,7 +63,7 @@ type Options = {
    */
   pdbData: Buffer;
   /**
-   * Sentry APM span for the parent transaction
+   * Sentry tracing span for the parent transaction
    */
   span?: Span;
   /**

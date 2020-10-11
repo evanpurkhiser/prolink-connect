@@ -1,6 +1,6 @@
 import signale from 'signale';
 import * as Sentry from '@sentry/node';
-import '@sentry/apm';
+import '@sentry/tracing';
 
 import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';

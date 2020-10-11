@@ -12,7 +12,7 @@ import {
   UInt32,
   Binary,
 } from 'src/remotedb/fields';
-import {Span, SpanStatus} from '@sentry/apm';
+import {Span, SpanStatus} from '@sentry/tracing';
 
 /**
  * Argument types are used in argument list fields. This is essentially

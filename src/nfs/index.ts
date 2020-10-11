@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/apm';
+import {Span} from '@sentry/tracing';
 
 import {getSlotName} from 'src/utils';
 import {Device, MediaSlot, DeviceID} from 'src/types';

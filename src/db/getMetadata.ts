@@ -1,4 +1,4 @@
-import {Span} from '@sentry/apm';
+import {Span} from '@sentry/tracing';
 
 import LocalDatabase from 'src/localdb';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';

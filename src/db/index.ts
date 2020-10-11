@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/node';
+import {SpanStatus} from '@sentry/tracing';
 
 import {Device, DeviceType, TrackType} from 'src/types';
 import {Track} from 'src/entities';
@@ -8,7 +9,6 @@ import DeviceManager from 'src/devices';
 
 import * as GetMetadata from './getMetadata';
 import * as GetArtwork from './getArtwork';
-import {SpanStatus} from '@sentry/apm';
 import {getTrackTypeName, getSlotName} from 'src/utils';
 
 enum LookupStrategy {

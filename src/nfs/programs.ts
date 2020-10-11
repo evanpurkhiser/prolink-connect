@@ -1,4 +1,4 @@
-import {Span} from '@sentry/apm';
+import {Span} from '@sentry/tracing';
 
 import {RpcConnection, RpcProgram} from './rpc';
 import {portmap, mount, nfs} from './xdr';
