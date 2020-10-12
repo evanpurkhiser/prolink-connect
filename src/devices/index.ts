@@ -1,18 +1,17 @@
 import {Socket} from 'dgram';
 import {EventEmitter} from 'events';
+import {VIRTUAL_CDJ_NAME} from 'src/constants';
+import {Device, DeviceID} from 'src/types';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
-import {Device, DeviceID} from 'src/types';
-
 import {deviceFromPacket} from './utils';
-import {VIRTUAL_CDJ_NAME} from 'src/constants';
 
 type Config = {
   /**
-   * Time in milliseconds after which a device is considered to have disconnected
-   * if it has not broadcast an announcment.
+   * Time in milliseconds after which a device is considered to have
+   * disconnected if it has not broadcast an announcment.
    *
-   * @default 5000 ms
+   * @default 10000 ms
    */
   deviceTimeout?: number;
 };
@@ -41,8 +40,8 @@ type DeviceEvents = {
    */
   connected: (device: Device) => void;
   /**
-   * Fired when a device has not announced itself on the network for the specified
-   * timeout.
+   * Fired when a device has not announced itself on the network for the
+   * specified timeout.
    */
   disconnected: (device: Device) => void;
   /**
