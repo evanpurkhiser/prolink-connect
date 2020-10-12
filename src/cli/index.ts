@@ -76,15 +76,6 @@ async function cli() {
 
   const player2 = network.deviceManager.devices.get(2);
   const player3 = network.deviceManager.devices.get(3);
-
-  signale.warn('PLAYING');
-  network.control.setPlayState(player2!, CDJStatus.PlayState.Playing);
-  network.control.setPlayState(player3!, CDJStatus.PlayState.Playing);
-
-  await new Promise(r => setTimeout(r, 3000));
-  signale.warn('PAUSING');
-  network.control.setPlayState(player2!, CDJStatus.PlayState.Playing);
-  network.control.setPlayState(player2!, CDJStatus.PlayState.Cued);
 }
 
 cli();

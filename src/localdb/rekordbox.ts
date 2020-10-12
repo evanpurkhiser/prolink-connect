@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
 import {KaitaiStream} from 'kaitai-struct';
-import {MikroORM, EntityManager} from 'mikro-orm';
+import {MikroORM, EntityManager} from '@mikro-orm/core';
 
 import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
@@ -172,26 +172,18 @@ class RekordboxHydrator {
 
     tx.setData('items', totalItems);
 
-    const saveEntity = async (entity: ReturnType<typeof createEntity>) => {
-      if (entity) {
-        await em.persist(entity);
-      }
-      this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
-    };
-
-    const savingEntities: Promise<void>[] = [];
-
     for (const row of tableRows(table)) {
       const entity = createEntity(row);
-      const savePromise = saveEntity(entity);
 
-      savingEntities.push(savePromise);
+      if (entity) {
+        em.persist(entity);
+      }
+      this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
 
       // Allow additional tasks to occur during hydration
       await new Promise(r => setTimeout(r, 0));
     }
 
-    await Promise.all(savingEntities);
     tx.finish();
   }
 }

@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import {MikroORM} from 'mikro-orm';
+import {MikroORM} from '@mikro-orm/core';
 import {createHash} from 'crypto';
 import {EventEmitter} from 'events';
 import {Mutex} from 'async-mutex';

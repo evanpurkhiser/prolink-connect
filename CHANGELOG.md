@@ -12,6 +12,9 @@
   with situations where a device reports having a track loaded from a device
   which has not yet announced itself on the network.
 
+* Upgraded to mikro-orm v7, removing some frustrating dependencies that would
+  be deeply bundled into apps using prolink-connect.
+
 ## v0.1.0
 
 * Fixed a bug in mixstatus when ending a track by taking the deck off-air and

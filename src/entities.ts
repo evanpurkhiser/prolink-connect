@@ -6,7 +6,7 @@ import {
   Property,
   Collection,
   QueryOrder,
-} from 'mikro-orm';
+} from '@mikro-orm/core';
 
 import {BeatGrid, CueAndLoop, WaveformHD} from 'src/types';
 
@@ -76,7 +76,7 @@ export class Playlist {
   parent!: Playlist | null;
 
   @OneToMany(() => Playlist, playlist => playlist.parent)
-  children: Collection<Playlist> = new Collection(this);
+  children = new Collection<Playlist>(this);
 
   @OneToMany(() => PlaylistEntry, entry => entry.playlist, {
     orderBy: {sortIndex: QueryOrder.DESC},

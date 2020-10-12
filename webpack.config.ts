@@ -3,11 +3,13 @@ import nodeExternals from 'webpack-node-externals';
 import path from 'path';
 import tsTransformPaths from '@zerollup/ts-transform-paths';
 
+const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+
 const config: webpack.Configuration = {
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  mode,
   entry: {
     index: './src/index.ts',
-    cli: 'src/cli/index',
+    ...(mode === 'development' ? {cli: 'src/cli/index'} : {}),
   },
   target: 'node',
   externals: [nodeExternals()],
