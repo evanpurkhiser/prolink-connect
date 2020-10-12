@@ -1,4 +1,4 @@
-import ip from 'ip-address';
+import * as ip from 'ip-address';
 
 import {PROLINK_HEADER} from 'src/constants';
 import {Device} from 'src/types';

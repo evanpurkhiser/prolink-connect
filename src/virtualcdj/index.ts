@@ -1,6 +1,6 @@
 import {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';
-import ip from 'ip-address';
+import * as ip from 'ip-address';
 
 import {buildName} from 'src/utils';
 import {DeviceID, Device, DeviceType} from 'src/types';

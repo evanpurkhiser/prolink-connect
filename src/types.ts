@@ -1,4 +1,4 @@
-import ip from 'ip-address';
+import * as ip from 'ip-address';
 
 export * as CDJStatus from 'src/status/types';
 

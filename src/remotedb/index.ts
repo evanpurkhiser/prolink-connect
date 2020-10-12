@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
-import ip from 'ip-address';
+import * as ip from 'ip-address';
 import PromiseSocket from 'promise-socket';
 import {Socket} from 'net';
 import {Mutex} from 'async-mutex';
