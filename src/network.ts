@@ -12,34 +12,12 @@ import RemoteDatabase from 'src/remotedb';
 import Database from 'src/db';
 import {ANNOUNCE_PORT, STATUS_PORT, DEFAULT_VCDJ_ID, BEAT_PORT} from 'src/constants';
 import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
-import {Device} from 'src/types';
+import {Device, NetworkState} from 'src/types';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 import {udpBind} from 'src/utils/udp';
 
 const connectErrorHelp =
   'Network must be configured. Try using `autoconfigFromPeers` or `configure`';
-
-export enum NetworkState {
-  /**
-   * The network is offline when we don't have an open connection to the network
-   * (no connection to the announcment and or status UDP socket is present).
-   */
-  Offline,
-  /**
-   * The network is online when we have opened sockets to the network, but have
-   * not yet started announcing ourselves as a virtual CDJ.
-   */
-  Online,
-  /**
-   * The network is connected once we have heard from another device on the network
-   */
-  Connected,
-  /**
-   * The network may have failed to connect if we aren't able to open the
-   * announcment and or status UDP socket.
-   */
-  Failed,
-}
 
 export type NetworkConfig = {
   /**

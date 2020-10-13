@@ -9,6 +9,7 @@ const config: webpack.Configuration = {
   mode,
   entry: {
     index: './src/index.ts',
+    types: './src/types.ts',
     ...(mode === 'development' ? {cli: 'src/cli/index'} : {}),
   },
   target: 'node',

@@ -1,6 +1,27 @@
-import * as ip from 'ip-address';
+import type {Address4} from 'ip-address';
 
 export * as CDJStatus from 'src/status/types';
+
+/**
+ * Re-export various types for the types only compile target
+ */
+
+export type {FetchProgress} from './nfs';
+export type {HydrationProgress} from './localdb/rekordbox';
+export type {MixstatusConfig} from './mixstatus';
+export type {NetworkConfig} from './network';
+
+export type {
+  Artwork,
+  Key,
+  Label,
+  Color,
+  Genre,
+  Album,
+  Artist,
+  Playlist,
+  Track,
+} from './entities';
 
 /**
  * Known device types on the network
@@ -24,7 +45,7 @@ export type Device = {
   id: DeviceID;
   type: DeviceType;
   macAddr: Uint8Array;
-  ip: ip.Address4;
+  ip: Address4;
   lastActive?: Date;
 };
 
@@ -267,3 +288,25 @@ export type Hotcue = BareCuePoint & {
 export type Hotloop = {type: 'hot_loop'} & (Omit<Hotcue, 'type'> & Omit<Loop, 'type'>);
 
 export type CueAndLoop = CuePoint | Loop | Hotcue | Hotloop;
+
+export enum NetworkState {
+  /**
+   * The network is offline when we don't have an open connection to the network
+   * (no connection to the announcment and or status UDP socket is present).
+   */
+  Offline,
+  /**
+   * The network is online when we have opened sockets to the network, but have
+   * not yet started announcing ourselves as a virtual CDJ.
+   */
+  Online,
+  /**
+   * The network is connected once we have heard from another device on the network
+   */
+  Connected,
+  /**
+   * The network may have failed to connect if we aren't able to open the
+   * announcment and or status UDP socket.
+   */
+  Failed,
+}
