@@ -682,13 +682,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/ip-address@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@types/ip-address/-/ip-address-7.0.0.tgz#3cd1512a4b9ed62234cc1b47dd374911963e7023"
-  integrity sha512-OyDm4EwZsYPDUjXz3ktiuQE8PJIPO1uUZMfvZMcWmykWjm3WVyI78rAnHkqKV3pMR7iDRKfalI+RxG5JBDUo5w==
-  dependencies:
-    ip-address "*"
-
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@types/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.3.tgz#4ba8ddb720221f432e443bd5f9117fd22cfd4762"
@@ -3547,7 +3540,7 @@ interpret@^2.2.0:
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-2.2.0.tgz#1a78a0b5965c40a5416d007ad6f50ad27c417df9"
   integrity sha512-Ju0Bz/cEia55xDwUWEa8+olFpCiQoypjnQySseKtmjNrnps3P+xfpUmGr90T7yjlVJmOtybRvPXhKMbHr+fWnw==
 
-ip-address@*, ip-address@^7.0.1:
+ip-address@^7.0.1:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/ip-address/-/ip-address-7.0.1.tgz#f9991ece78767b4696386e8274428686eae2d8b4"
   integrity sha512-cQL/iSRrBqhKhVoFSrqg73OJKDi9TZHewAq9AZgPstktQ7JqIgEeJ2kpPeQA1HdisirffMW3CuAPR4FfNLXDYQ==
