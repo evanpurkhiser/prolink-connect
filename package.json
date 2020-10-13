@@ -1,6 +1,6 @@
 {
   "name": "prolink-connect",
-  "version": "0.2.0-prerelease.3",
+  "version": "0.2.0-prerelease.4",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
   "keywords": [
