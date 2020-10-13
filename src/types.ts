@@ -8,8 +8,8 @@ export * as CDJStatus from 'src/status/types';
 
 export type {FetchProgress} from './nfs';
 export type {HydrationProgress} from './localdb/rekordbox';
-export type {MixstatusConfig} from './mixstatus';
-export type {NetworkConfig} from './network';
+export type {MixstatusConfig, MixstatusProcessor} from './mixstatus';
+export type {NetworkConfig, ProlinkNetwork, ConnectedProlinkNetwork} from './network';
 
 export type {
   Artwork,
