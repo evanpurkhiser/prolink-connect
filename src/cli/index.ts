@@ -4,7 +4,6 @@ import '@sentry/tracing';
 
 import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';
-import {CDJStatus} from 'src/types';
 
 Sentry.init({
   dsn: 'https://36570041fd5a4c05af76456e60a1233a@o126623.ingest.sentry.io/5205486',
@@ -73,9 +72,6 @@ async function cli() {
   });
 
   await new Promise(r => setTimeout(r, 3000));
-
-  const player2 = network.deviceManager.devices.get(2);
-  const player3 = network.deviceManager.devices.get(3);
 }
 
 cli();
