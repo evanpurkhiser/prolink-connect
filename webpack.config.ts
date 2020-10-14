@@ -3,14 +3,14 @@ import nodeExternals from 'webpack-node-externals';
 import path from 'path';
 import tsTransformPaths from '@zerollup/ts-transform-paths';
 
-const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+const IS_DEV = process.env.NODE_ENV !== 'production';
 
 const config: webpack.Configuration = {
-  mode,
+  mode: IS_DEV ? 'development' : 'production',
   entry: {
     index: './src/index.ts',
     types: './src/types.ts',
-    ...(mode === 'development' ? {cli: 'src/cli/index'} : {}),
+    ...(IS_DEV ? {cli: 'src/cli/index'} : {}),
   },
   target: 'node',
   externals: [nodeExternals()],
@@ -18,6 +18,9 @@ const config: webpack.Configuration = {
     path: path.resolve(__dirname, 'lib'),
     filename: '[name].js',
     libraryTarget: 'commonjs2',
+  },
+  optimization: {
+    minimize: false,
   },
   resolve: {
     extensions: ['.ts', '.js'],
