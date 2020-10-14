@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 export * from './entities';
 export * from './network';
 export * from './mixstatus';

@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/node';
-import {MikroORM} from '@mikro-orm/core';
 import {createHash} from 'crypto';
 import {EventEmitter} from 'events';
 import {Mutex} from 'async-mutex';
@@ -13,13 +12,13 @@ import {
   DeviceType,
   TrackType,
 } from 'src/types';
-import * as entities from 'src/entities';
 import DeviceManager from 'src/devices';
 import StatusEmitter from 'src/status';
 import {fetchFile, FetchProgress} from 'src/nfs';
 import {getSlotName} from 'src/utils';
 
 import {HydrationProgress, hydrateDatabase} from './rekordbox';
+import {MetadataORM} from './orm';
 
 /**
  * Rekordbox databases will only exist within these two slots
@@ -88,9 +87,9 @@ type DatabaseItem = {
    */
   media: MediaSlotInfo;
   /**
-   * The open sqlite database connection
+   * The MetadataORM service instance for the active connection
    */
-  orm: MikroORM;
+  orm: MetadataORM;
 };
 
 /**
@@ -110,23 +109,6 @@ const getMediaId = (info: MediaSlotInfo) => {
 
   return createHash('sha256').update(inputs.join('.'), 'utf8').digest().toString();
 };
-
-// Avoid idle connection dropping (which would drop in memory dbs)
-const noRefreshPool = {
-  idleTimeoutMillis: Infinity,
-  refreshIdle: false,
-  min: 1,
-  max: 1,
-};
-
-const newDatabase = () =>
-  MikroORM.init({
-    type: 'sqlite',
-    dbName: ':memory:',
-    entities: Object.values(entities),
-    discovery: {disableDynamicFileAccess: true},
-    pool: noRefreshPool,
-  });
 
 /**
  * The local database is responsible for syncing the remote rekordbox databases
@@ -196,17 +178,9 @@ class LocalDatabase {
     tx.setTag('slot', getSlotName(media.slot));
     tx.setData('numTracks', media.trackCount.toString());
 
-    const createOrm = async () => {
-      const dbCreateTx = tx.startChild({op: 'createSchema'});
-      const orm = await newDatabase();
-      await orm.getSchemaGenerator().createSchema();
-      dbCreateTx.finish();
-
-      return orm;
-    };
-
-    // Paralellize the ORM creating with PDB download
-    const creatingOrm = createOrm();
+    const dbCreateTx = tx.startChild({op: 'setupDatabase'});
+    const orm = new MetadataORM();
+    dbCreateTx.finish();
 
     let pdbData = Buffer.alloc(0);
 
@@ -237,7 +211,6 @@ class LocalDatabase {
       await fetchPdbData(attemptOrder[1]);
     }
 
-    const orm = await creatingOrm;
     await hydrateDatabase({
       orm,
       pdbData,
@@ -256,7 +229,7 @@ class LocalDatabase {
   };
 
   /**
-   * Gets the Typeorm database connection to a database hydrated with the media
+   * Gets the sqlite ORM service for to a database hydrated with the media
    * metadata for the provided device slot.
    *
    * If the database has not already been hydrated this will first hydrate the

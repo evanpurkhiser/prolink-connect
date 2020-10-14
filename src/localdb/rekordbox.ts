@@ -1,13 +1,14 @@
 import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
 import {KaitaiStream} from 'kaitai-struct';
-import {MikroORM, EntityManager} from '@mikro-orm/core';
 
 import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
+import {MetadataORM, Table} from 'src/localdb/orm';
 import {makeCueLoopEntry} from 'src/localdb/utils';
 import {HotcueButton} from 'src/types';
 import {
+  EntityFK,
   Track,
   Artist,
   Album,
@@ -54,9 +55,9 @@ export type HydrationProgress = {
  */
 type Options = {
   /**
-   * The database connection of which the tables will be hydrated
+   * The metadata ORM of which the tables will be hydrated
    */
-  orm: MikroORM;
+  orm: MetadataORM;
   /**
    * This buffer should contain the Rekordbox pdb file contents. It will be
    * used to do the hydration
@@ -109,7 +110,7 @@ export async function hydrateAnlz(
  * analysis (ANLZ) files into the common entity types used in this library.
  */
 class RekordboxHydrator {
-  #orm: MikroORM;
+  #orm: MetadataORM;
   #onProgress: (progress: HydrationProgress) => void;
 
   constructor({orm, onProgress}: Omit<Options, 'pdbData'>) {
@@ -131,20 +132,12 @@ class RekordboxHydrator {
     const db = new RekordboxPdb(stream);
     parseTx.finish();
 
-    const doHydration = async (em: EntityManager) => {
-      const hydrateTx = tx.startChild({op: 'hydration'});
-      await Promise.all(
-        db.tables.map((table: any) => this.hydrateFromTable(table, em, hydrateTx))
-      );
-      hydrateTx.finish();
+    const hydrateTx = tx.startChild({op: 'hydration'});
+    await Promise.all(
+      db.tables.map((table: any) => this.hydrateFromTable(table, hydrateTx))
+    );
+    hydrateTx.finish();
 
-      const flushTx = tx.startChild({op: 'flush'});
-      await em.flush();
-      flushTx.finish();
-    };
-
-    // Execute within a transaction to allow for deferred foreign key constraints.
-    await this.#orm.em.transactional(doHydration);
     tx.finish();
   }
 
@@ -152,13 +145,13 @@ class RekordboxHydrator {
    * Hydrate the database with entities from the provided RekordboxPdb table.
    * See pdbEntityCreators for how tables are mapped into database entities.
    */
-  async hydrateFromTable(table: any, em: EntityManager, span: Span) {
-    const tableName: string = RekordboxPdb.PageType[table.type].toLowerCase();
-    const createEntity = pdbEntityCreators[table.type];
+  async hydrateFromTable(table: any, span: Span) {
+    const tableName = pdbTables[table.type];
+    const createObject = pdbEntityCreators[table.type];
 
     const tx = span.startChild({op: 'hydrateFromTable', description: tableName});
 
-    if (createEntity === undefined) {
+    if (createObject === undefined) {
       return;
     }
 
@@ -173,11 +166,7 @@ class RekordboxHydrator {
     tx.setData('items', totalItems);
 
     for (const row of tableRows(table)) {
-      const entity = createEntity(row);
-
-      if (entity) {
-        em.persist(entity);
-      }
+      this.#orm.insertEntity(tableName, createObject(row));
       this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
 
       // Allow additional tasks to occur during hydration
@@ -219,79 +208,78 @@ function* tableRows(table: any) {
   } while (pageRef.index <= lastPage.index);
 }
 
-type IdAndNameEntity = new () => {id: number; name: string};
+type IdAndNameEntity = {id: number; name: string};
 
 /**
  * Utility to create a hydrator that hydrates the provided entity with the id
  * and name properties from the row.
  */
-const makeIdNameHydrator = <T extends IdAndNameEntity>(Entity: T) => (row: any) => {
-  const item = new Entity();
-
-  item.id = row.id;
-  item.name = row.name.body.text;
-
-  return item;
-};
+const makeIdNameHydrator = <T extends IdAndNameEntity>() => (row: any) =>
+  ({
+    id: row.id,
+    name: row.name.body.text,
+  } as T);
 
 /**
  * Translates a pdb track row entry to a {@link Track} entity.
  */
 function createTrack(trackRow: any) {
-  const track = new Track();
-  track.id = trackRow.id;
-  track.title = trackRow.title.body.text;
-  track.trackNumber = trackRow.trackNumber;
-  track.discNumber = trackRow.discNumber;
-  track.duration = trackRow.duration;
-  track.sampleRate = trackRow.sampleRate;
-  track.sampleDepth = trackRow.sampleDepth;
-  track.bitrate = trackRow.bitrate;
-  track.tempo = trackRow.tempo / 100;
-  track.playCount = trackRow.playCount;
-  track.year = trackRow.year;
-  track.rating = trackRow.rating;
-  track.mixName = trackRow.mixName.body.text;
-  track.comment = trackRow.comment.body.text;
-  track.autoloadHotcues = trackRow.autoloadHotcues.body.text === 'ON';
-  track.kuvoPublic = trackRow.kuvoPublic.body.text === 'ON';
-  track.filePath = trackRow.filePath.body.text;
-  track.fileName = trackRow.filename.body.text;
-  track.fileSize = trackRow.fileSize;
-  track.analyzePath = trackRow.analyzePath.body.text;
-  track.releaseDate = trackRow.releaseDate.body.text;
-  track.analyzeDate = new Date(trackRow.analyzeDate.body.text);
-  track.dateAdded = new Date(trackRow.dateAdded.body.text);
+  const analyzePath: string | undefined = trackRow.analyzePath.body.text;
 
-  // The analyze file comes in 3 forms
-  //
-  //  1. A `DAT` file, which is missing some extended information, for the older
-  //     Pioneer equipment (likely due to memory constraints).
-  //
-  //  2. A `EXT` file which includes colored waveforms and other extended data.
-  //
-  //  3. A `EX2` file -- currently unknown
-  //
-  // We noramlize this path by trimming the DAT extension off. Later we will
-  // try and read whatever is available.
-  track.analyzePath = track.analyzePath?.substring(0, track.analyzePath.length - 4);
+  const track: Track<EntityFK.WithFKs> = {
+    id: trackRow.id,
+    title: trackRow.title.body.text,
+    trackNumber: trackRow.trackNumber,
+    discNumber: trackRow.discNumber,
+    duration: trackRow.duration,
+    sampleRate: trackRow.sampleRate,
+    sampleDepth: trackRow.sampleDepth,
+    bitrate: trackRow.bitrate,
+    tempo: trackRow.tempo / 100,
+    playCount: trackRow.playCount,
+    year: trackRow.year,
+    rating: trackRow.rating,
+    mixName: trackRow.mixName.body.text,
+    comment: trackRow.comment.body.text,
+    autoloadHotcues: trackRow.autoloadHotcues.body.text === 'ON',
+    kuvoPublic: trackRow.kuvoPublic.body.text === 'ON',
+    filePath: trackRow.filePath.body.text,
+    fileName: trackRow.filename.body.text,
+    fileSize: trackRow.fileSize,
+    releaseDate: trackRow.releaseDate.body.text,
+    analyzeDate: new Date(trackRow.analyzeDate.body.text),
+    dateAdded: new Date(trackRow.dateAdded.body.text),
 
-  // This implicitly bypasses typescripts checks since these would expect to be
-  // assigned to objects. In this case we are _okay_ with this as the entity
-  // manager will translates these ids into the database fields.
-  track.artist = trackRow.artistId || null;
-  track.artwork = trackRow.artworkId || null;
-  track.originalArtist = trackRow.originalArtistId || null;
-  track.remixer = trackRow.remixerId || null;
-  track.composer = trackRow.composerId || null;
-  track.album = trackRow.albumId || null;
-  track.label = trackRow.labelId || null;
-  track.genre = trackRow.genreId || null;
-  track.color = trackRow.colorId || null;
-  track.key = trackRow.keyId || null;
+    // The analyze file comes in 3 forms
+    //
+    //  1. A `DAT` file, which is missing some extended information, for the older
+    //     Pioneer equipment (likely due to memory constraints).
+    //
+    //  2. A `EXT` file which includes colored waveforms and other extended data.
+    //
+    //  3. A `EX2` file -- currently unknown
+    //
+    // We noramlize this path by trimming the DAT extension off. Later we will
+    // try and read whatever is available.
+    analyzePath: analyzePath?.substring(0, analyzePath.length - 4),
 
-  // NOTE: There are a few additional columns that will be hydrated through the
-  // analyze files (given the analyzePath) which we do not assign here.
+    artworkId: trackRow.artworkId || null,
+    artistId: trackRow.artistId || null,
+    originalArtistId: trackRow.originalArtistId || null,
+    remixerId: trackRow.remixerId || null,
+    composerId: trackRow.composerId || null,
+    albumId: trackRow.albumId || null,
+    labelId: trackRow.labelId || null,
+    genreId: trackRow.genreId || null,
+    colorId: trackRow.colorId || null,
+    keyId: trackRow.keyId || null,
+
+    // NOTE: There are a few additional columns that will be hydrated through
+    // the analyze files (given the analyzePath) which we do not assign here.
+    beatGrid: null,
+    cueAndLoops: null,
+    waveformHd: null,
+  };
 
   return track;
 }
@@ -300,11 +288,12 @@ function createTrack(trackRow: any) {
  * Translates a pdb playlist row entry into a {@link Playlist} entity.
  */
 function createPlaylist(playlistRow: any) {
-  const playlist = new Playlist();
-  playlist.id = playlistRow.id;
-  playlist.name = playlistRow.name.body.text;
-  playlist.parent = playlistRow.parentId || null;
-  playlist.isFolder = playlistRow.rawIsFolder !== 0;
+  const playlist: Playlist<EntityFK.WithFKs> = {
+    id: playlistRow.id,
+    name: playlistRow.name.body.text,
+    isFolder: playlistRow.rawIsFolder !== 0,
+    parentId: playlistRow.parentId || null,
+  };
 
   return playlist;
 }
@@ -313,10 +302,12 @@ function createPlaylist(playlistRow: any) {
  * Translates a pdb playlist track entry into a {@link PlaylistTrack} entity.
  */
 function createPlaylistEntry(playlistTrackRow: any) {
-  const entry = new PlaylistEntry();
-  entry.sortIndex = playlistTrackRow.entryIndex;
-  entry.playlist = playlistTrackRow.playlistId;
-  entry.track = playlistTrackRow.trackId;
+  const entry: PlaylistEntry<EntityFK.WithFKs> = {
+    id: playlistTrackRow.id,
+    sortIndex: playlistTrackRow.entryIndex,
+    playlistId: playlistTrackRow.playlistId,
+    trackId: playlistTrackRow.trackId,
+  };
 
   return entry;
 }
@@ -325,16 +316,12 @@ function createPlaylistEntry(playlistTrackRow: any) {
  * Translates a pdb artwork entry into a {@link Artwork} entity.
  */
 function createArtworkEntry(artworkRow: any) {
-  const art = new Artwork();
-  art.id = artworkRow.id;
-  art.path = artworkRow.path.body.text;
+  const art: Artwork = {
+    id: artworkRow.id,
+    path: artworkRow.path.body.text,
+  };
 
   return art;
-}
-
-function createHistoryEntry(_historyRow: any) {
-  // TODO
-  return null;
 }
 
 /**
@@ -375,21 +362,38 @@ const {PageType} = RekordboxPdb;
 const {SectionTags} = RekordboxAnlz;
 
 /**
- * Maps rekordbox table names to funcitons that create entity objects for the
- * passed row.
+ * Maps rekordbox pdb table types to orm table names.
+ */
+const pdbTables = {
+  [PageType.TRACKS]: Table.Track,
+  [PageType.ARTISTS]: Table.Artist,
+  [PageType.GENRES]: Table.Genre,
+  [PageType.ALBUMS]: Table.Album,
+  [PageType.LABELS]: Table.Label,
+  [PageType.COLORS]: Table.Color,
+  [PageType.KEYS]: Table.Key,
+  [PageType.ARTWORK]: Table.Artwork,
+  [PageType.PLAYLIST_TREE]: Table.Playlist,
+  [PageType.PLAYLIST_ENTRIES]: Table.PlaylistEntry,
+};
+
+/**
+ * Maps rekordbox pdb table types to functions that create entity objects for
+ * the passed pdb row.
  */
 const pdbEntityCreators = {
   [PageType.TRACKS]: createTrack,
-  [PageType.ARTISTS]: makeIdNameHydrator(Artist),
-  [PageType.GENRES]: makeIdNameHydrator(Genre),
-  [PageType.ALBUMS]: makeIdNameHydrator(Album),
-  [PageType.LABELS]: makeIdNameHydrator(Label),
-  [PageType.COLORS]: makeIdNameHydrator(Color),
-  [PageType.KEYS]: makeIdNameHydrator(Key),
+  [PageType.ARTISTS]: makeIdNameHydrator<Artist>(),
+  [PageType.GENRES]: makeIdNameHydrator<Genre>(),
+  [PageType.ALBUMS]: makeIdNameHydrator<Album>(),
+  [PageType.LABELS]: makeIdNameHydrator<Label>(),
+  [PageType.COLORS]: makeIdNameHydrator<Color>(),
+  [PageType.KEYS]: makeIdNameHydrator<Key>(),
   [PageType.ARTWORK]: createArtworkEntry,
   [PageType.PLAYLIST_TREE]: createPlaylist,
   [PageType.PLAYLIST_ENTRIES]: createPlaylistEntry,
-  [PageType.HISTORY]: createHistoryEntry,
+
+  // TODO: Register PageType.HISTORY
 };
 
 /**
@@ -409,7 +413,3 @@ const trackAnlzHydrators = {
   // [SectionTags.WAVE_COLOR_PREVIEW]: null, <- In the EXT file
   // [SectionTags.WAVE_COLOR_SCROLL]: null,  <- In the EXT file
 };
-
-export const expectedTables = Object.keys(pdbEntityCreators).map(pageId =>
-  RekordboxPdb.PageType[pageId].toLowerCase()
-);

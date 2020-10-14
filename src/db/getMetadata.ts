@@ -3,7 +3,6 @@ import {Span} from '@sentry/tracing';
 import LocalDatabase from 'src/localdb';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';
-import {Track} from 'src/entities';
 import {fetchFile} from 'src/nfs';
 import {hydrateAnlz} from 'src/localdb/rekordbox';
 
@@ -84,7 +83,7 @@ export async function viaLocal(
     return null;
   }
 
-  const track = await orm.em.findOne(Track, {id: trackId});
+  const track = orm.findTrack(trackId);
 
   if (track === null) {
     return null;

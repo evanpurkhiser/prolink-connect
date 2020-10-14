@@ -82,63 +82,34 @@ async function getMetadata(opts: TrackQueryOpts) {
   }
 
   // Translate our trackItems into a (partial) Track entity.
-  const track = new entities.Track();
-  track.id = trackItems[ItemType.TrackTitle].id;
-  track.title = trackItems[ItemType.TrackTitle].title;
-  track.duration = trackItems[ItemType.Duration].duration;
-  track.tempo = trackItems[ItemType.Tempo].bpm;
-  track.comment = trackItems[ItemType.Comment].comment;
-  track.rating = trackItems[ItemType.Rating].rating;
+  const track: entities.Track = {
+    id: trackItems[ItemType.TrackTitle].id,
+    title: trackItems[ItemType.TrackTitle].title,
+    duration: trackItems[ItemType.Duration].duration,
+    tempo: trackItems[ItemType.Tempo].bpm,
+    comment: trackItems[ItemType.Comment].comment,
+    rating: trackItems[ItemType.Rating].rating,
+    year: trackItems?.[ItemType.Year]?.year,
+    bitrate: trackItems?.[ItemType.BitRate]?.bitrate,
 
-  track.artwork = new entities.Artwork();
-  track.artwork.id = trackItems[ItemType.TrackTitle].artworkId;
+    artwork: {id: trackItems[ItemType.TrackTitle].artworkId},
+    album: trackItems[ItemType.AlbumTitle],
+    artist: trackItems[ItemType.Artist],
+    genre: trackItems[ItemType.Genre],
+    key: trackItems[ItemType.Key],
+    color: findColor(Object.values(trackItems))!,
+    label: trackItems[ItemType.Label] ?? null,
+    remixer: trackItems?.[ItemType.Remixer] ?? null,
+    originalArtist: trackItems?.[ItemType.OrigianlArtist] ?? null,
+    composer: null,
 
-  track.album = new entities.Album();
-  track.album.id = trackItems[ItemType.AlbumTitle].id;
-  track.album.name = trackItems[ItemType.AlbumTitle].name;
+    fileName: '',
+    filePath: '',
 
-  track.artist = new entities.Artist();
-  track.artist.id = trackItems[ItemType.Artist].id;
-  track.artist.name = trackItems[ItemType.Artist].name;
-
-  track.genre = new entities.Genre();
-  track.genre.id = trackItems[ItemType.Genre].id;
-  track.genre.name = trackItems[ItemType.Genre].name;
-
-  track.key = new entities.Key();
-  track.key.id = trackItems[ItemType.Key].id;
-  track.key.name = trackItems[ItemType.Key].name;
-
-  const color = findColor(Object.values(trackItems))!;
-  track.color = new entities.Color();
-  track.color.id = color.id;
-  track.color.name = color.name;
-
-  if (ItemType.BitRate in trackItems) {
-    track.bitrate = trackItems[ItemType.BitRate].bitrate;
-  }
-
-  if (ItemType.Label in trackItems) {
-    track.label = new entities.Label();
-    track.label.id = trackItems[ItemType.Label].id;
-    track.label.name = trackItems[ItemType.Label].name;
-  }
-
-  if (ItemType.Year in trackItems) {
-    track.year = trackItems[ItemType.Year].year;
-  }
-
-  if (ItemType.Remixer in trackItems) {
-    track.remixer = new entities.Artist();
-    track.remixer.id = trackItems[ItemType.Remixer].id;
-    track.remixer.name = trackItems[ItemType.Remixer].name;
-  }
-
-  if (ItemType.OrigianlArtist in trackItems) {
-    track.originalArtist = new entities.Artist();
-    track.originalArtist.id = trackItems[ItemType.OrigianlArtist].id;
-    track.originalArtist.name = trackItems[ItemType.OrigianlArtist].name;
-  }
+    beatGrid: null,
+    cueAndLoops: null,
+    waveformHd: null,
+  };
 
   return track;
 }
@@ -186,34 +157,34 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
   }
 
   // Translate our fileItems into a (partial) Track entity.
-  const track = new entities.Track();
-  track.id = fileItems[ItemType.TrackTitle].id;
-  track.title = fileItems[ItemType.TrackTitle].title;
-  track.duration = fileItems[ItemType.Duration].duration;
-  track.tempo = fileItems[ItemType.Tempo].bpm;
-  track.rating = fileItems[ItemType.Rating].rating;
-  track.comment = fileItems[ItemType.Comment].comment;
-  track.bitrate = fileItems[ItemType.BitRate].bitrate;
+  const track: entities.Track = {
+    id: fileItems[ItemType.TrackTitle].id,
+    title: fileItems[ItemType.TrackTitle].title,
+    duration: fileItems[ItemType.Duration].duration,
+    tempo: fileItems[ItemType.Tempo].bpm,
+    comment: fileItems[ItemType.Comment].comment,
+    rating: fileItems[ItemType.Rating].rating,
+    bitrate: fileItems[ItemType.BitRate].bitrate,
 
-  track.artwork = new entities.Artwork();
-  track.artwork.id = fileItems[ItemType.TrackTitle].artworkId;
+    artwork: {id: fileItems[ItemType.TrackTitle].artworkId},
+    album: fileItems?.[ItemType.AlbumTitle],
+    artist: fileItems[ItemType.Artist],
+    genre: fileItems[ItemType.Genre],
+    color: findColor(Object.values(fileItems))!,
 
-  track.album = new entities.Album();
-  track.album.id = fileItems[ItemType.AlbumTitle].id;
-  track.album.name = fileItems[ItemType.AlbumTitle].name;
+    fileName: '',
+    filePath: '',
 
-  track.artist = new entities.Artist();
-  track.artist.id = fileItems[ItemType.Artist].id;
-  track.artist.name = fileItems[ItemType.Artist].name;
+    key: null,
+    label: null,
+    remixer: null,
+    originalArtist: null,
+    composer: null,
 
-  track.genre = new entities.Genre();
-  track.genre.id = fileItems[ItemType.Genre].id;
-  track.genre.name = fileItems[ItemType.Genre].name;
-
-  const color = findColor(Object.values(fileItems))!;
-  track.color = new entities.Color();
-  track.color.id = color.id;
-  track.color.name = color.name;
+    beatGrid: null,
+    cueAndLoops: null,
+    waveformHd: null,
+  };
 
   return track;
 }
