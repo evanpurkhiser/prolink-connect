@@ -25,6 +25,7 @@ export enum ItemType {
   Remixer = 0x0029,
   DateAdded = 0x002e,
   Unknown01 = 0x002f,
+  Unknown02 = 0x002a,
 
   ColorNone = 0x0013,
   ColorPink = 0x0014,
@@ -139,6 +140,7 @@ const transformItem = {
   [ItemType.Tempo]: (a: ItemData) => ({bpm: a.mainId / 100}),
   [ItemType.Duration]: (a: ItemData) => ({duration: a.mainId}),
   [ItemType.Unknown01]: (_: ItemData) => null,
+  [ItemType.Unknown02]: (_: ItemData) => null,
 
   [ItemType.ColorNone]: mapIdName,
   [ItemType.ColorPink]: mapIdName,
