@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/node';
+
 import {NumberField, StringField, Field} from 'src/remotedb/fields';
 
 /**
@@ -217,12 +219,17 @@ export const fieldsToItem = (args: Field[]) => {
   const itemData = makeItemData(args as ItemArgs);
   const {type} = itemData;
 
-  const transformer = transformItem[type];
+  let transformer = transformItem[type];
 
   // Typescript gives us safety, but it is possible there is an itemType we're
-  // not aware of yet, throw just in case.
+  // not aware of yet.
   if (transformer === undefined) {
-    throw new Error(`No item transformer registered for item type ${type}`);
+    transformer = () => null;
+
+    Sentry.captureMessage(
+      `No item transformer registered for item type ${type}`,
+      Sentry.Severity.Error
+    );
   }
 
   return {...transformer(itemData), type} as Items[ItemType];
