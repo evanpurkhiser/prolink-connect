@@ -12,14 +12,13 @@
   with situations where a device reports having a track loaded from a device
   which has not yet announced itself on the network.
 
-* Upgraded to mikro-orm v7, removing some frustrating dependencies that would
-  be deeply bundled into apps using prolink-connect.
+* Remove the `mikro-orm` dependency. We now directly use SQLite to cache pdb
+  databases locally.
 
-  **NOTE** This may require some fiddling if you were bundling this library
-  using webpack, since tye old mikro-orm required special configuration, as
-  does the new mikro-orm.
+  This removes a _huge_ dependency from the library, and makes consumption
+  significantly easier if you plan to bundle your application.
 
-  It's likely I'll remove the mikro-orm dependency in the future.
+  There should be no API changes because of this.
 
 * A new `prolink-connect/lib/types` file is available, which only exports types
   and enums, and does NOT rquire any runtime dependencies. This may be useful
