@@ -162,6 +162,10 @@ export class MixstatusProcessor {
   #promotePlayer = (state: CDJStatus.State) => {
     const {deviceId} = state;
 
+    if (!state.isOnAir) {
+      return;
+    }
+
     if (this.#livePlayers.has(deviceId)) {
       return;
     }
@@ -315,6 +319,9 @@ export class MixstatusProcessor {
 
   #handleOnairChange = (state: CDJStatus.State) => {
     const {deviceId} = state;
+
+    // Player may have just been brought on with nothing else playing
+    this.#playerMayBeFirst(state);
 
     if (!this.#livePlayers.has(deviceId)) {
       return;

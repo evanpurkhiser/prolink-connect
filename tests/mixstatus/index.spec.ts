@@ -60,7 +60,7 @@ describe('mixstatus processor', () => {
     currentNow = 0;
   });
 
-  it('does not report first state if not onair and playing', () => {
+  it('does not report first state if immediately not onair and playing', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
 
@@ -68,6 +68,22 @@ describe('mixstatus processor', () => {
       trackId: 123,
       playState: CDJStatus.PlayState.Playing,
     });
+    expect(npHandler).not.toBeCalled();
+  });
+
+  it('does not report first state if off-air and played as first track', () => {
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+
+    feedState(1, {
+      trackId: 123,
+      playState: CDJStatus.PlayState.Cued,
+    });
+
+    feedState(1, {
+      playState: CDJStatus.PlayState.Playing,
+    });
+
     expect(npHandler).not.toBeCalled();
   });
 
@@ -81,6 +97,54 @@ describe('mixstatus processor', () => {
       playState: CDJStatus.PlayState.Playing,
     });
     expect(npHandler).toBeCalledWith(oc({deviceId: 5, trackId: 123}));
+  });
+
+  it('reports tracks brought on-air when no others are playing', () => {
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+
+    feedState(1, {
+      trackId: 123,
+      playState: CDJStatus.PlayState.Playing,
+    });
+
+    // Oops forgot to bring the track on air
+    feedState(1, {isOnAir: true});
+
+    expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 123}));
+  });
+
+  it('does not report off-air playing track after live track cues', () => {
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+
+    // Player 1 is playing
+    feedState(1, {
+      trackId: 123,
+      isOnAir: true,
+      playState: CDJStatus.PlayState.Playing,
+    });
+
+    expect(npHandler).toHaveBeenCalled();
+    npHandler.mockReset();
+
+    // Player 2 is off air and cued
+    feedState(2, {
+      trackId: 234,
+      isOnAir: false,
+      playState: CDJStatus.PlayState.Cued,
+    });
+
+    // Player 2 begins playing
+    feedState(2, {
+      playState: CDJStatus.PlayState.Playing,
+    });
+
+    // Player 1 cues
+    feedState(1, {
+      playState: CDJStatus.PlayState.Cued,
+    });
+    expect(npHandler).not.toHaveBeenCalled();
   });
 
   it('reports the stopping of a single device', () => {
@@ -149,7 +213,6 @@ describe('mixstatus processor', () => {
    */
   const setupTwoTracks = () => {
     feedState(1, {
-      deviceId: 1,
       trackId: 123,
       isOnAir: true,
       playState: CDJStatus.PlayState.Playing,
@@ -397,7 +460,7 @@ describe('mixstatus processor', () => {
 
     // Player 1 loads a new track and begins playing
     feedState(1, {trackId: 456});
-    feedState(1, {playState: CDJStatus.PlayState.Playing});
+    feedState(1, {isOnAir: true, playState: CDJStatus.PlayState.Playing});
     expect(npHandler).not.toBeCalled();
 
     // 128 beats later player 1 should be reported
