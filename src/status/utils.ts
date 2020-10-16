@@ -11,7 +11,7 @@ export function statusFromPacket(packet: Buffer) {
   }
 
   // Rekordbox sends some short status packets that we can just ignore.
-  if (packet.length < 0xff) {
+  if (packet.length < 0xc8) {
     return undefined;
   }
 
