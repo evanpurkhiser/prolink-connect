@@ -79,7 +79,7 @@ export function getSlotName(slot: MediaSlot) {
 }
 
 const trackTypeNames = Object.fromEntries(
-  Object.entries(MediaSlot).map(e => [e[1], e[0].toLowerCase()])
+  Object.entries(TrackType).map(e => [e[1], e[0].toLowerCase()])
 );
 
 /**

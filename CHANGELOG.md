@@ -27,6 +27,8 @@
 
   There should be no API changes because of this.
 
+* Fixed a minor bug in trackTypeNames mapping.
+
 * A new `prolink-connect/lib/types` file is available, which only exports types
   and enums, and does NOT rquire any runtime dependencies. This may be useful
   when you want to use prolink-connect types in a frontend application, and do
