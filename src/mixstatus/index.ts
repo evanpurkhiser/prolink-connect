@@ -162,7 +162,7 @@ export class MixstatusProcessor {
   #promotePlayer = (state: CDJStatus.State) => {
     const {deviceId} = state;
 
-    if (!state.isOnAir) {
+    if (!state.isOnAir || !isPlaying(state)) {
       return;
     }
 

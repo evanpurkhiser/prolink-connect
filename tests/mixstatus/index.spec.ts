@@ -234,6 +234,23 @@ describe('mixstatus processor', () => {
     expect(npHandler).lastCalledWith(oc({deviceId: 1, trackId: 123}));
   });
 
+  it('does not report offair stopped tracks that come on air', () => {
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Both tracks stopped
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+    feedState(2, {playState: CDJStatus.PlayState.Cued});
+
+    // Second track comes on air
+    feedState(2, {isOnAir: true});
+
+    // No players should have been reported as playing
+    expect(npHandler).not.toHaveBeenCalled();
+  });
+
   it('reports next device after the configured beats pass and both are live', () => {
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
