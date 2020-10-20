@@ -125,7 +125,7 @@ describe('mixstatus processor', () => {
       playState: CDJStatus.PlayState.Playing,
     });
 
-    expect(npHandler).toHaveBeenCalled();
+    expect(npHandler).toHaveBeenCalledTimes(1);
     npHandler.mockReset();
 
     // Player 2 is off air and cued
