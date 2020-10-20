@@ -14,6 +14,7 @@ import {ANNOUNCE_PORT, STATUS_PORT, DEFAULT_VCDJ_ID, BEAT_PORT} from 'src/consta
 import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
 import {Device, NetworkState} from 'src/types';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
+import {MixstatusProcessor} from 'src/mixstatus';
 import {udpBind} from 'src/utils/udp';
 
 const connectErrorHelp =
@@ -65,7 +66,13 @@ type ConstructOpts = {
 /**
  * Services that are not accessible until connected
  */
-type ConnectedServices = 'statusEmitter' | 'control' | 'localdb' | 'remotedb' | 'db';
+type ConnectedServices =
+  | 'statusEmitter'
+  | 'control'
+  | 'db'
+  | 'localdb'
+  | 'remotedb'
+  | 'mixstatus';
 
 export type ConnectedProlinkNetwork = ProlinkNetwork &
   {[P in ConnectedServices]: NonNullable<ProlinkNetwork[P]>} & {
@@ -132,6 +139,7 @@ export class ProlinkNetwork {
 
   #config: null | NetworkConfig;
   #connection: null | ConnectionService;
+  #mixstatus: null | MixstatusProcessor;
 
   /**
    * @internal
@@ -153,6 +161,7 @@ export class ProlinkNetwork {
     this.#statusEmitter = statusEmitter;
 
     this.#connection = null;
+    this.#mixstatus = null;
 
     // We always start online when constructing the network
     this.#state = NetworkState.Online;
@@ -344,5 +353,24 @@ export class ProlinkNetwork {
    */
   get remotedb() {
     return this.#connection?.remotedb ?? null;
+  }
+
+  /**
+   * Get (and initalize) the @{link MixstatusProcessor} service. This service can
+   * be used to monitor the 'status' of devices on the network as a whole.
+   */
+  get mixstatus() {
+    if (this.#connection === null) {
+      return null;
+    }
+
+    // Delay initialization of the mixstatus processor so that we don't consume
+    // status events unless we actually want to.
+    if (this.#mixstatus === null) {
+      this.#mixstatus = new MixstatusProcessor();
+      this.#statusEmitter.on('status', s => this.#mixstatus?.handleState(s));
+    }
+
+    return this.#mixstatus;
   }
 }

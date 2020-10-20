@@ -4,6 +4,13 @@
 
 * Introduced a method to play and cue CDJs.
 
+* Expose the mixstatus processor as a service getter on the Network object.
+  This makes it easier to share a single instance of the mixstatus processor
+  within an app.
+
+* Fixed various false-positive now-playing reportings with the mixstatus
+  processor, along with some missing now-playing events.
+
 * Device manager has learned `getDeviceEnsured`, which will wait until the
   device appears on the network before resolving. Useful for when you know a
   device should be on the netowrk, but maybe has not yet announced itself
