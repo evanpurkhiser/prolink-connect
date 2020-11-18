@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
 
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
@@ -75,5 +76,10 @@ export async function viaLocal(
     return null;
   }
 
-  return fetchFile({device, slot: trackSlot, path: track.artwork.path});
+  try {
+    return fetchFile({device, slot: trackSlot, path: track.artwork.path});
+  } catch (error) {
+    Sentry.captureException(error);
+    return null;
+  }
 }
