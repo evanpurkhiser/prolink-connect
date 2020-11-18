@@ -1,6 +1,6 @@
 # Changelog
 
-## UNRELEASED
+## v0.2.0
 
 * Introduced a method to play and cue CDJs.
 
