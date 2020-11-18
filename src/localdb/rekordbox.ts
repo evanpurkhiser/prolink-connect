@@ -217,7 +217,7 @@ type IdAndNameEntity = {id: number; name: string};
 const makeIdNameHydrator = <T extends IdAndNameEntity>() => (row: any) =>
   ({
     id: row.id,
-    name: row.name.body.text,
+    name: row.name.body.text ?? '',
   } as T);
 
 /**
