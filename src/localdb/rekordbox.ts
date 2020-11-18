@@ -210,6 +210,9 @@ function* tableRows(table: any) {
 
 type IdAndNameEntity = {id: number; name: string};
 
+const ensureDate = (date: Date) =>
+  date instanceof Date && !isNaN(date.valueOf()) ? date : undefined;
+
 /**
  * Utility to create a hydrator that hydrates the provided entity with the id
  * and name properties from the row.
@@ -247,8 +250,8 @@ function createTrack(trackRow: any) {
     fileName: trackRow.filename.body.text,
     fileSize: trackRow.fileSize,
     releaseDate: trackRow.releaseDate.body.text,
-    analyzeDate: new Date(trackRow.analyzeDate.body.text),
-    dateAdded: new Date(trackRow.dateAdded.body.text),
+    analyzeDate: ensureDate(new Date(trackRow.analyzeDate.body.text)),
+    dateAdded: ensureDate(new Date(trackRow.dateAdded.body.text)),
 
     // The analyze file comes in 3 forms
     //
