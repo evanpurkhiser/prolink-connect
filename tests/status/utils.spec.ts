@@ -1,8 +1,9 @@
+import {readMock} from 'tests/utils';
+
 import {PROLINK_HEADER} from 'src/constants';
 import {PlayState} from 'src/status/types';
 import {mediaSlotFromPacket, statusFromPacket} from 'src/status/utils';
 import {MediaColor, MediaSlot, TrackType} from 'src/types';
-import {readMock} from 'tests/utils';
 
 describe('statusFromPacket', () => {
   it('fails with error for non-prolink packet', () => {

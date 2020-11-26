@@ -1,11 +1,11 @@
+import {mockDevice} from 'tests/utils';
+
 import {Socket} from 'dgram';
 import {EventEmitter} from 'events';
 
-import {mockDevice} from 'tests/utils';
-
+import {VIRTUAL_CDJ_NAME} from 'src/constants';
 import DeviceManager from 'src/devices';
 import {deviceFromPacket} from 'src/devices/utils';
-import {VIRTUAL_CDJ_NAME} from 'src/constants';
 
 jest.mock('src/devices/utils', () => ({
   deviceFromPacket: jest.fn(),

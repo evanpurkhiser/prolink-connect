@@ -1,7 +1,8 @@
+import {readMock} from 'tests/utils';
+
 import {PROLINK_HEADER} from 'src/constants';
 import {deviceFromPacket} from 'src/devices/utils';
 import {DeviceType} from 'src/types';
-import {readMock} from 'tests/utils';
 
 describe('deviceFromPacket', () => {
   it('fails with error for non-prolink packet', () => {
