@@ -2,24 +2,24 @@ import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
 import {KaitaiStream} from 'kaitai-struct';
 
-import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
-import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
-import {MetadataORM, Table} from 'src/localdb/orm';
-import {makeCueLoopEntry} from 'src/localdb/utils';
-import {HotcueButton} from 'src/types';
 import {
-  EntityFK,
-  Track,
-  Artist,
   Album,
-  Key,
+  Artist,
+  Artwork,
   Color,
+  EntityFK,
   Genre,
+  Key,
   Label,
   Playlist,
   PlaylistEntry,
-  Artwork,
+  Track,
 } from 'src/entities';
+import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
+import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
+import {MetadataORM, Table} from 'src/localdb/orm';
+import {makeCueLoopEntry} from 'src/localdb/utils';
+import {HotcueButton} from 'src/types';
 
 // NOTE: Kaitai doesn't currently have a good typescript exporter, so we will
 //       be making liberal usage of any in these utilities. We still guarantee

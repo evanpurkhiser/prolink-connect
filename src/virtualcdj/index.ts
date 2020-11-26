@@ -1,16 +1,17 @@
-import {Socket} from 'dgram';
-import {NetworkInterfaceInfoIPv4} from 'os';
 import * as ip from 'ip-address';
 
-import {buildName} from 'src/utils';
-import {DeviceID, Device, DeviceType} from 'src/types';
+import {Socket} from 'dgram';
+import {NetworkInterfaceInfoIPv4} from 'os';
+
 import {
-  VIRTUAL_CDJ_NAME,
+  ANNOUNCE_INTERVAL,
+  ANNOUNCE_PORT,
   PROLINK_HEADER,
   VIRTUAL_CDJ_FIRMWARE,
-  ANNOUNCE_PORT,
-  ANNOUNCE_INTERVAL,
+  VIRTUAL_CDJ_NAME,
 } from 'src/constants';
+import {Device, DeviceID, DeviceType} from 'src/types';
+import {buildName} from 'src/utils';
 
 /**
  * Constructs a virtual CDJ Device.

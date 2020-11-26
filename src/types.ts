@@ -6,22 +6,21 @@ export * as CDJStatus from 'src/status/types';
  * Re-export various types for the types only compile target
  */
 
-export type {FetchProgress} from './nfs';
-export type {HydrationProgress} from './localdb/rekordbox';
-export type {MixstatusConfig, MixstatusProcessor} from './mixstatus';
-export type {NetworkConfig, ProlinkNetwork, ConnectedProlinkNetwork} from './network';
-
 export type {
-  Artwork,
-  Key,
-  Label,
-  Color,
-  Genre,
   Album,
   Artist,
+  Artwork,
+  Color,
+  Genre,
+  Key,
+  Label,
   Playlist,
   Track,
 } from './entities';
+export type {HydrationProgress} from './localdb/rekordbox';
+export type {MixstatusConfig, MixstatusProcessor} from './mixstatus';
+export type {ConnectedProlinkNetwork, NetworkConfig, ProlinkNetwork} from './network';
+export type {FetchProgress} from './nfs';
 
 /**
  * Known device types on the network

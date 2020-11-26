@@ -1,19 +1,19 @@
 import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
 
+import {Device, DeviceID, MediaSlot} from 'src/types';
 import {getSlotName} from 'src/utils';
-import {Device, MediaSlot, DeviceID} from 'src/types';
 
-import {RpcConnection, RpcProgram, RetryConfig} from './rpc';
-import {nfs, mount} from './xdr';
 import {
-  makeProgramClient,
-  getExports,
-  mountFilesystem,
-  lookupPath,
   fetchFile as fetchFileCall,
   FileInfo,
+  getExports,
+  lookupPath,
+  makeProgramClient,
+  mountFilesystem,
 } from './programs';
+import {RetryConfig, RpcConnection, RpcProgram} from './rpc';
+import {mount, nfs} from './xdr';
 
 export type FetchProgress = {
   read: number;

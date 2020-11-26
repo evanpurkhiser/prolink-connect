@@ -1,5 +1,6 @@
-import {networkInterfaces, NetworkInterfaceInfoIPv4, NetworkInterfaceInfo} from 'os';
 import * as ip from 'ip-address';
+
+import {NetworkInterfaceInfo, NetworkInterfaceInfoIPv4, networkInterfaces} from 'os';
 
 import {Device, MediaSlot, TrackType} from 'src/types';
 

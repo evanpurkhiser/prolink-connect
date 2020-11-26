@@ -1,4 +1,4 @@
-import {Socket, BindOptions} from 'dgram';
+import {BindOptions, Socket} from 'dgram';
 import {AddressInfo} from 'net';
 
 /**

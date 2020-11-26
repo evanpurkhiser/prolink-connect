@@ -1,10 +1,10 @@
 import {Span} from '@sentry/tracing';
 
 import LocalDatabase from 'src/localdb';
-import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';
-import {fetchFile} from 'src/nfs';
 import {hydrateAnlz} from 'src/localdb/rekordbox';
+import {fetchFile} from 'src/nfs';
+import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
+import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
 
 export type Options = {
   /**

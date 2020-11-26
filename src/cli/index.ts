@@ -1,6 +1,7 @@
-import signale from 'signale';
-import * as Sentry from '@sentry/node';
 import '@sentry/tracing';
+
+import * as Sentry from '@sentry/node';
+import signale from 'signale';
 
 import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';

@@ -1,8 +1,8 @@
 import {Span} from '@sentry/tracing';
 
 import {RpcConnection, RpcProgram} from './rpc';
-import {portmap, mount, nfs} from './xdr';
 import {flattenLinkedList} from './utils';
+import {mount, nfs, portmap} from './xdr';
 import {FetchProgress} from '.';
 
 /**

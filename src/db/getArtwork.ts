@@ -1,11 +1,11 @@
 import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
 
-import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {DeviceID, MediaSlot, TrackType, Device} from 'src/types';
 import {Track} from 'src/entities';
-import {fetchFile} from 'src/nfs';
 import LocalDatabase from 'src/localdb';
+import {fetchFile} from 'src/nfs';
+import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
+import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
 
 export type Options = {
   /**

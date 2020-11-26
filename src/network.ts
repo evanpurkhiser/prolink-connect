@@ -1,21 +1,22 @@
 import * as Sentry from '@sentry/node';
 import {SpanStatus} from '@sentry/tracing';
 import {v4 as uuidv4} from 'uuid';
+
 import dgram, {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';
 
+import {ANNOUNCE_PORT, BEAT_PORT, DEFAULT_VCDJ_ID, STATUS_PORT} from 'src/constants';
 import Control from 'src/control';
-import DeviceManager from 'src/devices';
-import StatusEmitter from 'src/status';
-import LocalDatabase from 'src/localdb';
-import RemoteDatabase from 'src/remotedb';
 import Database from 'src/db';
-import {ANNOUNCE_PORT, STATUS_PORT, DEFAULT_VCDJ_ID, BEAT_PORT} from 'src/constants';
-import {getMatchingInterface, getBroadcastAddress} from 'src/utils';
-import {Device, NetworkState} from 'src/types';
-import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
+import DeviceManager from 'src/devices';
+import LocalDatabase from 'src/localdb';
 import {MixstatusProcessor} from 'src/mixstatus';
+import RemoteDatabase from 'src/remotedb';
+import StatusEmitter from 'src/status';
+import {Device, NetworkState} from 'src/types';
+import {getBroadcastAddress, getMatchingInterface} from 'src/utils';
 import {udpBind} from 'src/utils/udp';
+import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 
 const connectErrorHelp =
   'Network must be configured. Try using `autoconfigFromPeers` or `configure`';

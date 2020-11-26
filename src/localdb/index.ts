@@ -1,24 +1,25 @@
 import * as Sentry from '@sentry/node';
-import {createHash} from 'crypto';
-import {EventEmitter} from 'events';
 import {Mutex} from 'async-mutex';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
+import {createHash} from 'crypto';
+import {EventEmitter} from 'events';
+
+import DeviceManager from 'src/devices';
+import {fetchFile, FetchProgress} from 'src/nfs';
+import StatusEmitter from 'src/status';
 import {
+  Device,
   DeviceID,
+  DeviceType,
   MediaSlot,
   MediaSlotInfo,
-  Device,
-  DeviceType,
   TrackType,
 } from 'src/types';
-import DeviceManager from 'src/devices';
-import StatusEmitter from 'src/status';
-import {fetchFile, FetchProgress} from 'src/nfs';
 import {getSlotName} from 'src/utils';
 
-import {HydrationProgress, hydrateDatabase} from './rekordbox';
 import {MetadataORM} from './orm';
+import {hydrateDatabase, HydrationProgress} from './rekordbox';
 
 /**
  * Rekordbox databases will only exist within these two slots

@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 
-import {NumberField, StringField, Field} from 'src/remotedb/fields';
+import {Field, NumberField, StringField} from 'src/remotedb/fields';
 
 /**
  * Item types associated to the MenuItem message type.

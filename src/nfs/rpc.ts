@@ -1,10 +1,11 @@
-import {OperationOptions} from 'retry';
-import promiseRetry from 'promise-retry';
-import dgram, {Socket} from 'dgram';
-import {timeout, TimeoutError} from 'promise-timeout';
 import {Mutex} from 'async-mutex';
+import promiseRetry from 'promise-retry';
+import {timeout, TimeoutError} from 'promise-timeout';
+import {OperationOptions} from 'retry';
 
-import {udpRead, udpSend, udpClose} from 'src/utils/udp';
+import dgram, {Socket} from 'dgram';
+
+import {udpClose, udpRead, udpSend} from 'src/utils/udp';
 
 import {rpc} from './xdr';
 

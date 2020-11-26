@@ -1,14 +1,14 @@
-import {Response} from 'src/remotedb/message/types';
+import {makeCueLoopEntry} from 'src/localdb/utils';
 import {Field} from 'src/remotedb/fields';
 import {fieldsToItem} from 'src/remotedb/message/item';
-import {makeCueLoopEntry} from 'src/localdb/utils';
+import {Response} from 'src/remotedb/message/types';
 import {
   BeatGrid,
-  WaveformDetailed,
-  WaveformPreview,
-  WaveformHD,
   CueAndLoop,
   HotcueButton,
+  WaveformDetailed,
+  WaveformHD,
+  WaveformPreview,
 } from 'src/types';
 
 /**

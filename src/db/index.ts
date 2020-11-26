@@ -1,15 +1,15 @@
 import * as Sentry from '@sentry/node';
 import {SpanStatus} from '@sentry/tracing';
 
-import {Device, DeviceType, TrackType} from 'src/types';
-import {Track} from 'src/entities';
-import RemoteDatabase from 'src/remotedb';
-import LocalDatabase from 'src/localdb';
 import DeviceManager from 'src/devices';
+import {Track} from 'src/entities';
+import LocalDatabase from 'src/localdb';
+import RemoteDatabase from 'src/remotedb';
+import {Device, DeviceType, TrackType} from 'src/types';
+import {getSlotName, getTrackTypeName} from 'src/utils';
 
-import * as GetMetadata from './getMetadata';
 import * as GetArtwork from './getArtwork';
-import {getTrackTypeName, getSlotName} from 'src/utils';
+import * as GetMetadata from './getMetadata';
 
 enum LookupStrategy {
   Remote,
