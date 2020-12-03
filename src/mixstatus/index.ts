@@ -33,11 +33,20 @@ export type MixstatusConfig = {
   timeBetweenSets: number;
   /**
    * Indicates if the status objects reported have onAir capabilities. Setting
-   * this to false will degrade the functionality of the processor.
+   * this to false will degrade the functionality of the processor such that it
+   * will not consider the value of isOnAir and always assume CDJs are live.
    *
    * @default true
    */
   hasOnAirCapabilities: boolean;
+  /**
+   * When set to true tracks will not be reported after the beatsUntilReported,
+   * and will ONLY be reported if the other track has gone into a non-playing
+   * play state, or taken off air.
+   *
+   * @default false
+   */
+  reportRequresSilence: boolean;
 };
 
 const defaultConfig: MixstatusConfig = {
@@ -45,6 +54,7 @@ const defaultConfig: MixstatusConfig = {
   beatsUntilReported: 128,
   timeBetweenSets: 30,
   hasOnAirCapabilities: true,
+  reportRequresSilence: false,
 };
 
 /**
@@ -151,10 +161,24 @@ export class MixstatusProcessor {
     this.#config = {...defaultConfig, ...config};
   }
 
+  /**
+   * Update the configration
+   */
+  configure(config?: Partial<MixstatusConfig>) {
+    this.#config = {...this.#config, ...config};
+  }
+
   // Bind public event emitter interface
   on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
   off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
   once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
+
+  /**
+   * Helper to account for the hasOnAirCapabilities config. If not configured
+   * with this flag the state will always be determined as on air.
+   */
+  #onAir = (state: CDJStatus.State) =>
+    this.#config.hasOnAirCapabilities ? state.isOnAir : true;
 
   /**
    * Report a player as 'live'. Will not report the state if the player has
@@ -163,7 +187,7 @@ export class MixstatusProcessor {
   #promotePlayer = (state: CDJStatus.State) => {
     const {deviceId} = state;
 
-    if (!state.isOnAir || !isPlaying(state)) {
+    if (!this.#onAir(state) || !isPlaying(state)) {
       return;
     }
 
@@ -221,9 +245,6 @@ export class MixstatusProcessor {
     this.#emitter.emit('stopped', {deviceId});
   };
 
-  /**
-   *
-   */
   #setMayStop = async () => {
     // We handle the set ending interupt as a async timeout as in the case with
     // a set ending, the DJ may immediately turn off the CDJs, stopping state
@@ -233,7 +254,7 @@ export class MixstatusProcessor {
     }
 
     // If any tracks are still playing the set has not ended
-    if ([...this.#lastState.values()].some(s => isPlaying(s) && s.isOnAir)) {
+    if ([...this.#lastState.values()].some(s => isPlaying(s) && this.#onAir(s))) {
       return;
     }
 
@@ -265,7 +286,7 @@ export class MixstatusProcessor {
   #playerMayBeFirst = (state: CDJStatus.State) => {
     const otherPlayersPlaying = [...this.#lastState.values()]
       .filter(otherState => otherState.deviceId !== state.deviceId)
-      .some(otherState => otherState.isOnAir && isPlaying(otherState));
+      .some(otherState => this.#onAir(otherState) && isPlaying(otherState));
 
     if (otherPlayersPlaying) {
       return;
@@ -297,7 +318,7 @@ export class MixstatusProcessor {
 
     // Was this device in a 'may stop' state and it has begun on-air playing
     // again?
-    if (this.#lastStoppedTimes.has(deviceId) && nowPlaying && state.isOnAir) {
+    if (this.#lastStoppedTimes.has(deviceId) && nowPlaying && this.#onAir(state)) {
       this.#lastStoppedTimes.delete(deviceId);
       return;
     }
@@ -328,7 +349,7 @@ export class MixstatusProcessor {
       return;
     }
 
-    if (!state.isOnAir) {
+    if (!this.#onAir(state)) {
       this.#playerMayStop(state);
       return;
     }
@@ -341,7 +362,7 @@ export class MixstatusProcessor {
    * Feed a CDJStatus state object to the mix state processor
    */
   handleState(state: CDJStatus.State) {
-    const {deviceId, playState, isOnAir} = state;
+    const {deviceId, playState} = state;
 
     const lastState = this.#lastState.get(deviceId);
     this.#lastState.set(deviceId, state);
@@ -349,7 +370,7 @@ export class MixstatusProcessor {
     // If this is the first time we've heard from this CDJ, and it is on air
     // and playing, report it immediately. This is different from reporting the
     // first playing track, as the CDJ will have already sent many states.
-    if (lastState === undefined && isOnAir && isPlaying(state)) {
+    if (lastState === undefined && this.#onAir(state) && isPlaying(state)) {
       this.#lastStartTime.set(deviceId, Date.now());
       this.#playerMayBeFirst(state);
       return;
@@ -360,7 +381,7 @@ export class MixstatusProcessor {
       this.#handlePlaystateChange(lastState, state);
     }
 
-    if (lastState && lastState.isOnAir !== state.isOnAir) {
+    if (lastState && this.#onAir(lastState) !== this.#onAir(state)) {
       this.#handleOnairChange(state);
     }
 
@@ -372,7 +393,11 @@ export class MixstatusProcessor {
       bpmToSeconds(state.trackBPM!, state.sliderPitch) *
       1000;
 
-    if (startedAt !== undefined && requiredPlayTime <= Date.now() - startedAt) {
+    if (
+      !this.#config.reportRequresSilence &&
+      startedAt !== undefined &&
+      requiredPlayTime <= Date.now() - startedAt
+    ) {
       this.#promotePlayer(state);
     }
 

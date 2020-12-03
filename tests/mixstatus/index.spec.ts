@@ -486,4 +486,64 @@ describe('mixstatus processor', () => {
 
     expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 456}));
   });
+
+  it('does not report after requiredPlayTime when reportRequresSilence', () => {
+    processor.configure({reportRequresSilence: true});
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Player 2 comes onair after 64 beats
+    advanceByBeatCount(64);
+    feedState(2, {isOnAir: true});
+
+    // Player 2 stays onair. At beat 128 it is reported live.
+    advanceByBeatCount(64);
+    feedState(2, {});
+
+    // Player 2 is NOT reported as live due to reportRequresSilence
+    expect(npHandler).not.toHaveBeenCalled();
+
+    // Player 1 stops and player 2 is reporte live
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+
+    expect(npHandler).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores isOnAir when hasOnAirCapabilities is false', () => {
+    processor.configure({hasOnAirCapabilities: false});
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Player 2 is reported live at beat 128 without having isOnAir set true
+    advanceByBeatCount(128);
+    feedState(2, {});
+
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+  });
+
+  it('reports for hasOnAirCapabilities:false + reportRequresSilence:true', () => {
+    processor.configure({hasOnAirCapabilities: false, reportRequresSilence: true});
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Player 2 is not reported since player 1 has not yet stopped
+    advanceByBeatCount(128);
+    feedState(2, {});
+
+    expect(npHandler).not.toHaveBeenCalled();
+
+    advanceByBeatCount(64);
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+  });
 });
