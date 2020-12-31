@@ -10,25 +10,12 @@ import {
   WaveformHD,
   WaveformPreview,
 } from 'src/types';
-
-/**
- * Extracts a specific bitmask, shifting it to the bitmask.
- */
-const extractBitMask = (val: number, mask: number): number =>
-  (val & mask) >> Math.log2(mask & -mask);
-
-/**
- * Pioneer colors are 3 bits, convert this to a percentage.
- */
-const extractColor = (val: number, mask: number): number =>
-  extractBitMask(val, mask) / 0b111;
-
-/**
- * Utility to generate an filled with byte offsets for each segment
- */
-function makeOffsetArray(byteLength: number, segmentSize: number) {
-  return new Array(byteLength / segmentSize).fill(null).map((_, i) => i * segmentSize);
-}
+import {
+  convertWaveformHDData,
+  extractBitMask,
+  extractColor,
+  makeOffsetArray,
+} from 'src/utils/converters';
 
 /**
  * Generic null converter, for responses with no data.
@@ -105,29 +92,14 @@ const convertWaveformDetailed = (args: Field[]): WaveformDetailed => {
  * Converts HD waveform data.
  */
 const convertWaveformHD = (args: Field[]): WaveformHD => {
+  // TODO: Verify this 0x34 offset is correct
   const WAVEFORM_START = 0x34;
   const data = (args[3].value as Buffer).slice(WAVEFORM_START);
 
   // TODO: This response is also used for the HD waveform previews, however
-  // those tend to have a much more complex data structure.
+  // those have a much more complex data structure.
 
-  // Two byte bit representation for the color waveform.
-  //
-  // | f  e  d | c  b  a | 9  8  7 | 6  5  4  3  2 | 1   0 |
-  // [   red   |  green  |   blue  |     height    | ~ | ~ ]
-  const redMask    = 0b11100000_00000000; // prettier-ignore
-  const greenMask  = 0b00011100_00000000; // prettier-ignore
-  const blueMask   = 0b00000011_10000000; // prettier-ignore
-  const heightMask = 0b00000000_01111100; // prettier-ignore
-
-  const ec = extractColor;
-
-  return makeOffsetArray(data.length, 0x02)
-    .map(byteOffset => data.readUInt16BE(byteOffset))
-    .map(v => ({
-      height: extractBitMask(v, heightMask),
-      color: [ec(v, redMask), ec(v, greenMask), ec(v, blueMask)],
-    }));
+  return convertWaveformHDData(data);
 };
 
 /**

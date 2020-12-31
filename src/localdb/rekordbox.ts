@@ -20,6 +20,7 @@ import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import {MetadataORM, Table} from 'src/localdb/orm';
 import {makeCueLoopEntry} from 'src/localdb/utils';
 import {HotcueButton} from 'src/types';
+import {convertWaveformHDData} from 'src/utils/converters';
 
 // NOTE: Kaitai doesn't currently have a good typescript exporter, so we will
 //       be making liberal usage of any in these utilities. We still guarantee
@@ -361,6 +362,13 @@ function hydrateCueAndLoop(track: Track, data: any) {
   track.cueAndLoops = cueAndLoops;
 }
 
+/**
+ * Fill waveform HD data from the ANLZ section
+ */
+function hydrateWaveformHd(track: Track, data: any) {
+  track.waveformHd = convertWaveformHDData(Buffer.from(data.body.entries));
+}
+
 const {PageType} = RekordboxPdb;
 const {SectionTags} = RekordboxAnlz;
 
@@ -405,6 +413,7 @@ const pdbEntityCreators = {
 const trackAnlzHydrators = {
   [SectionTags.BEAT_GRID]: hydrateBeatgrid,
   [SectionTags.CUES]: hydrateCueAndLoop,
+  [SectionTags.WAVE_COLOR_SCROLL]: hydrateWaveformHd,
 
   // TODO: The following sections haven't yet been extracted into the local
   //       database.
@@ -414,5 +423,4 @@ const trackAnlzHydrators = {
   // [SectionTags.WAVE_PREVIEW]: null,
   // [SectionTags.WAVE_SCROLL]: null,
   // [SectionTags.WAVE_COLOR_PREVIEW]: null, <- In the EXT file
-  // [SectionTags.WAVE_COLOR_SCROLL]: null,  <- In the EXT file
 };
