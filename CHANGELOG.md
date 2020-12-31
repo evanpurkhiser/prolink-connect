@@ -1,5 +1,13 @@
 # Changelog
 
+## Unrelease
+
+* Fetch WaveformHD metadata when getMetadata is called for a track
+
+## v0.3.0
+
+* Allow the mixstatus processor to be configured.
+
 ## v0.2.0
 
 * Introduced a method to play and cue CDJs.
