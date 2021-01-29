@@ -105,7 +105,7 @@ async function main() {
   // This will begin announcing ourself on the network, as well as enable various
   // services on the network service object.
   console.info('Connecting to the network');
-  network.connect();
+  await network.connect();
 
   // If you're using trypescript, you can now type gaurd [0] to coerce the type
   // to ProlinkNetworkConnected, marking all services as non-null.

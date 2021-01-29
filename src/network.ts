@@ -15,7 +15,7 @@ import RemoteDatabase from 'src/remotedb';
 import StatusEmitter from 'src/status';
 import {Device, NetworkState} from 'src/types';
 import {getBroadcastAddress, getMatchingInterface} from 'src/utils';
-import {udpBind} from 'src/utils/udp';
+import {udpBind, udpClose} from 'src/utils/udp';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 
 const connectErrorHelp =
@@ -213,7 +213,7 @@ export class ProlinkNetwork {
    * The network must first have been configured (either with autoconfigFromPeers
    * or manual configuration). This will then initialize all the network services.
    */
-  connect() {
+  async connect() {
     if (this.#config === null) {
       throw new Error(connectErrorHelp);
     }
@@ -223,6 +223,10 @@ export class ProlinkNetwork {
     // Create VCDJ for the interface's broadcast address
     const broadcastAddr = getBroadcastAddress(this.#config.iface);
     const vcdj = getVirtualCDJ(this.#config.iface, this.#config.vcdjId);
+
+    // Re-open the announce socket bound specifically to the configured interface
+    await udpClose(this.#announceSocket);
+    await udpBind(this.#announceSocket, ANNOUNCE_PORT, this.#config.iface.address);
 
     // Start announcing
     const announcer = new Announcer(vcdj, this.#announceSocket, broadcastAddr);
