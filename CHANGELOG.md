@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 Nothing yet
 
-## [0.4.0] - 2021-02-01
+## [v0.4.0] - 2021-02-01
 
 ### Fixed
 
@@ -91,4 +91,4 @@ Nothing yet
 [v0.3.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.1.0-prerelease.21...v0.1.0
-[v0.1.0-prerelease.210.1.0]: https://github.com/evanpurkhiser/prolink-connect/compare/ef4b95d...v0.1.0-prerelease.21
+[v0.1.0-prerelease.21]: https://github.com/evanpurkhiser/prolink-connect/compare/ef4b95d...v0.1.0-prerelease.21
