@@ -2,8 +2,6 @@
 
 ## Unrelease
 
-* Fetch WaveformHD metadata when getMetadata is called for a track
-
 ## v0.3.0
 
 * Allow the mixstatus processor to be configured.

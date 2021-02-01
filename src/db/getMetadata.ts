@@ -89,10 +89,7 @@ export async function viaLocal(
     return null;
   }
 
-  await Promise.all([
-    hydrateAnlz(track, 'DAT', path => fetchFile({device, slot: trackSlot, path})),
-    hydrateAnlz(track, 'EXT', path => fetchFile({device, slot: trackSlot, path})),
-  ]);
+  await hydrateAnlz(track, 'DAT', path => fetchFile({device, slot: trackSlot, path}));
 
   return track;
 }
