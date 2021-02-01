@@ -14,8 +14,8 @@ Nothing yet
 ### Fixed
 
 - Bind announcement to the configured interface. This corrects an issue where
-  prolink connect could fail to correctly to the CDJs when the OS's routing
-  table did not correctly route the announce broadcast packets.
+  prolink connect could fail to correctly connect to the CDJs when the OS's
+  routing table did not correctly route the announce broadcast packets.
 
 - Disconnect all sockets when calling `disconnect` on the network.
 
