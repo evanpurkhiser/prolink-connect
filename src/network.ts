@@ -103,7 +103,6 @@ export async function bringOnline(config?: NetworkConfig) {
     await udpBind(announceSocket, ANNOUNCE_PORT, '0.0.0.0');
     await udpBind(beatSocket, BEAT_PORT, '0.0.0.0');
     await udpBind(statusSocket, STATUS_PORT, '0.0.0.0');
-    announceSocket.setBroadcast(true);
   } catch (err) {
     Sentry.captureException(err);
     tx.setStatus(SpanStatus.Unavailable);
@@ -226,7 +225,10 @@ export class ProlinkNetwork {
 
     // Re-open the announce socket bound specifically to the configured interface
     await udpClose(this.#announceSocket);
+
+    this.#announceSocket = dgram.createSocket('udp4');
     await udpBind(this.#announceSocket, ANNOUNCE_PORT, this.#config.iface.address);
+    this.#announceSocket.setBroadcast(true);
 
     // Start announcing
     const announcer = new Announcer(vcdj, this.#announceSocket, broadcastAddr);
