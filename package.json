@@ -18,7 +18,8 @@
     "build": "webpack",
     "build-docs": "typedoc --stripInternal --theme minimal --out docs src",
     "test": "jest",
-    "lint": "eslint src/**/*.ts tests/**/*.ts"
+    "lint": "eslint src/**/*.ts tests/**/*.ts",
+    "preversion": "yarn lint; yarn test"
   },
   "files": [
     "lib/"
