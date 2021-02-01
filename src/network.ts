@@ -169,6 +169,9 @@ export class ProlinkNetwork {
 
   /**
    * Configure / reconfigure the network with an explicit configuration.
+   *
+   * You may need to disconnect and re-connect the network after making a
+   * networking configuration change.
    */
   configure(config: NetworkConfig) {
     this.#config = {...this.#config, ...config};
@@ -267,9 +270,11 @@ export class ProlinkNetwork {
       this.localdb?.disconnectForDevice(device);
     }
 
-    // Close announce and status sockets
-    this.#announceSocket.close();
-    this.#statusSocket.close();
+    return Promise.all([
+      udpClose(this.#announceSocket),
+      udpClose(this.#statusSocket),
+      udpClose(this.#beatSocket),
+    ]);
   }
 
   /**
