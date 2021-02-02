@@ -1,7 +1,8 @@
+import tsTransformPaths from '@zerollup/ts-transform-paths';
 import * as webpack from 'webpack';
 import nodeExternals from 'webpack-node-externals';
+
 import path from 'path';
-import tsTransformPaths from '@zerollup/ts-transform-paths';
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
@@ -13,7 +14,7 @@ const config: webpack.Configuration = {
     ...(IS_DEV ? {cli: 'src/cli/index'} : {}),
   },
   target: 'node',
-  externals: [nodeExternals()],
+  externals: [nodeExternals() as any],
   output: {
     path: path.resolve(__dirname, 'lib'),
     filename: '[name].js',
