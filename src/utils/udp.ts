@@ -14,7 +14,7 @@ export function udpBind(conn: Socket, arg1?: any, arg2?: any): Promise<AddressIn
   return new Promise((resolve, reject) => {
     conn.once('error', reject);
     conn.once('listening', () => {
-      conn.off('error', resolve);
+      conn.off('error', reject);
       resolve(conn.address());
     });
 
