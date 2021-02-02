@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   Instaed, we can just announce to all connected devices on each announcment
   tick.
 
+## Changed
+
+- Upgraded to latest Kaitai struct definitions for rekordbox database decoding.
+  Thank you [@brunchboy](https://github.com/brunchboy).
+
 ## [v0.4.0] - 2021-02-01
 
 ### Fixed
