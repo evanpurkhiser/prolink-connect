@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Fixed
 
-- Binding to the detected interface to broadcast the announcment packets is not
-  the best approach, since we then can no longer recieve broadcast packets.
-  Instaed, we can just announce to all connected devices on each announcment
+- Binding to the detected interface to broadcast the announcement packets is not
+  the best approach, since we then can no longer receive broadcast packets.
+  Instead, we can just announce to all connected devices on each announcement
   tick.
 
 ## Changed
@@ -43,14 +43,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Device manager has learned `getDeviceEnsured`, which will wait until the
   device appears on the network before resolving. Useful for when you know a
-  device should be on the netowrk, but maybe has not yet announced itself
+  device should be on the network, but maybe has not yet announced itself
 
 - Use `getDeviceEnsured` when querying the aggregate database. This will help
   with situations where a device reports having a track loaded from a device
   which has not yet announced itself on the network.
 
 - A new `prolink-connect/lib/types` file is available, which only exports types
-  and enums, and does NOT rquire any runtime dependencies. This may be useful
+  and enums, and does NOT require any runtime dependencies. This may be useful
   when you want to use prolink-connect types in a frontend application, and do
   not want to accidentally bundle various node.js dependencies into your app.
 
@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- Fixed various false-positive now-playing reportings with the mixstatus
+- Fixed various false-positive now-playing repostings with the mixstatus
   processor, along with some missing now-playing events.
 
   This removes a _huge_ dependency from the library, and makes consumption
@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Fixed a bug in mixstatus when ending a track by taking the deck off-air and
   then cueing before it finished determining if the off-air action passed the
-  number of interupt beats, causing the track to incorrectly NOT be cleared
+  number of interrupt beats, causing the track to incorrectly NOT be cleared
   from having been marked as having reported itself as playing.
 
 ## [v0.1.0-prerelease.21] - 2020-06-17
