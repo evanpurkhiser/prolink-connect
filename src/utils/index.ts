@@ -48,18 +48,6 @@ export function getMatchingInterface(ipAddr: ip.Address4) {
   return matchedIface;
 }
 
-export function getBroadcastAddress(iface: NetworkInterfaceInfoIPv4) {
-  const maskSplit = iface.netmask.split('.');
-
-  // bitwise OR over the splitted NAND netmask, then glue them back together
-  // with a dot character to form an ip we have to do a NAND operation because
-  // of the 2-complements; getting rid of all the 'prepended' 1's with & 0xFF
-  return iface.address
-    .split('.')
-    .map((e, i) => (~maskSplit[i] & 0xff) | Number(e))
-    .join('.');
-}
-
 /**
  * Given a BPM and pitch value, compute how many seconds per beat
  */

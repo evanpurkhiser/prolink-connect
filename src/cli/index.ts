@@ -25,7 +25,7 @@ async function cli() {
   signale.await('Autoconfigure successfull!');
 
   signale.await('Connecting to network!');
-  await network.connect();
+  network.connect();
 
   if (!network.isConnected()) {
     signale.error('Failed to connect to the network');

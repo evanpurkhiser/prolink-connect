@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-Nothing yet
+## Fixed
+
+- Binding to the detected interface to broadcast the announcment packets is not
+  the best approach, since we then can no longer recieve broadcast packets.
+  Instaed, we can just announce to all connected devices on each announcment
+  tick.
 
 ## [v0.4.0] - 2021-02-01
 

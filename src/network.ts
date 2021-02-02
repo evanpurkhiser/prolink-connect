@@ -14,7 +14,7 @@ import {MixstatusProcessor} from 'src/mixstatus';
 import RemoteDatabase from 'src/remotedb';
 import StatusEmitter from 'src/status';
 import {Device, NetworkState} from 'src/types';
-import {getBroadcastAddress, getMatchingInterface} from 'src/utils';
+import {getMatchingInterface} from 'src/utils';
 import {udpBind, udpClose} from 'src/utils/udp';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 
@@ -215,7 +215,7 @@ export class ProlinkNetwork {
    * The network must first have been configured (either with autoconfigFromPeers
    * or manual configuration). This will then initialize all the network services.
    */
-  async connect() {
+  connect() {
     if (this.#config === null) {
       throw new Error(connectErrorHelp);
     }
@@ -223,18 +223,10 @@ export class ProlinkNetwork {
     const tx = Sentry.startTransaction({name: 'connect'});
 
     // Create VCDJ for the interface's broadcast address
-    const broadcastAddr = getBroadcastAddress(this.#config.iface);
     const vcdj = getVirtualCDJ(this.#config.iface, this.#config.vcdjId);
 
-    // Re-open the announce socket bound specifically to the configured interface
-    await udpClose(this.#announceSocket);
-
-    this.#announceSocket = dgram.createSocket('udp4');
-    await udpBind(this.#announceSocket, ANNOUNCE_PORT, this.#config.iface.address);
-    this.#announceSocket.setBroadcast(true);
-
     // Start announcing
-    const announcer = new Announcer(vcdj, this.#announceSocket, broadcastAddr);
+    const announcer = new Announcer(vcdj, this.#announceSocket, this.deviceManager);
     announcer.start();
 
     // Create remote and local databases

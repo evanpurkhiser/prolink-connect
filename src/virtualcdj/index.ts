@@ -10,6 +10,7 @@ import {
   VIRTUAL_CDJ_FIRMWARE,
   VIRTUAL_CDJ_NAME,
 } from 'src/constants';
+import DeviceManager from 'src/devices';
 import {Device, DeviceID, DeviceType} from 'src/types';
 import {buildName} from 'src/utils';
 
@@ -129,9 +130,10 @@ export class Announcer {
    */
   #announceSocket: Socket;
   /**
-   * The broadcast address to make the announcments on
+   * The device manager service used to determine which devices to announce
+   * ourselves to.
    */
-  #broadcastAddr: string;
+  #deviceManager: DeviceManager;
   /**
    * The virtual CDJ device to announce
    */
@@ -141,16 +143,20 @@ export class Announcer {
    */
   #intervalHandle?: NodeJS.Timeout;
 
-  constructor(vcdj: Device, announceSocket: Socket, broadcastAddr: string) {
+  constructor(vcdj: Device, announceSocket: Socket, deviceManager: DeviceManager) {
     this.#vcdj = vcdj;
     this.#announceSocket = announceSocket;
-    this.#broadcastAddr = broadcastAddr;
+    this.#deviceManager = deviceManager;
   }
 
   start() {
     const announcePacket = makeAnnouncePacket(this.#vcdj);
+
+    const announceToDevice = (device: Device) =>
+      this.#announceSocket.send(announcePacket, ANNOUNCE_PORT, device.ip.address);
+
     this.#intervalHandle = setInterval(
-      () => this.#announceSocket.send(announcePacket, ANNOUNCE_PORT, this.#broadcastAddr),
+      () => [...this.#deviceManager.devices.values()].forEach(announceToDevice),
       ANNOUNCE_INTERVAL
     );
   }
