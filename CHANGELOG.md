@@ -7,18 +7,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-Nothing yet
+### Added
+
+- A new `triggerNextTrack` method has been introduced to the Mixstatus service.
+  Calling this will immediately report the player which has been playing for
+  the longest as now playing.
+
+- the Mixstatus service has learned to follow master. See the chagnes to
+  Mixstatus below.
+
+### Changed
+
+- The Mixstatus service's configuration has been restructured and has learned
+  how to follow master.
+
+  - `reportRequresSilence` has been removed
+
+  - A new `mode` option has been introduced that configures how the mixstatus
+    processor will generally determine when a track change has happened. The
+    `ReportingMode` defines: `SmartTiming` (the default), `WaitsForSilence`
+    (the replacment for `reportRequresSilence`), and a new `FollowsMaster`
+    mode, which simply causes tracks to be reported when the player becomes
+    master (assuming it is on air and playing).
 
 ## [v0.5.0]
 
-## Fixed
+### Fixed
 
 - Binding to the detected interface to broadcast the announcement packets is not
   the best approach, since we then can no longer receive broadcast packets.
   Instead, we can just announce to all connected devices on each announcement
   tick.
 
-## Changed
+### Changed
 
 - Upgraded to latest Kaitai struct definitions for rekordbox database decoding.
   Thank you [@brunchboy](https://github.com/brunchboy).

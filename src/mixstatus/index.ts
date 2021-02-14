@@ -7,7 +7,65 @@ import {bpmToSeconds} from 'src/utils';
 
 import {isPlaying, isStopping} from './utils';
 
+/**
+ * Reporting modes specify how the mixstatus processor will determine when a new
+ * track is 'now playing'.
+ */
+export enum ReportingMode {
+  /**
+   * Tracks will be smartly marked as playing following rules:
+   *
+   * - The track that has been in the play state with the CDJ in the "on air" state
+   *   for the longest period of time (allowing for a configurable length of
+   *   interruption with allowedInterruptBeats) is considered to be the active
+   *   track that incoming tracks will be compared against.
+   *
+   * - A incoming track will immediately be reported as nowPlaying if it is on
+   *   air, playing, and the last active track has been cued.
+   *
+   * - A incoming track will be reported as nowPlaying if the active track has
+   *   not been on air or has not been playing for the configured
+   *   allowedInterruptBeats.
+   *
+   * - A incoming track will be reported as nowPlaying if it has played
+   *   consecutively (with allowedInterruptBeats honored for the incoming track)
+   *   for the configured beatsUntilReported.
+   */
+  SmartTiming,
+  /**
+   * Tracks will not be reported after the beatsUntilReported AND will ONLY
+   * be reported if the other track has gone into a non-playing play state, or
+   * taken off air (when useOnAirStatus is enabled).
+   */
+  WaitsForSilence,
+  /**
+   * The track will simply be reported only after the player becomes master.
+   */
+  FollowsMaster,
+}
+
 export type MixstatusConfig = {
+  /**
+   * Selects the mixstatus reporting mode
+   */
+  mode: ReportingMode;
+  /**
+   * Specifies the duration in seconds that no tracks must be on air. This can
+   * be thought of as how long 'air silence' is reasonable in a set before a
+   * separate one is considered have begun.
+   *
+   * @default 30 (half a minute)
+   */
+  timeBetweenSets: number;
+  /**
+   * Indicates if the status objects reported should have their on-air flag
+   * read. Setting this to false will degrade the functionality of the processor
+   * such that it will not consider the value of isOnAir and always assume CDJs
+   * are live.
+   *
+   * @default true
+   */
+  useOnAirStatus: boolean;
   /**
    * Configures how many beats a track may not be live or playing for it to
    * still be considered active.
@@ -20,41 +78,19 @@ export type MixstatusConfig = {
    * (since the beat it was cued at) until the track is considered to be
    * active.
    *
+   * Used for ReportingMode.SmartTiming
+   *
    * @default 128 (2 phrases)
    */
   beatsUntilReported: number;
-  /**
-   * Specifies the duration in seconds that no tracks must be on air. This can
-   * be thought of as how long 'air silence' is reasonable in a set before a
-   * separate one is considered have begun.
-   *
-   * @default 30 (half a minute)
-   */
-  timeBetweenSets: number;
-  /**
-   * Indicates if the status objects reported have onAir capabilities. Setting
-   * this to false will degrade the functionality of the processor such that it
-   * will not consider the value of isOnAir and always assume CDJs are live.
-   *
-   * @default true
-   */
-  hasOnAirCapabilities: boolean;
-  /**
-   * When set to true tracks will not be reported after the beatsUntilReported,
-   * and will ONLY be reported if the other track has gone into a non-playing
-   * play state, or taken off air.
-   *
-   * @default false
-   */
-  reportRequresSilence: boolean;
 };
 
 const defaultConfig: MixstatusConfig = {
+  mode: ReportingMode.SmartTiming,
+  timeBetweenSets: 30,
   allowedInterruptBeats: 8,
   beatsUntilReported: 128,
-  timeBetweenSets: 30,
-  hasOnAirCapabilities: true,
-  reportRequresSilence: false,
+  useOnAirStatus: true,
 };
 
 /**
@@ -100,27 +136,6 @@ type Emitter = StrictEventEmitter<EventEmitter, MixstatusEvents>;
  *
  * Config options may be changed after the processor has been created and is
  * actively receiving state updates.
- *
- * Track changes are detected based on a number of rules:
- *
- * - The track that has been in the play state with the CDJ in the "on air" state
- *   for the longest period of time (allowing for a configurable length of
- *   interruption with AllowedInterruptBeats) is considered to be the active
- *   track that incoming tracks will be compared against.
- *
- * - A incoming track will immediately be reported as nowPlaying if it is on
- *   air, playing, and the last active track has been cued.
- *
- * - A incoming track will be reported as nowPlaying if the active track has
- *   not been on air or has not been playing for the configured
- *   AllowedInterruptBeats.
- *
- * - A incoming track will be reported as nowPlaying if it has played
- *   consecutively (with AllowedInterruptBeats honored for the incoming track)
- *   for the configured BeatsUntilReported.
- *
- * - A track will be reported as stopped when it was NowPlaying and was stopped
- *   (cued, reached the end of the track, or a new track was loaded.
  */
 export class MixstatusProcessor {
   /**
@@ -174,11 +189,11 @@ export class MixstatusProcessor {
   once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   /**
-   * Helper to account for the hasOnAirCapabilities config. If not configured
+   * Helper to account for the useOnAirStatus config. If not configured
    * with this flag the state will always be determined as on air.
    */
   #onAir = (state: CDJStatus.State) =>
-    this.#config.hasOnAirCapabilities ? state.isOnAir : true;
+    this.#config.useOnAirStatus ? state.isOnAir : true;
 
   /**
    * Report a player as 'live'. Will not report the state if the player has
@@ -311,6 +326,9 @@ export class MixstatusProcessor {
   #handlePlaystateChange = (lastState: CDJStatus.State, state: CDJStatus.State) => {
     const {deviceId} = state;
 
+    const isFollowingMaster =
+      this.#config.mode === ReportingMode.FollowsMaster && state.isMaster;
+
     const nowPlaying = isPlaying(state);
     const wasPlaying = isPlaying(lastState);
 
@@ -321,6 +339,10 @@ export class MixstatusProcessor {
     if (this.#lastStoppedTimes.has(deviceId) && nowPlaying && this.#onAir(state)) {
       this.#lastStoppedTimes.delete(deviceId);
       return;
+    }
+
+    if (isNowPlaying && isFollowingMaster) {
+      this.#promotePlayer(state);
     }
 
     if (isNowPlaying) {
@@ -385,6 +407,16 @@ export class MixstatusProcessor {
       this.#handleOnairChange(state);
     }
 
+    // Are we simply following master?
+    if (
+      this.#config.mode === ReportingMode.FollowsMaster &&
+      lastState?.isMaster === false &&
+      state.isMaster
+    ) {
+      this.#promotePlayer(state);
+      return;
+    }
+
     // If a device has been playing for the required number of beats, we may be
     // able to report it as live
     const startedAt = this.#lastStartTime.get(deviceId);
@@ -394,7 +426,7 @@ export class MixstatusProcessor {
       1000;
 
     if (
-      !this.#config.reportRequresSilence &&
+      this.#config.mode === ReportingMode.SmartTiming &&
       startedAt !== undefined &&
       requiredPlayTime <= Date.now() - startedAt
     ) {
@@ -412,5 +444,13 @@ export class MixstatusProcessor {
     if (stoppedAt !== undefined && requiredStopTime <= Date.now() - stoppedAt) {
       this.#markPlayerStopped(state);
     }
+  }
+
+  /**
+   * Manually reports the track that has been playing the longest which has not
+   * yet been reported as live.
+   */
+  triggerNextTrack() {
+    this.#promoteNextPlayer();
   }
 }

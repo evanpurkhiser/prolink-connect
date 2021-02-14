@@ -1,4 +1,4 @@
-import {MixstatusProcessor} from 'src/mixstatus';
+import {MixstatusProcessor, ReportingMode} from 'src/mixstatus';
 import {CDJStatus, MediaSlot, TrackType} from 'src/types';
 import {bpmToSeconds} from 'src/utils';
 
@@ -487,8 +487,8 @@ describe('mixstatus processor', () => {
     expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 456}));
   });
 
-  it('does not report after requiredPlayTime when reportRequresSilence', () => {
-    processor.configure({reportRequresSilence: true});
+  it('does not report after requiredPlayTime when ReportingMode.WaitsForSilence', () => {
+    processor.configure({mode: ReportingMode.WaitsForSilence});
 
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
@@ -512,8 +512,8 @@ describe('mixstatus processor', () => {
     expect(npHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores isOnAir when hasOnAirCapabilities is false', () => {
-    processor.configure({hasOnAirCapabilities: false});
+  it('ignores isOnAir when useOnAirStatus is false', () => {
+    processor.configure({useOnAirStatus: false});
 
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
@@ -527,8 +527,11 @@ describe('mixstatus processor', () => {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports for hasOnAirCapabilities:false + reportRequresSilence:true', () => {
-    processor.configure({hasOnAirCapabilities: false, reportRequresSilence: true});
+  it('reports for useOnAirStatus:false + ReportingMode.WaitsForSilence', () => {
+    processor.configure({
+      mode: ReportingMode.WaitsForSilence,
+      useOnAirStatus: false,
+    });
 
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
@@ -543,6 +546,56 @@ describe('mixstatus processor', () => {
 
     advanceByBeatCount(64);
     feedState(1, {playState: CDJStatus.PlayState.Cued});
+
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+  });
+
+  it('reports while using ReportingMode.FollowsMaster', () => {
+    processor.configure({mode: ReportingMode.FollowsMaster});
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Player 2 is not reported since it has not yet become master
+    advanceByBeatCount(128);
+    feedState(2, {isOnAir: true});
+
+    expect(npHandler).not.toHaveBeenCalled();
+
+    advanceByBeatCount(64);
+    feedState(1, {});
+
+    // Player 2 is not reported since it has not yet become master
+    expect(npHandler).not.toHaveBeenCalled();
+
+    // Player 2 becomes master and is reported
+    feedState(1, {isMaster: false});
+    feedState(2, {isMaster: true});
+
+    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+  });
+
+  it('reports with ReportingMode.FollowsMaster, master selected early', () => {
+    processor.configure({
+      mode: ReportingMode.FollowsMaster,
+      useOnAirStatus: false,
+    });
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+    setupTwoTracks();
+    npHandler.mockReset();
+
+    // Player 2 is cued and then becomes master
+    feedState(2, {playState: CDJStatus.PlayState.Cued});
+    feedState(2, {isMaster: true});
+
+    expect(npHandler).not.toHaveBeenCalled();
+
+    // Player 2 starts playing as master
+    feedState(2, {playState: CDJStatus.PlayState.Playing});
 
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
