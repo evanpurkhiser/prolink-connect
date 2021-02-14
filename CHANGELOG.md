@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [v0.6.0]
+
 ### Added
 
 - A new `triggerNextTrack` method has been introduced to the Mixstatus service.
@@ -121,7 +125,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Initial working implementation. This is currently being used to re-implement
   [prolink-tools](https://github.com/evanpurkhiser/prolink-tools).
 
-[Unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.6.0...HEAD
+[v0.5.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.2.0...v0.3.0
