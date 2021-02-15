@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-Nothing yet.
+### Fixed
+
+- Actually export `MixstatusMode`, not just the type.
 
 ## [v0.7.0] - 2021-02-14
 
 ### Changed
 
- - `ReportingMode` has been renamed to `MixstatusMode` and is now exported in
-   `prolink-connect/lib/types`.
+- `ReportingMode` has been renamed to `MixstatusMode` and is now exported in
+  `prolink-connect/lib/types`.
 
 ## [v0.6.0] - 2021-02-14
 
