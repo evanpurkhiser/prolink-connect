@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+Nothing yet.
+
+## [v0.7.2] - 2021-02-15
+
 ### Fixed
 
 - Do not import the mixstatus module in the types export, as this exports more
@@ -141,7 +145,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Initial working implementation. This is currently being used to re-implement
   [prolink-tools](https://github.com/evanpurkhiser/prolink-tools).
 
-[Unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.2...HEAD
+[v0.7.2]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.1...v0.7.2
 [v0.7.1]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.0...v0.7.1
 [v0.7.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.5.0...v0.6.0
