@@ -310,4 +310,39 @@ export enum NetworkState {
   Failed,
 }
 
-export {MixstatusMode} from './mixstatus';
+/**
+ * Mixstatus reporting modes specify how the mixstatus processor will determine when a new
+ * track is 'now playing'.
+ */
+export enum MixstatusMode {
+  /**
+   * Tracks will be smartly marked as playing following rules:
+   *
+   * - The track that has been in the play state with the CDJ in the "on air" state
+   *   for the longest period of time (allowing for a configurable length of
+   *   interruption with allowedInterruptBeats) is considered to be the active
+   *   track that incoming tracks will be compared against.
+   *
+   * - A incoming track will immediately be reported as nowPlaying if it is on
+   *   air, playing, and the last active track has been cued.
+   *
+   * - A incoming track will be reported as nowPlaying if the active track has
+   *   not been on air or has not been playing for the configured
+   *   allowedInterruptBeats.
+   *
+   * - A incoming track will be reported as nowPlaying if it has played
+   *   consecutively (with allowedInterruptBeats honored for the incoming track)
+   *   for the configured beatsUntilReported.
+   */
+  SmartTiming,
+  /**
+   * Tracks will not be reported after the beatsUntilReported AND will ONLY
+   * be reported if the other track has gone into a non-playing play state, or
+   * taken off air (when useOnAirStatus is enabled).
+   */
+  WaitsForSilence,
+  /**
+   * The track will simply be reported only after the player becomes master.
+   */
+  FollowsMaster,
+}

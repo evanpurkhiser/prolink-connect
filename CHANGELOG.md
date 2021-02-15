@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-Nothing yet.
+### Fixed
+
+- Do not import the mixstatus module in the types export, as this exports more
+  things that we really don't want.
 
 ## [v0.7.1] - 2021-02-15
 
@@ -30,7 +33,7 @@ Nothing yet.
   Calling this will immediately report the player which has been playing for
   the longest as now playing.
 
-- the Mixstatus service has learned to follow master. See the chagnes to
+- the Mixstatus service has learned to follow master. See the changes to
   Mixstatus below.
 
 ### Changed
@@ -43,7 +46,7 @@ Nothing yet.
   - A new `mode` option has been introduced that configures how the mixstatus
     processor will generally determine when a track change has happened. The
     `ReportingMode` defines: `SmartTiming` (the default), `WaitsForSilence`
-    (the replacment for `reportRequresSilence`), and a new `FollowsMaster`
+    (the replacement for `reportRequresSilence`), and a new `FollowsMaster`
     mode, which simply causes tracks to be reported when the player becomes
     master (assuming it is on air and playing).
 

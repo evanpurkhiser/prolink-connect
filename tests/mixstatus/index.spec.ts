@@ -1,5 +1,5 @@
-import {MixstatusMode, MixstatusProcessor} from 'src/mixstatus';
-import {CDJStatus, MediaSlot, TrackType} from 'src/types';
+import {MixstatusProcessor} from 'src/mixstatus';
+import {CDJStatus, MediaSlot, MixstatusMode, TrackType} from 'src/types';
 import {bpmToSeconds} from 'src/utils';
 
 const MOCK_BPM = 60;
