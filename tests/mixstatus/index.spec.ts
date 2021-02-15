@@ -1,4 +1,4 @@
-import {MixstatusProcessor, ReportingMode} from 'src/mixstatus';
+import {MixstatusMode, MixstatusProcessor} from 'src/mixstatus';
 import {CDJStatus, MediaSlot, TrackType} from 'src/types';
 import {bpmToSeconds} from 'src/utils';
 
@@ -487,8 +487,8 @@ describe('mixstatus processor', () => {
     expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 456}));
   });
 
-  it('does not report after requiredPlayTime when ReportingMode.WaitsForSilence', () => {
-    processor.configure({mode: ReportingMode.WaitsForSilence});
+  it('does not report after requiredPlayTime when MixstatusMode.WaitsForSilence', () => {
+    processor.configure({mode: MixstatusMode.WaitsForSilence});
 
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
@@ -527,9 +527,9 @@ describe('mixstatus processor', () => {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports for useOnAirStatus:false + ReportingMode.WaitsForSilence', () => {
+  it('reports for useOnAirStatus:false + MixstatusMode.WaitsForSilence', () => {
     processor.configure({
-      mode: ReportingMode.WaitsForSilence,
+      mode: MixstatusMode.WaitsForSilence,
       useOnAirStatus: false,
     });
 
@@ -550,8 +550,8 @@ describe('mixstatus processor', () => {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports while using ReportingMode.FollowsMaster', () => {
-    processor.configure({mode: ReportingMode.FollowsMaster});
+  it('reports while using MixstatusMode.FollowsMaster', () => {
+    processor.configure({mode: MixstatusMode.FollowsMaster});
 
     const npHandler = jest.fn();
     processor.on('nowPlaying', npHandler);
@@ -577,9 +577,9 @@ describe('mixstatus processor', () => {
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
 
-  it('reports with ReportingMode.FollowsMaster, master selected early', () => {
+  it('reports with MixstatusMode.FollowsMaster, master selected early', () => {
     processor.configure({
-      mode: ReportingMode.FollowsMaster,
+      mode: MixstatusMode.FollowsMaster,
       useOnAirStatus: false,
     });
 

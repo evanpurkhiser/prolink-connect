@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
 
-## [v0.6.0]
+ - `ReportingMode` has been renamed to `MixstatusMode` and is now exported in
+   `prolink-connect/lib/types`.
+
+## [v0.6.0] - 2021-02-14
 
 ### Added
 
@@ -34,7 +37,7 @@ Nothing yet.
     mode, which simply causes tracks to be reported when the player becomes
     master (assuming it is on air and playing).
 
-## [v0.5.0]
+## [v0.5.0] - 2021-02-01
 
 ### Fixed
 

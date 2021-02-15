@@ -18,7 +18,7 @@ export type {
   Track,
 } from './entities';
 export type {HydrationProgress} from './localdb/rekordbox';
-export type {MixstatusConfig, MixstatusProcessor} from './mixstatus';
+export type {MixstatusConfig, MixstatusMode, MixstatusProcessor} from './mixstatus';
 export type {ConnectedProlinkNetwork, NetworkConfig, ProlinkNetwork} from './network';
 export type {FetchProgress} from './nfs';
 

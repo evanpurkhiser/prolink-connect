@@ -8,10 +8,10 @@ import {bpmToSeconds} from 'src/utils';
 import {isPlaying, isStopping} from './utils';
 
 /**
- * Reporting modes specify how the mixstatus processor will determine when a new
+ * Mixstatus reporting modes specify how the mixstatus processor will determine when a new
  * track is 'now playing'.
  */
-export enum ReportingMode {
+export enum MixstatusMode {
   /**
    * Tracks will be smartly marked as playing following rules:
    *
@@ -48,7 +48,7 @@ export type MixstatusConfig = {
   /**
    * Selects the mixstatus reporting mode
    */
-  mode: ReportingMode;
+  mode: MixstatusMode;
   /**
    * Specifies the duration in seconds that no tracks must be on air. This can
    * be thought of as how long 'air silence' is reasonable in a set before a
@@ -78,7 +78,7 @@ export type MixstatusConfig = {
    * (since the beat it was cued at) until the track is considered to be
    * active.
    *
-   * Used for ReportingMode.SmartTiming
+   * Used for MixstatusMode.SmartTiming
    *
    * @default 128 (2 phrases)
    */
@@ -86,7 +86,7 @@ export type MixstatusConfig = {
 };
 
 const defaultConfig: MixstatusConfig = {
-  mode: ReportingMode.SmartTiming,
+  mode: MixstatusMode.SmartTiming,
   timeBetweenSets: 30,
   allowedInterruptBeats: 8,
   beatsUntilReported: 128,
@@ -327,7 +327,7 @@ export class MixstatusProcessor {
     const {deviceId} = state;
 
     const isFollowingMaster =
-      this.#config.mode === ReportingMode.FollowsMaster && state.isMaster;
+      this.#config.mode === MixstatusMode.FollowsMaster && state.isMaster;
 
     const nowPlaying = isPlaying(state);
     const wasPlaying = isPlaying(lastState);
@@ -409,7 +409,7 @@ export class MixstatusProcessor {
 
     // Are we simply following master?
     if (
-      this.#config.mode === ReportingMode.FollowsMaster &&
+      this.#config.mode === MixstatusMode.FollowsMaster &&
       lastState?.isMaster === false &&
       state.isMaster
     ) {
@@ -426,7 +426,7 @@ export class MixstatusProcessor {
       1000;
 
     if (
-      this.#config.mode === ReportingMode.SmartTiming &&
+      this.#config.mode === MixstatusMode.SmartTiming &&
       startedAt !== undefined &&
       requiredPlayTime <= Date.now() - startedAt
     ) {
