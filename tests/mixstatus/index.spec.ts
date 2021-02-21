@@ -13,6 +13,7 @@ const makeState = (state?: Partial<CDJStatus.State>): CDJStatus.State => ({
   playState: CDJStatus.PlayState.Empty,
   isOnAir: false,
   isSync: false,
+  isEmergencyMode: false,
   isMaster: false,
   trackBPM: MOCK_BPM,
   sliderPitch: 0,

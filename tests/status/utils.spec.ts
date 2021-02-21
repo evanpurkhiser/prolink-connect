@@ -33,6 +33,7 @@ describe('statusFromPacket', () => {
       isMaster: false,
       isOnAir: false,
       isSync: false,
+      isEmergencyMode: false,
       playState: PlayState.Empty,
       sliderPitch: 0,
       trackBPM: null,
