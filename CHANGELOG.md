@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+- You can now call `network.db.getWaveforms` to load waveforms for a track.
+
 - The `isEmergencyMode` flag has been aded to the CDJStatus type. This reports
   if the CDJ is in an emergency loop (or just emergency mode in newer players)
 

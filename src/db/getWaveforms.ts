@@ -1,15 +1,16 @@
 import {Span} from '@sentry/tracing';
 
+import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
+import {Device, DeviceID, MediaSlot, TrackType, WaveformHD} from 'src/types';
 
 import {anlzLoader} from './utils';
 
 export type Options = {
   /**
-   * The device to query the track metadata from
+   * The device to query the track waveforms off of
    */
   deviceId: DeviceID;
   /**
@@ -17,21 +18,30 @@ export type Options = {
    */
   trackSlot: MediaSlot;
   /**
-   * The type of track we are querying for
+   * The type of track we are querying waveforms for
    */
   trackType: TrackType;
   /**
-   * The track id to retrive metadata for
+   * The track to lookup waveforms for
    */
-  trackId: number;
+  track: Track;
   /**
    * The Sentry transaction span
    */
   span?: Span;
 };
 
+export type Waveforms = {
+  /**
+   * The full-size and full-color waveform
+   */
+  waveformHd: WaveformHD;
+
+  // TODO: Add other waveform types
+};
+
 export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>) {
-  const {deviceId, trackSlot, trackType, trackId, span} = opts;
+  const {deviceId, trackSlot, trackType, track, span} = opts;
 
   const conn = await remote.get(deviceId);
   if (conn === null) {
@@ -44,28 +54,14 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
     menuTarget: MenuTarget.Main,
   };
 
-  const track = await conn.query({
+  const waveformHd = await conn.query({
     queryDescriptor,
-    query: Query.GetMetadata,
-    args: {trackId},
+    query: Query.GetWaveformHD,
+    args: {trackId: track.id},
     span,
   });
 
-  track.filePath = await conn.query({
-    queryDescriptor,
-    query: Query.GetTrackInfo,
-    args: {trackId},
-    span,
-  });
-
-  track.beatGrid = await conn.query({
-    queryDescriptor,
-    query: Query.GetBeatGrid,
-    args: {trackId},
-    span,
-  });
-
-  return track;
+  return {waveformHd} as Waveforms;
 }
 
 export async function viaLocal(
@@ -73,27 +69,18 @@ export async function viaLocal(
   device: Device,
   opts: Required<Options>
 ) {
-  const {deviceId, trackSlot, trackId} = opts;
+  const {deviceId, trackSlot, track} = opts;
 
   if (trackSlot !== MediaSlot.USB && trackSlot !== MediaSlot.SD) {
     throw new Error('Expected USB or SD slot for remote database query');
   }
 
-  const orm = await local.get(deviceId, trackSlot);
-  if (orm === null) {
+  const conn = await local.get(deviceId, trackSlot);
+  if (conn === null) {
     return null;
   }
 
-  const track = orm.findTrack(trackId);
+  const anlz = await loadAnlz(track, 'EXT', anlzLoader({device, slot: trackSlot}));
 
-  if (track === null) {
-    return null;
-  }
-
-  const anlz = await loadAnlz(track, 'DAT', anlzLoader({device, slot: trackSlot}));
-
-  track.beatGrid = anlz.beatGrid;
-  track.cueAndLoops = anlz.cueAndLoops;
-
-  return track;
+  return {waveformHd: anlz.waveformHd} as Waveforms;
 }

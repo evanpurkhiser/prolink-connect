@@ -10,6 +10,7 @@ import {getSlotName, getTrackTypeName} from 'src/utils';
 
 import * as GetArtwork from './getArtwork';
 import * as GetMetadata from './getMetadata';
+import * as GetWaveforms from './getWaveforms';
 
 enum LookupStrategy {
   Remote,
@@ -148,6 +149,47 @@ class Database {
     tx.finish();
 
     return artwork;
+  }
+
+  /**
+   * Retrives the waveforms for a track on a specific device slot.
+   */
+  async getWaveforms(opts: GetArtwork.Options) {
+    const {deviceId, trackType, trackSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetWaveforms'})
+      : Sentry.startTransaction({name: 'dbGetWaveforms'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('trackType', getTrackTypeName(trackType));
+    tx.setTag('trackSlot', getSlotName(trackSlot));
+
+    const callOpts = {...opts, span: tx};
+
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
+      return null;
+    }
+
+    const strategy = this.#getLookupStrategy(device, trackType);
+    let waveforms: GetWaveforms.Waveforms | null = null;
+
+    if (strategy === LookupStrategy.Remote) {
+      waveforms = await GetWaveforms.viaRemote(this.#remoteDatabase, callOpts);
+    }
+
+    if (strategy === LookupStrategy.Local) {
+      waveforms = await GetWaveforms.viaLocal(this.#localDatabase, device, callOpts);
+    }
+
+    if (strategy === LookupStrategy.NoneAvailable) {
+      tx.setStatus(SpanStatus.Unavailable);
+    }
+
+    tx.finish();
+
+    return waveforms;
   }
 }
 
