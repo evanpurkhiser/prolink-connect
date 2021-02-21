@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-Nothing yet.
+### Added
+
+- The `isEmergencyMode` flag has been aded to the CDJStatus type. This reports
+  if the CDJ is in an emergency loop (or just emergency mode in newer players)
 
 ## [v0.7.2] - 2021-02-15
 

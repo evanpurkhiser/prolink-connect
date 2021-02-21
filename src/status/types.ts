@@ -76,6 +76,11 @@ export type State = {
    */
   isMaster: boolean;
   /**
+   * Whether the CDJ is in an emergency state (emergecy loop / emergency mode
+   * on newer players)
+   */
+  isEmergencyMode: boolean;
+  /**
    * The BPM of the loaded track. null if no track is loaded or the BPM is unknown.
    */
   trackBPM: number | null;

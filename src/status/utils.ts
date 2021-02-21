@@ -37,6 +37,7 @@ export function statusFromPacket(packet: Buffer) {
     isOnAir: (packet[0x89] & CDJStatus.StatusFlag.OnAir) !== 0,
     isSync: (packet[0x89] & CDJStatus.StatusFlag.Sync) !== 0,
     isMaster: (packet[0x89] & CDJStatus.StatusFlag.Master) !== 0,
+    isEmergencyMode: !!packet[0xba],
     trackBPM,
     sliderPitch: calcPitch(packet.slice(0x8d, 0x8d + 3)),
     effectivePitch: calcPitch(packet.slice(0x99, 0x99 + 3)),
