@@ -19,7 +19,7 @@ import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
 import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import {MetadataORM, Table} from 'src/localdb/orm';
 import {makeCueLoopEntry} from 'src/localdb/utils';
-import {HotcueButton} from 'src/types';
+import {BeatGrid, CueAndLoop, HotcueButton, WaveformHD} from 'src/types';
 import {convertWaveformHDData} from 'src/utils/converters';
 
 // NOTE: Kaitai doesn't currently have a good typescript exporter, so we will
@@ -32,6 +32,35 @@ import {convertWaveformHDData} from 'src/utils/converters';
  * would handle loading the file over NFS.
  */
 type AnlzResolver = (path: string) => Promise<Buffer>;
+
+/**
+ * Data returned from loading DAT anlz files
+ */
+type AnlzResponseDAT = {
+  /**
+   * Embedded beat grid information
+   */
+  beatGrid: BeatGrid | null;
+  /**
+   * Embedded cue and loop information
+   */
+  cueAndLoops: CueAndLoop[] | null;
+};
+
+/**
+ * Data returned from loading EXT anlz files
+ */
+type AnlzResponseEXT = {
+  /**
+   * HD Waveform information
+   */
+  waveformHd: WaveformHD | null;
+};
+
+type AnlzResponse = {
+  DAT: AnlzResponseDAT;
+  EXT: AnlzResponseEXT;
+};
 
 /**
  * Details about the current state of the hydtration task
@@ -87,23 +116,48 @@ export async function hydrateDatabase({pdbData, span, ...options}: Options) {
 }
 
 /**
- * Hydrate the ANLZ sections of a Track entity from the analyzePath. This
- * method will mutate the passed Track entity.
+ * Loads the ANLZ data of a Track entity from the analyzePath.
  */
-export async function hydrateAnlz(
+export async function loadAnlz<T extends keyof AnlzResponse>(
   track: Track,
-  type: 'DAT' | 'EXT',
+  type: T,
   anlzResolver: AnlzResolver
-) {
+): Promise<AnlzResponse[T]> {
   const path = `${track.analyzePath}.${type}`;
   const anlzData = await anlzResolver(path);
 
   const stream = new KaitaiStream(anlzData);
   const anlz = new RekordboxAnlz(stream);
 
+  const result = {} as AnlzResponse[T];
+  const resultDat = result as AnlzResponseDAT;
+  const resultExt = result as AnlzResponseEXT;
+
   for (const section of anlz.sections) {
-    trackAnlzHydrators[section.fourcc]?.(track, section);
+    if (section.fourcc === SectionTags.BEAT_GRID) {
+      resultDat.beatGrid = makeBeatGrid(section);
+      continue;
+    }
+    if (section.fourcc === SectionTags.CUES) {
+      resultDat.cueAndLoops = makeCueAndLoop(section);
+      continue;
+    }
+    if (section.fourcc === SectionTags.WAVE_COLOR_SCROLL) {
+      resultExt.waveformHd = makeWaveformHd(section);
+      continue;
+    }
+
+    // TODO: The following sections haven't yet been extracted into the local
+    //       database.
+    //
+    // [SectionTags.CUES_2]: null,             <- In the EXT file
+    // [SectionTags.SONG_STRUCTURE]: null,     <- In the EXT file
+    // [SectionTags.WAVE_PREVIEW]: null,
+    // [SectionTags.WAVE_SCROLL]: null,
+    // [SectionTags.WAVE_COLOR_PREVIEW]: null, <- In the EXT file
   }
+
+  return result;
 }
 
 /**
@@ -331,21 +385,19 @@ function createArtworkEntry(artworkRow: any) {
 /**
  * Fill beatgrid data from the ANLZ section
  */
-function hydrateBeatgrid(track: Track, data: any) {
-  const beatgrid = data.body.beats.map((beat: any) => ({
+function makeBeatGrid(data: any) {
+  return data.body.beats.map((beat: any) => ({
     offset: beat.time,
     bpm: beat.tempo / 100,
     count: beat.beatNumber,
   }));
-
-  track.beatGrid = beatgrid;
 }
 
 /**
  * Fill cue and loop data from the ANLZ section
  */
-function hydrateCueAndLoop(track: Track, data: any) {
-  const cueAndLoops = data.body.cues.map((entry: any) => {
+function makeCueAndLoop(data: any) {
+  return data.body.cues.map((entry: any) => {
     // Cues with the status 0 are likely leftovers that were removed
 
     const button = entry.hotCue === 0 ? false : (entry.type as HotcueButton);
@@ -358,15 +410,13 @@ function hydrateCueAndLoop(track: Track, data: any) {
 
     return makeCueLoopEntry(isCue, isLoop, offset, length, button);
   });
-
-  track.cueAndLoops = cueAndLoops;
 }
 
 /**
  * Fill waveform HD data from the ANLZ section
  */
-function hydrateWaveformHd(track: Track, data: any) {
-  track.waveformHd = convertWaveformHDData(Buffer.from(data.body.entries));
+function makeWaveformHd(data: any) {
+  return convertWaveformHDData(Buffer.from(data.body.entries));
 }
 
 const {PageType} = RekordboxPdb;
@@ -405,22 +455,4 @@ const pdbEntityCreators = {
   [PageType.PLAYLIST_ENTRIES]: createPlaylistEntry,
 
   // TODO: Register PageType.HISTORY
-};
-
-/**
- * Hydrate provided Track entities with data from named ANLZ sections.
- */
-const trackAnlzHydrators = {
-  [SectionTags.BEAT_GRID]: hydrateBeatgrid,
-  [SectionTags.CUES]: hydrateCueAndLoop,
-  [SectionTags.WAVE_COLOR_SCROLL]: hydrateWaveformHd,
-
-  // TODO: The following sections haven't yet been extracted into the local
-  //       database.
-  //
-  // [SectionTags.CUES_2]: null,             <- In the EXT file
-  // [SectionTags.SONG_STRUCTURE]: null,     <- In the EXT file
-  // [SectionTags.WAVE_PREVIEW]: null,
-  // [SectionTags.WAVE_SCROLL]: null,
-  // [SectionTags.WAVE_COLOR_PREVIEW]: null, <- In the EXT file
 };

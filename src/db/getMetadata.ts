@@ -1,7 +1,7 @@
 import {Span} from '@sentry/tracing';
 
 import LocalDatabase from 'src/localdb';
-import {hydrateAnlz} from 'src/localdb/rekordbox';
+import {loadAnlz} from 'src/localdb/rekordbox';
 import {fetchFile} from 'src/nfs';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
@@ -89,7 +89,11 @@ export async function viaLocal(
     return null;
   }
 
-  await hydrateAnlz(track, 'DAT', path => fetchFile({device, slot: trackSlot, path}));
+  const anlzLoader = (path: string) => fetchFile({device, slot: trackSlot, path});
+  const anlz = await loadAnlz(track, 'DAT', anlzLoader);
+
+  track.beatGrid = anlz.beatGrid;
+  track.cueAndLoops = anlz.cueAndLoops;
 
   return track;
 }
