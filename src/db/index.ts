@@ -5,7 +5,7 @@ import DeviceManager from 'src/devices';
 import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import RemoteDatabase from 'src/remotedb';
-import {Device, DeviceType, TrackType} from 'src/types';
+import {Device, DeviceType, TrackType, Waveforms} from 'src/types';
 import {getSlotName, getTrackTypeName} from 'src/utils';
 
 import * as GetArtwork from './getArtwork';
@@ -173,7 +173,7 @@ class Database {
     }
 
     const strategy = this.#getLookupStrategy(device, trackType);
-    let waveforms: GetWaveforms.Waveforms | null = null;
+    let waveforms: Waveforms | null = null;
 
     if (strategy === LookupStrategy.Remote) {
       waveforms = await GetWaveforms.viaRemote(this.#remoteDatabase, callOpts);

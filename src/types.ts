@@ -199,6 +199,18 @@ export type WaveformDetailed = WaveformSegment[];
 export type WaveformHD = WaveformHDSegment[];
 
 /**
+ * The result of looking up track waveforms
+ */
+export type Waveforms = {
+  /**
+   * The full-size and full-color waveform
+   */
+  waveformHd: WaveformHD;
+
+  // TODO: Add other waveform types
+};
+
+/**
  * A hotcue button label
  */
 export enum HotcueButton {

@@ -4,7 +4,7 @@ import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {Device, DeviceID, MediaSlot, TrackType, WaveformHD} from 'src/types';
+import {Device, DeviceID, MediaSlot, TrackType, Waveforms} from 'src/types';
 
 import {anlzLoader} from './utils';
 
@@ -29,15 +29,6 @@ export type Options = {
    * The Sentry transaction span
    */
   span?: Span;
-};
-
-export type Waveforms = {
-  /**
-   * The full-size and full-color waveform
-   */
-  waveformHd: WaveformHD;
-
-  // TODO: Add other waveform types
 };
 
 export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>) {
