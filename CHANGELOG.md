@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 Nothing yet
 
+## [v0.8.1] - 2021-04-23
+
+### Changed
+
+Bumped to latest js-xdr to remove node Buffer warnings.
+
 ## [v0.8.0] - 2021-04-12
 
 ### Added
@@ -154,7 +160,8 @@ Nothing yet
 - Initial working implementation. This is currently being used to re-implement
   [prolink-tools](https://github.com/evanpurkhiser/prolink-tools).
 
-[Unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.8.1...HEAD
+[v0.8.1]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.8.0...v0.8.1
 [v0.8.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.2...v0.8.0
 [v0.7.2]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.1...v0.7.2
 [v0.7.1]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.0...v0.7.1
