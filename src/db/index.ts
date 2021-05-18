@@ -5,11 +5,19 @@ import DeviceManager from 'src/devices';
 import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import RemoteDatabase from 'src/remotedb';
-import {Device, DeviceType, TrackType, Waveforms} from 'src/types';
+import {
+  Device,
+  DeviceType,
+  MediaSlot,
+  PlaylistContents,
+  TrackType,
+  Waveforms,
+} from 'src/types';
 import {getSlotName, getTrackTypeName} from 'src/utils';
 
 import * as GetArtwork from './getArtwork';
 import * as GetMetadata from './getMetadata';
+import * as GetPlaylist from './getPlaylist';
 import * as GetWaveforms from './getWaveforms';
 
 enum LookupStrategy {
@@ -48,7 +56,7 @@ class Database {
     this.#deviceManager = deviceManager;
   }
 
-  #getLookupStrategy = (device: Device, type: TrackType) => {
+  #getTrackLookupStrategy = (device: Device, type: TrackType) => {
     const isUnanalyzed = type === TrackType.AudioCD || type === TrackType.Unanalyzed;
     const requiresCdjRemote =
       device.type === DeviceType.CDJ && isUnanalyzed && this.cdjSupportsRemotedb;
@@ -59,6 +67,13 @@ class Database {
       ? LookupStrategy.Local
       : LookupStrategy.NoneAvailable;
   };
+
+  #getMediaLookupStrategy = (device: Device, slot: MediaSlot) =>
+    device.type === DeviceType.Rekordbox && slot === MediaSlot.RB
+      ? LookupStrategy.Remote
+      : device.type === DeviceType.Rekordbox
+      ? LookupStrategy.NoneAvailable
+      : LookupStrategy.Local;
 
   /**
    * Reports weather or not the CDJs can be communcated to over the remote
@@ -90,7 +105,7 @@ class Database {
       return null;
     }
 
-    const strategy = this.#getLookupStrategy(device, trackType);
+    const strategy = this.#getTrackLookupStrategy(device, trackType);
     let track: Track | null = null;
 
     if (strategy === LookupStrategy.Remote) {
@@ -131,7 +146,7 @@ class Database {
       return null;
     }
 
-    const strategy = this.#getLookupStrategy(device, trackType);
+    const strategy = this.#getTrackLookupStrategy(device, trackType);
     let artwork: Buffer | null = null;
 
     if (strategy === LookupStrategy.Remote) {
@@ -172,7 +187,7 @@ class Database {
       return null;
     }
 
-    const strategy = this.#getLookupStrategy(device, trackType);
+    const strategy = this.#getTrackLookupStrategy(device, trackType);
     let waveforms: Waveforms | null = null;
 
     if (strategy === LookupStrategy.Remote) {
@@ -190,6 +205,50 @@ class Database {
     tx.finish();
 
     return waveforms;
+  }
+
+  /**
+   * Retrieve folders, playlists, and tracks within the playlist tree. The id
+   * may be left undefined to query the root of the playlist tree.
+   *
+   * NOTE: You will never receive a track list and playlists or folders at the
+   * same time. But the API is simpler to combine the lookup for these.
+   */
+  async getPlaylist(opts: GetPlaylist.Options) {
+    const {deviceId, mediaSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetPlaylist'})
+      : Sentry.startTransaction({name: 'dbGetPlaylist'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('mediaSlot', getSlotName(mediaSlot));
+
+    const callOpts = {...opts, span: tx};
+
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
+      return null;
+    }
+
+    const strategy = this.#getMediaLookupStrategy(device, mediaSlot);
+    let contents: PlaylistContents | null = null;
+
+    if (strategy === LookupStrategy.Remote) {
+      contents = await GetPlaylist.viaRemote(this.#remoteDatabase, callOpts);
+    }
+
+    if (strategy === LookupStrategy.Local) {
+      contents = await GetPlaylist.viaLocal(this.#localDatabase, callOpts);
+    }
+
+    if (strategy === LookupStrategy.NoneAvailable) {
+      tx.setStatus(SpanStatus.Unavailable);
+    }
+
+    tx.finish();
+
+    return contents;
   }
 }
 

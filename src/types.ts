@@ -1,5 +1,7 @@
 import type {Address4} from 'ip-address';
 
+import type {Playlist, Track} from './entities';
+
 export * as CDJStatus from 'src/status/types';
 
 /**
@@ -299,6 +301,29 @@ export type Hotcue = BareCuePoint & {
 export type Hotloop = {type: 'hot_loop'} & (Omit<Hotcue, 'type'> & Omit<Loop, 'type'>);
 
 export type CueAndLoop = CuePoint | Loop | Hotcue | Hotloop;
+
+/**
+ * Represents the contents of a playlist
+ */
+export type PlaylistContents = {
+  /**
+   * The playlists in this playlist.
+   */
+  playlists: Playlist[];
+  /**
+   * The folders in this playlist.
+   */
+  folders: Playlist[];
+  /**
+   * The tracks in this playlist. This is an AsyncIterator as looking up track
+   * metadata may be slow when connected to the remote database.
+   */
+  tracks: AsyncIterable<Track>;
+  /**
+   * The total number of tracks in this playlist.
+   */
+  totalTracks: number;
+};
 
 export enum NetworkState {
   /**

@@ -346,7 +346,7 @@ function createTrack(trackRow: any) {
  * Translates a pdb playlist row entry into a {@link Playlist} entity.
  */
 function createPlaylist(playlistRow: any) {
-  const playlist: Playlist<EntityFK.WithFKs> = {
+  const playlist: Playlist = {
     id: playlistRow.id,
     name: playlistRow.name.body.text,
     isFolder: playlistRow.rawIsFolder !== 0,

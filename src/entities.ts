@@ -44,24 +44,14 @@ export type Artist = {
   name: string;
 };
 
-type PlaylistRelations = {
-  parent: Playlist | null;
-  children: Playlist[];
-  entries: PlaylistEntry[];
-};
-
-type PlaylistFks = {
+export type Playlist = {
+  id: number;
+  name: string;
+  isFolder: boolean;
   parentId: number | null;
 };
 
-export type Playlist<withFKs extends EntityFK = EntityFK.WithRelations> = {
-  id: number;
-  isFolder: boolean;
-  name: string;
-} & (withFKs extends EntityFK.WithFKs ? PlaylistFks : PlaylistRelations);
-
 type PlaylistEntryRelations = {
-  playlist: Playlist;
   track: Track;
 };
 

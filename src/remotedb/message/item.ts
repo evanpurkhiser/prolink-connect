@@ -154,10 +154,11 @@ const transformItem = {
   [ItemType.ColorBlue]: mapIdName,
   [ItemType.ColorPurple]: mapIdName,
 
+  [ItemType.Folder]: mapIdName,
+  [ItemType.Playlist]: mapIdName,
+
   // TODO: All of these item types are missing
-  [ItemType.Folder]: (a: ItemData) => a,
   [ItemType.Disc]: (a: ItemData) => a,
-  [ItemType.Playlist]: (a: ItemData) => a,
 
   [ItemType.HistoryPlaylist]: (a: ItemData) => a,
   [ItemType.DateAdded]: (a: ItemData) => a,

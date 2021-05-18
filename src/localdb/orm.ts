@@ -1,7 +1,7 @@
 import sqlite3 from 'better-sqlite3';
-import {camelCase, mapKeys, mapValues, snakeCase} from 'lodash';
+import {camelCase, mapKeys, mapValues, partition, snakeCase} from 'lodash';
 
-import {EntityFK, Track} from 'src/entities';
+import {EntityFK, Playlist, PlaylistEntry, Track} from 'src/entities';
 
 import {generateSchema} from './schema';
 
@@ -131,5 +131,38 @@ export class MetadataORM {
     }
 
     return track as Track;
+  }
+
+  /**
+   * Query for a list of {folders, playlists, tracks} given a playlist ID. If
+   * no ID is provided the root list is queried.
+   *
+   * Note that when tracks are returned there will be no folders or playslists.
+   * But the API here is simpler to assume there could be.
+   *
+   * Tracks are returned in the order they are placed on the playlist.
+   */
+  findPlaylist(playlistId?: number) {
+    const parentCondition = playlistId === undefined ? 'parent_id is ?' : 'parent_id = ?';
+
+    // Lookup playlists / folders for this playlist ID
+    const playlistRows: Record<string, any>[] = this.#conn
+      .prepare(`select * from ${Table.Playlist} where ${parentCondition}`)
+      .all(playlistId);
+
+    const [folders, playlists] = partition(
+      playlistRows.map(row => mapKeys(row, (_, k) => camelCase(k)) as Playlist),
+      p => p.isFolder
+    );
+
+    const entryRows: Record<string, any>[] = this.#conn
+      .prepare(`select * from ${Table.PlaylistEntry} where playlist_id = ?`)
+      .all(playlistId);
+
+    const trackEntries = entryRows.map(
+      row => mapKeys(row, (_, k) => camelCase(k)) as PlaylistEntry<EntityFK.WithFKs>
+    );
+
+    return {folders, playlists, trackEntries};
   }
 }

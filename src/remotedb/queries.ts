@@ -2,7 +2,7 @@ import {Span} from '@sentry/tracing';
 
 import * as entities from 'src/entities';
 
-import {Items, ItemType} from './message/item';
+import {Item, Items, ItemType} from './message/item';
 import {Request, Response} from './message/types';
 import {Binary, UInt32} from './fields';
 import {Message} from './message';
@@ -364,6 +364,70 @@ async function getTrackInfo(opts: TrackQueryOpts) {
   return infoItems[ItemType.Path].path;
 }
 
+type PlaylistQueryOpts = HandlerOpts<{
+  /**
+   * The ID of the playlist to query for. May be left blank to query the root
+   * playlist folder.
+   */
+  id?: number;
+  /**
+   * When querying for a playlist folder this must be true.
+   */
+  isFolderRequest: boolean;
+}>;
+
+/**
+ * Lookup playlist entries
+ */
+async function getPlaylist(opts: PlaylistQueryOpts) {
+  const {conn, lookupDescriptor, span, args} = opts;
+
+  // XXX: The or operator is correct here to coerece `0` into null to keep a
+  // consistent representation of parentId.
+  const parentId = args.id || null;
+
+  // TODO: Maybe sort could become a parameter
+  const sort = new UInt32(0);
+  const id = new UInt32(parentId ?? 0);
+  const isFolder = new UInt32(args.isFolderRequest ? 0x1 : 0x0);
+
+  const request = new Message({
+    type: Request.MenuPlaylist,
+    args: [fieldFromDescriptor(lookupDescriptor), sort, id, isFolder],
+  });
+
+  await conn.writeMessage(request, span);
+  const resp = await conn.readMessage(Response.Success, span);
+
+  type PlaylistItemTypes = ItemType.Folder | ItemType.Playlist | ItemType.TrackTitle;
+
+  const items = renderItems<PlaylistItemTypes>(
+    conn,
+    lookupDescriptor,
+    resp.data.itemsAvailable,
+    span
+  );
+
+  const playlistItems: Item<PlaylistItemTypes>[] = [];
+  for await (const item of items) {
+    playlistItems.push(item);
+  }
+
+  const folders: entities.Playlist[] = (playlistItems as Item<ItemType.Folder>[])
+    .filter(item => item.type === ItemType.Folder)
+    .map(({id, name}) => ({isFolder: true, id, name, parentId}));
+
+  const playlists: entities.Playlist[] = (playlistItems as Item<ItemType.Playlist>[])
+    .filter(item => item.type === ItemType.Playlist)
+    .map(({id, name}) => ({isFolder: false, id, name, parentId}));
+
+  const trackEntries = (playlistItems as Item<ItemType.TrackTitle>[]).filter(
+    item => item.type === ItemType.TrackTitle
+  );
+
+  return {folders, playlists, trackEntries};
+}
+
 export const queryHandlers = {
   [Request.GetMetadata]: getMetadata,
   [Request.GetArtwork]: getArtwork,
@@ -375,6 +439,7 @@ export const queryHandlers = {
   [Request.GetWaveformDetailed]: getWaveformDetailed,
   [Request.GetAdvCueAndLoops]: getCueAndLoopsAdv,
   [Request.GetWaveformHD]: getWaveformHD,
+  [Request.MenuPlaylist]: getPlaylist,
 
   // TODO: Add queries for all different kinds of menu requests
 };

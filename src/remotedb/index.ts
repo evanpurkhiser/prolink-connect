@@ -9,7 +9,7 @@ import {Socket} from 'net';
 import DeviceManager from 'src/devices';
 import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
 
-import {DataRequest, getMessageName, MessageType, Response} from './message/types';
+import {getMessageName, MessageType, Request, Response} from './message/types';
 import {REMOTEDB_SERVER_QUERY_PORT} from './constants';
 import {readField, UInt32} from './fields';
 import {Message} from './message';
@@ -42,14 +42,11 @@ export type LookupDescriptor = QueryDescriptor & {
   hostDevice: Device;
 };
 
-// TODO: This should be expanded to extend Requset once we have all the rest in
-// the queryHandlers
-
 /**
  * Used to specify the query type that is being made
  */
-export type Query = DataRequest;
-export const Query = DataRequest;
+export type Query = keyof typeof queryHandlers;
+export const Query = Request;
 
 const QueryInverse = Object.fromEntries(Object.entries(Query).map(e => [e[1], e[0]]));
 
