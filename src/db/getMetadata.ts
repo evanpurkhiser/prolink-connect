@@ -76,7 +76,7 @@ export async function viaLocal(
   const {deviceId, trackSlot, trackId} = opts;
 
   if (trackSlot !== MediaSlot.USB && trackSlot !== MediaSlot.SD) {
-    throw new Error('Expected USB or SD slot for remote database query');
+    throw new Error('Expected USB or SD slot for local database query');
   }
 
   const orm = await local.get(deviceId, trackSlot);
