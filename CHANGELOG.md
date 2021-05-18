@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-Nothing yet
+### Added
+
+- You can now call `network.db.getPlaylist` to receive the listing for a
+  playlist. Without specifying the playlist to lookup the root playlist will be
+  queried.
+
+### Fixed
+
+- Remote database calls could fail for requests that result in a large number
+  of rows. Unless you were using the remotedb query interface directly, it is
+  unlikely you would have ran into this problem. The two implemented queries do
+  not return emough rows to result in the error.
 
 ## [v0.8.1] - 2021-04-23
 
