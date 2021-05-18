@@ -23,17 +23,18 @@ export const fieldFromDescriptor = ({
 export const makeRenderMessage = (
   descriptor: LookupDescriptor,
   offset: number,
-  limit: number
+  count: number,
+  total: number
 ) =>
   new Message({
     type: MessageType.RenderMenu,
     args: [
       fieldFromDescriptor(descriptor),
       new UInt32(offset),
-      new UInt32(limit),
+      new UInt32(count),
       new UInt32(0),
-      new UInt32(limit),
-      new UInt32(0),
+      new UInt32(total),
+      new UInt32(0x0c),
     ],
   });
 
@@ -52,7 +53,12 @@ export async function* renderItems<T extends ItemType = ItemType>(
   while (itemsRead < total) {
     // Request another page of items
     if (itemsRead % LIMIT === 0) {
-      const message = makeRenderMessage(descriptor, itemsRead, LIMIT);
+      // XXX: itemsRead + count should NOT exceed the total. A larger value
+      // will push the offset back to accomadate for the extra items, ensuring
+      // we always recieve count items.
+      const count = Math.min(LIMIT, total - itemsRead);
+      const message = makeRenderMessage(descriptor, itemsRead, count, total);
+
       await conn.writeMessage(message, span);
       await conn.readMessage(MessageType.MenuHeader, span);
     }
