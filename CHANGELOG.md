@@ -21,7 +21,7 @@ Bumped to latest js-xdr to remove node Buffer warnings.
 
 - You can now call `network.db.getWaveforms` to load waveforms for a track.
 
-- The `isEmergencyMode` flag has been aded to the CDJStatus type. This reports
+- The `isEmergencyMode` flag has been added to the CDJStatus type. This reports
   if the CDJ is in an emergency loop (or just emergency mode in newer players)
 
 ## [v0.7.2] - 2021-02-15
