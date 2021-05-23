@@ -31,14 +31,14 @@ export type NetworkConfig = {
    *
    * IMPORTANT:
    *
-   * You will likely want to configure this to be > 4, however it is important to
-   * note, if you choose an ID within the 1-4 range, no other CDJ may exist on the
-   * network using that ID. you CAN NOT have 4 CDJs if you're using one of their slots.
+   * You will likely want to configure this to be > 6, however it is important to
+   * note, if you choose an ID within the 1-6 range, no other CDJ may exist on the
+   * network using that ID. you CAN NOT have 6 CDJs if you're using one of their slots.
    *
    * However, should you want to make metadata queries to a unanalized media
    * device connected to the CDJ, or metadata queries for CD disc data, you MUST
-   * use a ID within the 1-4 range, as the CDJs will not respond to metadata
-   * requests outside of the range of 1-4
+   * use a ID within the 1-6 range, as the CDJs will not respond to metadata
+   * requests outside of the range of 1-6
    *
    * Note that rekordbox analized media connected to the CDJ is accessed out of
    * band of the networks remote database protocl, and is not limited by this
@@ -351,7 +351,7 @@ export class ProlinkNetwork {
    * themselves.
    *
    * NOTE: To use this service to access the CDJ remote database service, the
-   *       Virtual CDJ must report itself as an ID between 1 and 4. This means
+   *       Virtual CDJ must report itself as an ID between 1 and 6. This means
    *       there cannot be four physical CDJs on the network to access any CDJs
    *       remote database.
    */

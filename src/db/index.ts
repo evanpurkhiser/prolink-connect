@@ -81,7 +81,7 @@ class Database {
    * compact disc tracks.
    */
   get cdjSupportsRemotedb() {
-    return this.#hostDevice.id > 0 && this.#hostDevice.id < 5;
+    return this.#hostDevice.id > 0 && this.#hostDevice.id < 7;
   }
 
   /**

@@ -81,10 +81,11 @@ async function main() {
   // NOTES on the Device ID:
   //
   //  It's recommended that you use a Device ID of `5` for the virtual device.
-  //  Using a ID between 1 - 4 will take up ONE SLOT on the network that normally
-  //  a CDJ would occupy. When a 1-4 ID is used You may ONLY HAVE 3 CDJs on the
-  //  network. Attempting to connect a 4th CDJ will conflict with the virtual
-  //  device announced on the network by prolink-connect.
+  //  Using a ID between 1 - 6 will take up ONE SLOT on the network that normally
+  //  a CDJ would occupy. When a 1-6 ID is used You may ONLY HAVE 5 CDJs on the
+  //  network. Attempting to connect a 6th CDJ will conflict with the virtual
+  //  device announced on the network by prolink-connect. (On models older than
+  //  2000s the rande is 1-4.)
   //
   //  There are some cases where you may want your virtual device to announce
   //  itself with "real" device ID, but this library does not currently support
