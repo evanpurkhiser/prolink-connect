@@ -272,11 +272,13 @@ const ensureDate = (date: Date) =>
  * Utility to create a hydrator that hydrates the provided entity with the id
  * and name properties from the row.
  */
-const makeIdNameHydrator = <T extends IdAndNameEntity>() => (row: any) =>
-  ({
-    id: row.id,
-    name: row.name.body.text ?? '',
-  } as T);
+const makeIdNameHydrator =
+  <T extends IdAndNameEntity>() =>
+  (row: any) =>
+    ({
+      id: row.id,
+      name: row.name.body.text ?? '',
+    } as T);
 
 /**
  * Translates a pdb track row entry to a {@link Track} entity.
