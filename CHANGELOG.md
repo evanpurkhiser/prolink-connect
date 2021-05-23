@@ -28,7 +28,7 @@ Nothing yet
 
 ### Changed
 
-Bumped to latest js-xdr to remove node Buffer warnings.
+- Bumped to latest js-xdr to remove node Buffer warnings.
 
 ## [v0.8.0] - 2021-04-12
 
@@ -75,14 +75,14 @@ Bumped to latest js-xdr to remove node Buffer warnings.
 - The Mixstatus service's configuration has been restructured and has learned
   how to follow master.
 
-  - `reportRequresSilence` has been removed
+ - `reportRequresSilence` has been removed
 
-  - A new `mode` option has been introduced that configures how the mixstatus
-    processor will generally determine when a track change has happened. The
-    `ReportingMode` defines: `SmartTiming` (the default), `WaitsForSilence`
-    (the replacement for `reportRequresSilence`), and a new `FollowsMaster`
-    mode, which simply causes tracks to be reported when the player becomes
-    master (assuming it is on air and playing).
+ - A new `mode` option has been introduced that configures how the mixstatus
+   processor will generally determine when a track change has happened. The
+   `ReportingMode` defines: `SmartTiming` (the default), `WaitsForSilence`
+   (the replacement for `reportRequresSilence`), and a new `FollowsMaster`
+   mode, which simply causes tracks to be reported when the player becomes
+   master (assuming it is on air and playing).
 
 ## [v0.5.0] - 2021-02-01
 
