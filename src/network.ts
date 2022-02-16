@@ -75,11 +75,12 @@ type ConnectedServices =
   | 'remotedb'
   | 'mixstatus';
 
-export type ConnectedProlinkNetwork = ProlinkNetwork &
-  {[P in ConnectedServices]: NonNullable<ProlinkNetwork[P]>} & {
-    state: NetworkState.Connected;
-    isConfigured: true;
-  };
+export type ConnectedProlinkNetwork = ProlinkNetwork & {
+  [P in ConnectedServices]: NonNullable<ProlinkNetwork[P]>;
+} & {
+  state: NetworkState.Connected;
+  isConfigured: true;
+};
 
 /**
  * Brings the Prolink network online.
