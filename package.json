@@ -77,7 +77,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "volta": {
-    "node": "14.3.0",
+    "node": "16.14.0",
     "yarn": "1.22.4"
   }
 }
