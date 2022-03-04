@@ -47,6 +47,8 @@ To talk with Prolink devices on the network you'll first need to...
  3. Connect to the devices on the network
 
 ```ts
+import { bringOnline } from 'prolink-connect';
+
 async function main() {
   // Bring the prolink network online.
   //
