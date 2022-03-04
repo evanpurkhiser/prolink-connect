@@ -108,7 +108,7 @@ async function main() {
   console.info('Connecting to the network');
   await network.connect();
 
-  // If you're using trypescript, you can now type gaurd [0] to coerce the type
+  // If you're using trypescript, you can now type guard [0] to coerce the type
   // to ProlinkNetworkConnected, marking all services as non-null.
   //
   // [0]: https://www.typescriptlang.org/docs/handbook/advanced-types.html#using-type-predicates
