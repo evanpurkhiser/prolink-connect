@@ -9,7 +9,7 @@
 </h3>
 
 <p align="center">
-	<img src="https://github.com/EvanPurkhiser/prolink-connect/workflows/build/badge.svg" alt="build" />
+	<img src="https://github.com/evanpurkhiser/prolink-connect/workflows/build/badge.svg" alt="build" />
 	<a href="https://www.npmjs.com/package/prolink-connect"><img alt="npm" src="https://img.shields.io/npm/v/prolink-connect"></a>
 </p>
 
@@ -26,15 +26,15 @@ Thank you to [@brunchboy](https://github.com/brunchboy) for his work on
 
 ## Features
 
- * **Written in Typescript** - Accurate typings making implementation a breeze.
-   Autocompete your DJ tools to completion.
+- **Written in Typescript** - Accurate typings making implementation a breeze.
+  Autocompete your DJ tools to completion.
 
- * **CDJ Status** - Receive Player state details for each CDJ on the network.
-   The status is reported as a [`CDJStatus.State`](https://connect.prolink.tools/modules/_src_status_types_.html).
+- **CDJ Status** - Receive Player state details for each CDJ on the network.
+  The status is reported as a [`CDJStatus.State`](https://connect.prolink.tools/modules/_src_status_types_.html).
 
- * **Metadata Database** - Access metadata of currently the currently playing
-   (or not!) tracks stored in the connected Rekordbox formatted USB / SD
-   device, or via Rekordbox link.
+- **Metadata Database** - Access metadata of currently the currently playing
+  (or not!) tracks stored in the connected Rekordbox formatted USB / SD
+  device, or via Rekordbox link.
 
 ## Library usage
 
@@ -42,12 +42,12 @@ Thank you to [@brunchboy](https://github.com/brunchboy) for his work on
 
 To talk with Prolink devices on the network you'll first need to...
 
- 1. Bring the network online 
- 2. Configure the network to be connected to.
- 3. Connect to the devices on the network
+1.  Bring the network online
+2.  Configure the network to be connected to.
+3.  Connect to the devices on the network
 
 ```ts
-import { bringOnline } from 'prolink-connect';
+import {bringOnline} from 'prolink-connect';
 
 async function main() {
   // Bring the prolink network online.
@@ -122,4 +122,3 @@ async function main() {
   }
 }
 ```
-
