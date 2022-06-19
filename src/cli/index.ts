@@ -15,36 +15,6 @@ Sentry.init({
   tracesSampleRate: 1,
 });
 
-/**
- * Downloads a file from ProDJ-Link device.
- *
- * @param network Prolink network instance.
- * @param state Current state
- * @returns
- */
-async function downloadMediaFile(network: ProlinkNetwork, state: State): Promise<Buffer | undefined> {
-  if (!network.db) return;
-
-  const track = await network.db.getMetadata({
-    deviceId: state.trackDeviceId,
-    trackSlot: state.trackSlot,
-    trackType: state.trackType,
-    trackId: state.trackId
-  });
-
-  if (!track) return;
-
-  const buf = await network.db.getFile({
-    deviceId: state.trackDeviceId,
-    trackSlot: state.trackSlot,
-    trackType: state.trackType,
-    track: track
-  });
-
-  if (!buf) return;
-  return buf;
-}
-
 async function cli() {
   signale.await('Bringing up prolink network');
   const network = await bringOnline();
@@ -97,9 +67,14 @@ async function cli() {
     }
 
     // Download a file from ProDJ-Link.
-    const buffer = await downloadMediaFile(network, state);
-    if (buffer) {
-      fs.writeFileSync(track.fileName, buffer, 'binary');
+    const buf = await network.db.getFile({
+      deviceId: state.trackDeviceId,
+      trackSlot: state.trackSlot,
+      trackType: state.trackType,
+      track: track
+    });
+    if (buf) {
+      fs.writeFileSync(track.fileName, buf, 'binary');
     }
 
     // Display the track that was emmited by the network.
