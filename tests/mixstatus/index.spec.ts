@@ -426,7 +426,7 @@ describe('mixstatus processor', () => {
     // advanceByBeatCount helper
     jest.advanceTimersByTime(30 * 1000);
 
-    await new Promise(r => setImmediate(r));
+    await new Promise(r => new Promise(r));
     expect(seHandler).toHaveBeenCalled();
   });
 
