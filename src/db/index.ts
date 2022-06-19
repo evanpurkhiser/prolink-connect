@@ -16,7 +16,7 @@ import {
 import {getSlotName, getTrackTypeName} from 'src/utils';
 
 import * as GetFile from './getFile';
-import * as GetArtwork from './getArtwork';
+import * as GetArtworkThumbnail from './getArtworkThumbnail';
 import * as GetMetadata from './getMetadata';
 import * as GetPlaylist from './getPlaylist';
 import * as GetWaveforms from './getWaveforms';
@@ -129,7 +129,7 @@ class Database {
   /**
    * Retrives the file off a specific device slot.
    */
-  async getFile(opts: GetArtwork.Options) {
+  async getFile(opts: GetArtworkThumbnail.Options) {
     const {deviceId, trackType, trackSlot, span} = opts;
 
     const tx = span
@@ -169,7 +169,7 @@ class Database {
   /**
    * Retrives the artwork for a track on a specific device slot.
    */
-  async getArtwork(opts: GetArtwork.Options) {
+  async getArtworkThumbnail(opts: GetArtworkThumbnail.Options) {
     const {deviceId, trackType, trackSlot, span} = opts;
 
     const tx = span
@@ -191,11 +191,11 @@ class Database {
     let artwork: Buffer | null = null;
 
     if (strategy === LookupStrategy.Remote) {
-      artwork = await GetArtwork.viaRemote(this.#remoteDatabase, callOpts);
+      artwork = await GetArtworkThumbnail.viaRemote(this.#remoteDatabase, callOpts);
     }
 
     if (strategy === LookupStrategy.Local) {
-      artwork = await GetArtwork.viaLocal(this.#localDatabase, device, callOpts);
+      artwork = await GetArtworkThumbnail.viaLocal(this.#localDatabase, device, callOpts);
     }
 
     if (strategy === LookupStrategy.NoneAvailable) {
@@ -210,7 +210,7 @@ class Database {
   /**
    * Retrives the waveforms for a track on a specific device slot.
    */
-  async getWaveforms(opts: GetArtwork.Options) {
+  async getWaveforms(opts: GetArtworkThumbnail.Options) {
     const {deviceId, trackType, trackSlot, span} = opts;
 
     const tx = span
