@@ -5,20 +5,54 @@ import signale from 'signale';
 
 import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';
+import {State } from 'src/status/types';
+import { ProlinkNetwork } from 'src/network';
+
+import fs from 'fs';
 
 Sentry.init({
   dsn: 'https://36570041fd5a4c05af76456e60a1233a@o126623.ingest.sentry.io/5205486',
   tracesSampleRate: 1,
 });
 
+/**
+ * Downloads a file from ProDJ-Link device.
+ *
+ * @param network Prolink network instance.
+ * @param state Current state
+ * @returns
+ */
+async function downloadMediaFile(network: ProlinkNetwork, state: State): Promise<Buffer | undefined> {
+  if (!network.db) return;
+
+  const track = await network.db.getMetadata({
+    deviceId: state.trackDeviceId,
+    trackSlot: state.trackSlot,
+    trackType: state.trackType,
+    trackId: state.trackId
+  });
+
+  if (!track) return;
+
+  const buf = await network.db.getFile({
+    deviceId: state.trackDeviceId,
+    trackSlot: state.trackSlot,
+    trackType: state.trackType,
+    track: track
+  });
+
+  if (!buf) return;
+  return buf;
+}
+
 async function cli() {
   signale.await('Bringing up prolink network');
   const network = await bringOnline();
   signale.success('Network online, preparing to connect');
 
-  network.deviceManager.on('connected', d =>
+  network.deviceManager.on('connected', d => {
     signale.star('New device: %s [id: %s]', d.name, d.id)
-  );
+  });
 
   signale.await('Autoconfiguring network.. waiting for devices');
   await network.autoconfigFromPeers();
@@ -62,14 +96,15 @@ async function cli() {
       return;
     }
 
-    const art = await network.db.getArtwork({
-      deviceId: trackDeviceId,
-      trackSlot,
-      trackType,
-      track,
-    });
+    // Download a file from ProDJ-Link.
+    const buffer = await downloadMediaFile(network, state);
+    if (buffer) {
+      fs.writeFileSync(track.fileName, buffer, 'binary');
+    }
 
-    console.log(trackId, track.title, art?.length);
+    // Display the track that was emmited by the network.
+    console.log(trackId, track.title);
+
   });
 
   await new Promise(r => setTimeout(r, 3000));

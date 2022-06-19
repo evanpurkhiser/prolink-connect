@@ -15,6 +15,7 @@ import {
 } from 'src/types';
 import {getSlotName, getTrackTypeName} from 'src/utils';
 
+import * as GetFile from './getFile';
 import * as GetArtwork from './getArtwork';
 import * as GetMetadata from './getMetadata';
 import * as GetPlaylist from './getPlaylist';
@@ -125,6 +126,46 @@ class Database {
     return track;
   }
 
+  /**
+   * Retrives the file off a specific device slot.
+   */
+  async getFile(opts: GetArtwork.Options) {
+    const {deviceId, trackType, trackSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetFile'})
+      : Sentry.startTransaction({name: 'dbGetFile'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('trackType', getTrackTypeName(trackType));
+    tx.setTag('trackSlot', getSlotName(trackSlot));
+
+    const callOpts = {...opts, span: tx};
+
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
+      return null;
+    }
+
+    const strategy = this.#getTrackLookupStrategy(device, trackType);
+    let artwork: Buffer | null = null;
+
+    if (strategy === LookupStrategy.Remote) {
+      artwork = await GetFile.viaRemote(this.#remoteDatabase, device, callOpts);
+    }
+
+    if (strategy === LookupStrategy.Local) {
+      artwork = await GetFile.viaLocal(this.#localDatabase, device, callOpts);
+    }
+
+    if (strategy === LookupStrategy.NoneAvailable) {
+      tx.setStatus(SpanStatus.Unavailable);
+    }
+
+    tx.finish();
+
+    return artwork;
+  }
   /**
    * Retrives the artwork for a track on a specific device slot.
    */
