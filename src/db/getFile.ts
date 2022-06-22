@@ -30,6 +30,8 @@ export type Options = {
   span?: Span;
 };
 
+const CHUNK_SIZE = 8192; // Maximum allowed XDR read size
+
 export async function viaRemote(remote: RemoteDatabase, device: Device, opts: Required<Options>) {
   const {deviceId, trackSlot, trackType, track, span} = opts;
 
@@ -79,7 +81,11 @@ export async function viaLocal(
     return fetchFile({
       device,
       slot: trackSlot,
-      path: track.filePath
+      path: track.filePath,
+      onProgress: (progress) => {
+        console.log(progress.read, progress.total);
+      },
+      chunkSize: CHUNK_SIZE
     });
   } catch (error) {
     Sentry.captureException(error);

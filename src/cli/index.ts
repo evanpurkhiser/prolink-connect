@@ -5,8 +5,6 @@ import signale from 'signale';
 
 import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';
-import {State } from 'src/status/types';
-import { ProlinkNetwork } from 'src/network';
 
 import fs from 'fs';
 
@@ -52,8 +50,6 @@ async function cli() {
 
     lastTid.set(state.deviceId, trackId);
 
-    console.log(trackId);
-
     const track = await network.db.getMetadata({
       deviceId: trackDeviceId,
       trackSlot,
@@ -66,6 +62,8 @@ async function cli() {
       return;
     }
 
+    console.log(trackId, track.title);
+
     // Download a file from ProDJ-Link.
     const buf = await network.db.getFile({
       deviceId: state.trackDeviceId,
@@ -75,10 +73,10 @@ async function cli() {
     });
     if (buf) {
       fs.writeFileSync(track.fileName, buf, 'binary');
+      console.log(`Copied ${track.fileName}`);
     }
 
     // Display the track that was emmited by the network.
-    console.log(trackId, track.title);
 
   });
 
