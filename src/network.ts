@@ -263,6 +263,13 @@ export class ProlinkNetwork {
       this.localdb?.disconnectForDevice(device);
     }
 
+    return this.close;
+  }
+
+  /**
+   * Close UDP sockets.
+   */
+  close() {
     return Promise.all([
       udpClose(this.#announceSocket),
       udpClose(this.#statusSocket),
