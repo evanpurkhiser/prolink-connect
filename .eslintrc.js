@@ -4,6 +4,6 @@ module.exports = {
     es6: true,
     'jest/globals': true,
   },
-  extends: ['@evanpurkhiser'],
+  extends: ['@evanpurkhiser/eslint-config/common'],
   plugins: ['jest'],
 };
