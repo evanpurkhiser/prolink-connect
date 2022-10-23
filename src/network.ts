@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node';
 import {SpanStatus} from '@sentry/tracing';
-import {v4 as uuidv4} from 'uuid';
 
+import {randomUUID} from 'crypto';
 import dgram, {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';
 
@@ -88,7 +88,7 @@ export type ConnectedProlinkNetwork = ProlinkNetwork & {
  * This is the primary entrypoint for connecting to the prolink network.
  */
 export async function bringOnline(config?: NetworkConfig) {
-  Sentry.setTag('connectionId', uuidv4());
+  Sentry.setTag('connectionId', randomUUID());
   const tx = Sentry.startTransaction({name: 'bringOnline'});
 
   // Socket used to listen for devices on the network
