@@ -302,7 +302,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get the @{link DeviceManager} service. This service is used to monitor and
+   * Get the {@link DeviceManager} service. This service is used to monitor and
    * react to devices connecting and disconnecting from the prolink network.
    */
   get deviceManager() {
@@ -310,7 +310,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get the @{link StatusEmitter} service. This service is used to monitor
+   * Get the {@link StatusEmitter} service. This service is used to monitor
    * status updates on each CDJ.
    */
   get statusEmitter() {
@@ -321,7 +321,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get the @{link Control} service. This service can be used to control the
+   * Get the {@link Control} service. This service can be used to control the
    * Playstate of CDJs on the network.
    */
   get control() {
@@ -329,7 +329,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get the @{link Database} service. This service is used to retrieve
+   * Get the {@link Database} service. This service is used to retrieve
    * metadata and listings from devices on the network, automatically choosing the
    * best strategy to access the data.
    */
@@ -338,7 +338,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get the @{link LocalDatabase} service. This service is used to query and sync
+   * Get the {@link LocalDatabase} service. This service is used to query and sync
    * metadata that is downloaded directly from the rekordbox database present
    * on media connected to the CDJs.
    */
@@ -347,7 +347,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get the @{link RemoteDatabase} service. This service is used to query
+   * Get the {@link RemoteDatabase} service. This service is used to query
    * metadata directly from the database service running on Rekordbox and the CDJs
    * themselves.
    *
@@ -361,7 +361,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get (and initalize) the @{link MixstatusProcessor} service. This service can
+   * Get (and initalize) the {@link MixstatusProcessor} service. This service can
    * be used to monitor the 'status' of devices on the network as a whole.
    */
   get mixstatus() {
