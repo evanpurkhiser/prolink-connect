@@ -1,4 +1,3 @@
-import tsTransformPaths from '@zerollup/ts-transform-paths';
 import * as webpack from 'webpack';
 import nodeExternals from 'webpack-node-externals';
 
@@ -38,15 +37,6 @@ const config: webpack.Configuration = {
         test: /\.ts$/,
         exclude: /node_modules/,
         loader: 'ts-loader',
-        options: {
-          getCustomTransformers: (program: any) => {
-            const transformer = tsTransformPaths(program);
-            return {
-              before: [transformer.before],
-              afterDeclarations: [transformer.afterDeclarations],
-            };
-          },
-        },
       },
     ],
   },
