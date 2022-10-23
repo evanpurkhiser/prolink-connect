@@ -41,9 +41,14 @@ export class BaseField {
    */
   static bytesToRead: number | ((reportedLength: number) => number);
 
-  /**
-   * @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
-   */
+  // The constructor property (which is used to access the class from an
+  // instance of it) must be set to the BaseClass object so we can access the
+  // `.type` property.
+  //
+  // @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+  //
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   ['constructor']: typeof BaseField;
 }
 
