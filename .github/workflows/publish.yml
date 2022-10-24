@@ -2,18 +2,18 @@ name: publish
 
 on:
   push:
-    tags: [ 'v*' ]
+    tags: ['v*']
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: volta-cli/action@v1
-    - run: yarn install
-    - run: yarn test
-    - run: yarn build
-    - name: yarn publish
-      run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc && yarn publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - uses: actions/checkout@v3
+      - uses: volta-cli/action@v1
+      - run: yarn install
+      - run: yarn test
+      - run: yarn build
+      - name: yarn publish
+        run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc && yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
