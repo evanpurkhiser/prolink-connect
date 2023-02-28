@@ -141,6 +141,7 @@ type FetchFileOptions = {
   path: string;
   onProgress?: Parameters<typeof fetchFileCall>[2];
   span?: Span;
+  chunkSize?: number;
 };
 
 const badRoothandleError = (slot: MediaSlot, deviceId: DeviceID) =>
@@ -160,6 +161,7 @@ export async function fetchFile({
   path,
   onProgress,
   span,
+  chunkSize
 }: FetchFileOptions) {
   const tx = span
     ? span.startChild({op: 'fetchFile'})
@@ -190,7 +192,7 @@ export async function fetchFile({
     fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
   }
 
-  const file = await fetchFileCall(nfsClient, fileInfo, onProgress, tx);
+  const file = await fetchFileCall(nfsClient, fileInfo, onProgress, tx, chunkSize);
 
   tx.setData('path', path);
   tx.setData('slot', getSlotName(slot));

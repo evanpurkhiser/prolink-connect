@@ -191,8 +191,12 @@ export async function fetchFile(
   conn: RpcProgram,
   file: FileInfo,
   onProgress?: (progress: FetchProgress) => void,
-  span?: Span
+  span?: Span,
+  readSize?: number
 ) {
+  readSize = readSize || READ_SIZE;
+  if (readSize > 8192)
+    throw new Error(`Maximum read size for NFS is 8192. You specified: ${readSize}`);
   const {handle, name, size} = file;
   const data = Buffer.alloc(size);
 
@@ -208,7 +212,7 @@ export async function fetchFile(
     const readArgs = new nfs.ReadArgs({
       handle,
       offset: bytesRead,
-      count: READ_SIZE,
+      count: readSize,
       totalCount: 0,
     });
 

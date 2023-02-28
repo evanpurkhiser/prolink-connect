@@ -6,6 +6,8 @@ import signale from 'signale';
 import {MixstatusProcessor} from 'src/mixstatus';
 import {bringOnline} from 'src/network';
 
+import fs from 'fs';
+
 Sentry.init({
   dsn: 'https://36570041fd5a4c05af76456e60a1233a@o126623.ingest.sentry.io/5205486',
   tracesSampleRate: 1,
@@ -16,9 +18,9 @@ async function cli() {
   const network = await bringOnline();
   signale.success('Network online, preparing to connect');
 
-  network.deviceManager.on('connected', d =>
+  network.deviceManager.on('connected', d => {
     signale.star('New device: %s [id: %s]', d.name, d.id)
-  );
+  });
 
   signale.await('Autoconfiguring network.. waiting for devices');
   await network.autoconfigFromPeers();
@@ -48,8 +50,6 @@ async function cli() {
 
     lastTid.set(state.deviceId, trackId);
 
-    console.log(trackId);
-
     const track = await network.db.getMetadata({
       deviceId: trackDeviceId,
       trackSlot,
@@ -62,14 +62,22 @@ async function cli() {
       return;
     }
 
-    const art = await network.db.getArtwork({
-      deviceId: trackDeviceId,
-      trackSlot,
-      trackType,
-      track,
-    });
+    console.log(trackId, track.title);
 
-    console.log(trackId, track.title, art?.length);
+    // Download a file from ProDJ-Link.
+    const buf = await network.db.getFile({
+      deviceId: state.trackDeviceId,
+      trackSlot: state.trackSlot,
+      trackType: state.trackType,
+      track: track
+    });
+    if (buf) {
+      fs.writeFileSync(track.fileName, buf, 'binary');
+      console.log(`Copied ${track.fileName}`);
+    }
+
+    // Display the track that was emmited by the network.
+
   });
 
   await new Promise(r => setTimeout(r, 3000));
