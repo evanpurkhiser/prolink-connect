@@ -91,10 +91,10 @@ const colors = [
 
 const colorSet = new Set(colors);
 
-type ColorType = typeof colors[number];
+type ColorType = (typeof colors)[number];
 
 /**
  * Locate the color item in an item list
  */
-export const findColor = (items: Items[ItemType][]) =>
+export const findColor = (items: Array<Items[ItemType]>) =>
   items.filter(item => colorSet.has(item.type as any)).pop() as Items[ColorType];

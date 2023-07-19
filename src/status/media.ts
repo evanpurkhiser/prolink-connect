@@ -2,7 +2,7 @@ import {PROLINK_HEADER} from 'src/constants';
 import {Device, MediaSlot} from 'src/types';
 import {buildName} from 'src/utils';
 
-type Options = {
+interface Options {
   /**
    * The device asking for media info
    */
@@ -16,7 +16,7 @@ type Options = {
    * The specific slot
    */
   slot: MediaSlot;
-};
+}
 
 /**
  * Get information about the media connected to the specifed slot on the

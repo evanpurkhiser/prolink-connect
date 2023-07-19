@@ -7,7 +7,7 @@ import {bpmToSeconds} from 'src/utils';
 
 import {isPlaying, isStopping} from './utils';
 
-export type MixstatusConfig = {
+export interface MixstatusConfig {
   /**
    * Selects the mixstatus reporting mode
    */
@@ -46,7 +46,7 @@ export type MixstatusConfig = {
    * @default 128 (2 phrases)
    */
   beatsUntilReported: number;
-};
+}
 
 const defaultConfig: MixstatusConfig = {
   mode: MixstatusMode.SmartTiming,
@@ -59,7 +59,7 @@ const defaultConfig: MixstatusConfig = {
 /**
  * The interface the mix status event emitter should follow
  */
-type MixstatusEvents = {
+interface MixstatusEvents {
   /**
    * Fired when a track is considered to be on-air and is being heard by the
    * audiance
@@ -77,7 +77,7 @@ type MixstatusEvents = {
    * Fired when tracks have been stopped
    */
   setEnded: () => void;
-};
+}
 
 type Emitter = StrictEventEmitter<EventEmitter, MixstatusEvents>;
 

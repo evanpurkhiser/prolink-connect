@@ -36,7 +36,7 @@ type AnlzResolver = (path: string) => Promise<Buffer>;
 /**
  * Data returned from loading DAT anlz files
  */
-type AnlzResponseDAT = {
+interface AnlzResponseDAT {
   /**
    * Embedded beat grid information
    */
@@ -45,27 +45,27 @@ type AnlzResponseDAT = {
    * Embedded cue and loop information
    */
   cueAndLoops: CueAndLoop[] | null;
-};
+}
 
 /**
  * Data returned from loading EXT anlz files
  */
-type AnlzResponseEXT = {
+interface AnlzResponseEXT {
   /**
    * HD Waveform information
    */
   waveformHd: WaveformHD | null;
-};
+}
 
-type AnlzResponse = {
+interface AnlzResponse {
   DAT: AnlzResponseDAT;
   EXT: AnlzResponseEXT;
-};
+}
 
 /**
  * Details about the current state of the hydtration task
  */
-export type HydrationProgress = {
+export interface HydrationProgress {
   /**
    * The specific table that progress is being reported for
    */
@@ -78,12 +78,12 @@ export type HydrationProgress = {
    * The completed number of progress steps
    */
   complete: number;
-};
+}
 
 /**
  * Options to hydrate the database
  */
-type Options = {
+interface Options {
   /**
    * The metadata ORM of which the tables will be hydrated
    */
@@ -103,7 +103,7 @@ type Options = {
    * will be called.
    */
   onProgress?: (progress: HydrationProgress) => void;
-};
+}
 
 /**
  * Given a rekordbox pdb file contents. This function will hydrate the provided
@@ -263,7 +263,10 @@ function* tableRows(table: any) {
   } while (pageRef.index <= lastPage.index);
 }
 
-type IdAndNameEntity = {id: number; name: string};
+interface IdAndNameEntity {
+  id: number;
+  name: string;
+}
 
 const ensureDate = (date: Date) =>
   date instanceof Date && !isNaN(date.valueOf()) ? date : undefined;
@@ -278,7 +281,7 @@ const makeIdNameHydrator =
     ({
       id: row.id,
       name: row.name.body.text ?? '',
-    } as T);
+    }) as T;
 
 /**
  * Translates a pdb track row entry to a {@link Track} entity.

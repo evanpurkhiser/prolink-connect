@@ -23,13 +23,13 @@ const rpcAuthMessage = new rpc.UnixAuth({
   gids: [],
 });
 
-type RpcCall = {
+interface RpcCall {
   port: number;
   program: number;
   version: number;
   procedure: number;
   data: Buffer;
-};
+}
 
 /**
  * Configuration for the retry strategy to use when making RPC calls

@@ -15,16 +15,16 @@ import {
 import {RetryConfig, RpcConnection, RpcProgram} from './rpc';
 import {mount, nfs} from './xdr';
 
-export type FetchProgress = {
+export interface FetchProgress {
   read: number;
   total: number;
-};
+}
 
-type ClientSet = {
+interface ClientSet {
   conn: RpcConnection;
   mountClient: RpcProgram;
   nfsClient: RpcProgram;
-};
+}
 
 /**
  * The slot <-> mount name mapping is well known.
@@ -45,7 +45,7 @@ let retryConfig: RetryConfig = {};
  * connections. It is not guaranteed that the connections in the cache will
  * still be connected.
  */
-const clientsCache: Map<string, ClientSet> = new Map();
+const clientsCache = new Map<string, ClientSet>();
 
 /**
  * Given a device address running a nfs and mountd RPC server, provide
@@ -84,19 +84,19 @@ async function getClients(address: string) {
   return set;
 }
 
-type GetRootHandleOptions = {
+interface GetRootHandleOptions {
   device: Device;
   slot: keyof typeof slotMountMapping;
   mountClient: RpcProgram;
   span?: Span;
-};
+}
 
 /**
  * This module maintains a singleton cached list of (device address + slot) -> file
  * handles. The file handles may become stale in this list should the devices
  * connected to the players slot change.
  */
-const rootHandleCache: Map<string, Map<MediaSlot, Buffer>> = new Map();
+const rootHandleCache = new Map<string, Map<MediaSlot, Buffer>>();
 
 /**
  * Locate the root filehandle of the given device slot.
@@ -135,13 +135,13 @@ async function getRootHandle({device, slot, mountClient, span}: GetRootHandleOpt
   return rootHandle;
 }
 
-type FetchFileOptions = {
+interface FetchFileOptions {
   device: Device;
   slot: keyof typeof slotMountMapping;
   path: string;
   onProgress?: Parameters<typeof fetchFileCall>[2];
   span?: Span;
-};
+}
 
 const badRoothandleError = (slot: MediaSlot, deviceId: DeviceID) =>
   new Error(`The slot (${slot}) is not exported on Device ${deviceId}`);

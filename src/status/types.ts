@@ -30,7 +30,7 @@ export enum PlayState {
 /**
  * Represents various details about the current state of the CDJ.
  */
-export type State = {
+export interface State {
   /**
    * The device reporting this status.
    */
@@ -112,4 +112,4 @@ export type State = {
    * A counter that increments for every status packet sent.
    */
   packetNum: number;
-};
+}

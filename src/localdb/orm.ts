@@ -146,7 +146,7 @@ export class MetadataORM {
     const parentCondition = playlistId === undefined ? 'parent_id is ?' : 'parent_id = ?';
 
     // Lookup playlists / folders for this playlist ID
-    const playlistRows: Record<string, any>[] = this.#conn
+    const playlistRows: Array<Record<string, any>> = this.#conn
       .prepare(`select * from ${Table.Playlist} where ${parentCondition}`)
       .all(playlistId);
 
@@ -155,7 +155,7 @@ export class MetadataORM {
       p => p.isFolder
     );
 
-    const entryRows: Record<string, any>[] = this.#conn
+    const entryRows: Array<Record<string, any>> = this.#conn
       .prepare(`select * from ${Table.PlaylistEntry} where playlist_id = ?`)
       .all(playlistId);
 

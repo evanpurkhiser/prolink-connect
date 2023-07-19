@@ -8,7 +8,7 @@ import {Device, DeviceID, MediaSlot, TrackType, Waveforms} from 'src/types';
 
 import {anlzLoader} from './utils';
 
-export type Options = {
+export interface Options {
   /**
    * The device to query the track waveforms off of
    */
@@ -29,7 +29,7 @@ export type Options = {
    * The Sentry transaction span
    */
   span?: Span;
-};
+}
 
 export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>) {
   const {deviceId, trackSlot, trackType, track, span} = opts;

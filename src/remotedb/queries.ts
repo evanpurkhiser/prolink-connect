@@ -15,12 +15,12 @@ import {Connection, LookupDescriptor, Query} from '.';
  * something useful.
  */
 
-type HandlerOpts<A extends Record<string, unknown> = Record<string, unknown>> = {
+interface HandlerOpts<A extends Record<string, unknown> = Record<string, unknown>> {
   conn: Connection;
   lookupDescriptor: LookupDescriptor;
   span: Span;
   args: A;
-};
+}
 
 // Track lookups are so common that we specify an alias specifically for track
 // lookup query options.
@@ -408,20 +408,20 @@ async function getPlaylist(opts: PlaylistQueryOpts) {
     span
   );
 
-  const playlistItems: Item<PlaylistItemTypes>[] = [];
+  const playlistItems: Array<Item<PlaylistItemTypes>> = [];
   for await (const item of items) {
     playlistItems.push(item);
   }
 
-  const folders: entities.Playlist[] = (playlistItems as Item<ItemType.Folder>[])
+  const folders: entities.Playlist[] = (playlistItems as Array<Item<ItemType.Folder>>)
     .filter(item => item.type === ItemType.Folder)
     .map(({id, name}) => ({isFolder: true, id, name, parentId}));
 
-  const playlists: entities.Playlist[] = (playlistItems as Item<ItemType.Playlist>[])
+  const playlists: entities.Playlist[] = (playlistItems as Array<Item<ItemType.Playlist>>)
     .filter(item => item.type === ItemType.Playlist)
     .map(({id, name}) => ({isFolder: false, id, name, parentId}));
 
-  const trackEntries = (playlistItems as Item<ItemType.TrackTitle>[]).filter(
+  const trackEntries = (playlistItems as Array<Item<ItemType.TrackTitle>>).filter(
     item => item.type === ItemType.TrackTitle
   );
 
@@ -444,7 +444,7 @@ export const queryHandlers = {
   // TODO: Add queries for all different kinds of menu requests
 };
 
-export type Handler<T extends Query> = typeof queryHandlers[T];
+export type Handler<T extends Query> = (typeof queryHandlers)[T];
 
 export type HandlerArgs<T extends Query> = Parameters<Handler<T>>[0]['args'];
 export type HandlerReturn<T extends Query> = ReturnType<Handler<T>>;

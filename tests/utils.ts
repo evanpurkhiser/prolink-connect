@@ -1,7 +1,9 @@
 /* istanbul ignore file */
 
 import * as ip from 'ip-address';
+
 import {readFile} from 'fs/promises';
+
 import {Device, DeviceType} from 'src/types';
 
 export function readMock(path: string) {

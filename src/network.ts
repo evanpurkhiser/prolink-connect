@@ -21,7 +21,7 @@ import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 const connectErrorHelp =
   'Network must be configured. Try using `autoconfigFromPeers` or `configure`';
 
-export type NetworkConfig = {
+export interface NetworkConfig {
   /**
    * The network interface to listen for devices on the network over
    */
@@ -45,24 +45,24 @@ export type NetworkConfig = {
    * restriction.
    */
   vcdjId: number;
-};
+}
 
-type ConnectionService = {
+interface ConnectionService {
   announcer: Announcer;
   control: Control;
   remotedb: RemoteDatabase;
   localdb: LocalDatabase;
   database: Database;
-};
+}
 
-type ConstructOpts = {
+interface ConstructOpts {
   config?: NetworkConfig;
   announceSocket: Socket;
   beatSocket: Socket;
   statusSocket: Socket;
   deviceManager: DeviceManager;
   statusEmitter: StatusEmitter;
-};
+}
 
 /**
  * Services that are not accessible until connected

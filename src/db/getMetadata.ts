@@ -7,7 +7,7 @@ import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
 
 import {anlzLoader} from './utils';
 
-export type Options = {
+export interface Options {
   /**
    * The device to query the track metadata from
    */
@@ -28,7 +28,7 @@ export type Options = {
    * The Sentry transaction span
    */
   span?: Span;
-};
+}
 
 export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>) {
   const {deviceId, trackSlot, trackType, trackId, span} = opts;

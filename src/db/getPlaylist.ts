@@ -5,7 +5,7 @@ import LocalDatabase from 'src/localdb';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, PlaylistContents, TrackType} from 'src/types';
 
-export type Options = {
+export interface Options {
   /**
    * The playlist or folder to query the entries of. This may be left as
    * undefined to retrieve the root playlist.
@@ -23,7 +23,7 @@ export type Options = {
    * The Sentry transaction span
    */
   span?: Span;
-};
+}
 
 export async function viaRemote(remote: RemoteDatabase, opts: Options) {
   const {playlist, deviceId, mediaSlot, span} = opts;

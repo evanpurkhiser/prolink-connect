@@ -9,63 +9,63 @@ export enum EntityFK {
   WithRelations,
 }
 
-export type Artwork = {
+export interface Artwork {
   id: number;
   path?: string;
-};
+}
 
-export type Key = {
+export interface Key {
   id: number;
   name: string;
-};
+}
 
-export type Label = {
+export interface Label {
   id: number;
   name: string;
-};
+}
 
-export type Color = {
+export interface Color {
   id: number;
   name: string;
-};
+}
 
-export type Genre = {
+export interface Genre {
   id: number;
   name: string;
-};
+}
 
-export type Album = {
+export interface Album {
   id: number;
   name: string;
-};
+}
 
-export type Artist = {
+export interface Artist {
   id: number;
   name: string;
-};
+}
 
-export type Playlist = {
+export interface Playlist {
   id: number;
   name: string;
   isFolder: boolean;
   parentId: number | null;
-};
+}
 
-type PlaylistEntryRelations = {
+interface PlaylistEntryRelations {
   track: Track;
-};
+}
 
-type PlaylistEntryFks = {
+interface PlaylistEntryFks {
   playlistId: number;
   trackId: number;
-};
+}
 
 export type PlaylistEntry<withFKs extends EntityFK = EntityFK.WithRelations> = {
   id: number;
   sortIndex: number;
 } & (withFKs extends EntityFK.WithFKs ? PlaylistEntryFks : PlaylistEntryRelations);
 
-type TrackRelations = {
+interface TrackRelations {
   artwork: Artwork | null;
   artist: Artist | null;
   originalArtist: Artist | null;
@@ -76,9 +76,9 @@ type TrackRelations = {
   genre: Genre | null;
   color: Color | null;
   key: Key | null;
-};
+}
 
-type TrackFks = {
+interface TrackFks {
   artworkId?: number;
   artistId?: number;
   originalArtistId?: number;
@@ -89,7 +89,7 @@ type TrackFks = {
   genreId?: number;
   colorId?: number;
   keyId?: number;
-};
+}
 
 /**
  * Represents a track.

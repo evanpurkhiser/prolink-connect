@@ -26,7 +26,7 @@ import {hydrateDatabase, HydrationProgress} from './rekordbox';
  */
 type DatabaseSlot = MediaSlot.USB | MediaSlot.SD;
 
-type CommonProgressOpts = {
+interface CommonProgressOpts {
   /**
    * The device progress is being reported for
    */
@@ -35,7 +35,7 @@ type CommonProgressOpts = {
    * The media slot progress is being reported for
    */
   slot: MediaSlot;
-};
+}
 
 type DownloadProgressOpts = CommonProgressOpts & {
   /**
@@ -56,7 +56,7 @@ type HydrationDoneOpts = CommonProgressOpts;
 /**
  * Events that may be triggered  by the LocalDatabase emitter
  */
-type DatabaseEvents = {
+interface DatabaseEvents {
   /**
    * Triggered when we are fetching a database from a CDJ
    */
@@ -74,11 +74,11 @@ type DatabaseEvents = {
    * before considering the databas to be fully hydrated.
    */
   hydrationDone: (opts: HydrationDoneOpts) => void;
-};
+}
 
 type Emitter = StrictEventEmitter<EventEmitter, DatabaseEvents>;
 
-type DatabaseItem = {
+interface DatabaseItem {
   /**
    * The uniquity identifier of the database
    */
@@ -91,7 +91,7 @@ type DatabaseItem = {
    * The MetadataORM service instance for the active connection
    */
   orm: MetadataORM;
-};
+}
 
 /**
  * Compute the identifier for media device in a CDJ. This is used to determine

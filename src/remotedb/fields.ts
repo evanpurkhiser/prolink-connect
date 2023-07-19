@@ -228,7 +228,7 @@ async function read(stream: PromiseReadable<any>, bytes: number) {
  */
 export async function readField<
   T extends FieldType,
-  F extends InstanceType<typeof fieldMap[T]>
+  F extends InstanceType<(typeof fieldMap)[T]>,
 >(stream: PromiseReadable<any>, expect: T): Promise<F> {
   const typeData = await read(stream, 1);
   const Field = fieldMap[typeData[0] as FieldType];

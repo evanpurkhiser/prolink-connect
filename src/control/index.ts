@@ -5,11 +5,11 @@ import {CDJStatus, Device} from 'src/types';
 import {buildName} from 'src/utils';
 import {udpSend} from 'src/utils/udp';
 
-type Options = {
+interface Options {
   hostDevice: Device;
   device: Device;
   playState: CDJStatus.PlayState.Cued | CDJStatus.PlayState.Playing;
-};
+}
 
 const STATE_MAP = {
   [CDJStatus.PlayState.Cued]: 0x01,

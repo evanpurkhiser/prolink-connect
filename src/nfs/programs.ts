@@ -10,10 +10,10 @@ import {FetchProgress} from '.';
  */
 const READ_SIZE = 2048;
 
-type Program = {
+interface Program {
   id: number;
   version: number;
-};
+}
 
 /**
  * Queries for the listening port of a RPC program
@@ -42,7 +42,7 @@ export async function makeProgramClient(conn: RpcConnection, program: Program) {
 /**
  * Export represents a NFS export on a remote system
  */
-type Export = {
+interface Export {
   /**
    * The name of the exported filesystem
    */
@@ -51,17 +51,17 @@ type Export = {
    * The groups allowed to mount this filesystem
    */
   groups: string[];
-};
+}
 
 /**
  * Attributes a remote file
  */
-export type FileInfo = {
+export interface FileInfo {
   handle: Buffer;
   name: string;
   size: number;
   type: 'null' | 'regular' | 'directory' | 'block' | 'char' | 'link';
-};
+}
 
 /**
  * Request a list of export entries.

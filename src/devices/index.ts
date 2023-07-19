@@ -8,7 +8,7 @@ import {Device, DeviceID} from 'src/types';
 
 import {deviceFromPacket} from './utils';
 
-type Config = {
+interface Config {
   /**
    * Time in milliseconds after which a device is considered to have
    * disconnected if it has not broadcast an announcment.
@@ -16,7 +16,7 @@ type Config = {
    * @default 10000 ms
    */
   deviceTimeout?: number;
-};
+}
 
 const defaultConfig = {
   deviceTimeout: 10000,
@@ -36,7 +36,7 @@ type ConfigEditable = Omit<Config, 'announceSocket'>;
 /**
  * The interface the device manager event emitter should follow
  */
-type DeviceEvents = {
+interface DeviceEvents {
   /**
    * Fired when a new device becomes available on the network
    */
@@ -50,7 +50,7 @@ type DeviceEvents = {
    * Fired every time the device announces itself on the network
    */
   announced: (device: Device) => void;
-};
+}
 
 type Emitter = StrictEventEmitter<EventEmitter, DeviceEvents>;
 

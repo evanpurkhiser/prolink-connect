@@ -41,19 +41,19 @@ export type DeviceID = number;
 /**
  * Represents a device on the prolink network.
  */
-export type Device = {
+export interface Device {
   name: string;
   id: DeviceID;
   type: DeviceType;
   macAddr: Uint8Array;
   ip: Address4;
   lastActive?: Date;
-};
+}
 
 /**
  * Details of a particular media slot on the CDJ
  */
-export type MediaSlotInfo = {
+export interface MediaSlotInfo {
   /**
    * The device the slot physically exists on
    */
@@ -77,11 +77,11 @@ export type MediaSlotInfo = {
   /**
    * Number of free bytes available on the media
    */
-  freeBytes: BigInt;
+  freeBytes: bigint;
   /**
    * Number of bytes used on the media
    */
-  totalBytes: BigInt;
+  totalBytes: bigint;
   /**
    * Specifies the available tracks type on the media
    */
@@ -99,7 +99,7 @@ export type MediaSlotInfo = {
    * True when a rekordbox 'my settings' file has been exported to the media
    */
   hasSettings: boolean;
-};
+}
 
 export enum MediaColor {
   Default = 0x00,
@@ -156,7 +156,7 @@ export type BeatGrid = Array<{
 /**
  * A waveform segment contains a height and 'whiteness' value.
  */
-type WaveformSegment = {
+interface WaveformSegment {
   /**
    * The height this segment in the waveform. Ranges from 0 - 31.
    */
@@ -166,13 +166,13 @@ type WaveformSegment = {
    * being completely white.
    */
   whiteness: number;
-};
+}
 
 /**
  * A HD waveform segment contains the height of the waveform, and it's color
  * represented as RGB values.
  */
-type WaveformHDSegment = {
+interface WaveformHDSegment {
   /**
    * The height this segment in the waveform. Ranges from 0 - 31.
    */
@@ -181,7 +181,7 @@ type WaveformHDSegment = {
    * the RGB value, each channel ranges from 0-1 for the segment.
    */
   color: [number, number, number];
-};
+}
 
 /**
  * The waveform preview will be 400 segments of data.
@@ -203,14 +203,14 @@ export type WaveformHD = WaveformHDSegment[];
 /**
  * The result of looking up track waveforms
  */
-export type Waveforms = {
+export interface Waveforms {
   /**
    * The full-size and full-color waveform
    */
   waveformHd: WaveformHD;
 
   // TODO: Add other waveform types
-};
+}
 
 /**
  * A hotcue button label
@@ -255,7 +255,7 @@ export enum CueColor {
  * Represents a single cue point. On older exports the label and color may be
  * undefined.
  */
-export type CuePoint = {
+export interface CuePoint {
   type: 'cue_point';
   /**
    * Number of milliseconds from the start of the track.
@@ -269,7 +269,7 @@ export type CuePoint = {
    * RGB values of the hotcue color
    */
   color?: CueColor;
-};
+}
 
 type BareCuePoint = Omit<CuePoint, 'type'>;
 
@@ -305,7 +305,7 @@ export type CueAndLoop = CuePoint | Loop | Hotcue | Hotloop;
 /**
  * Represents the contents of a playlist
  */
-export type PlaylistContents = {
+export interface PlaylistContents {
   /**
    * The playlists in this playlist.
    */
@@ -323,7 +323,7 @@ export type PlaylistContents = {
    * The total number of tracks in this playlist.
    */
   totalTracks: number;
-};
+}
 
 export enum NetworkState {
   /**

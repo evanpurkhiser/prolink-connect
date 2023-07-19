@@ -24,7 +24,7 @@ export function getMatchingInterface(ipAddr: ip.Address4) {
   const flatList = Object.entries(networkInterfaces()).reduce(
     (acc, [name, info]) =>
       info !== undefined ? acc.concat(info.map(i => ({...i, name}))) : acc,
-    [] as ({name: string} & NetworkInterfaceInfo)[]
+    [] as Array<{name: string} & NetworkInterfaceInfo>
   );
 
   let matchedIface: (NetworkInterfaceInfoIPv4 & {name: string}) | null = null;

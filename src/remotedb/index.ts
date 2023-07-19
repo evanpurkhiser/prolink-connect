@@ -28,11 +28,11 @@ export enum MenuTarget {
 /**
  * Used to specify where to lookup data when making queries
  */
-export type QueryDescriptor = {
+export interface QueryDescriptor {
   menuTarget: MenuTarget;
   trackSlot: MediaSlot;
   trackType: TrackType;
-};
+}
 
 /**
  * Used internally when making queries.
@@ -60,7 +60,7 @@ export function getQueryName(query: Query) {
 /**
  * Options used to make a remotedb query
  */
-type QueryOpts<T extends Query> = {
+interface QueryOpts<T extends Query> {
   queryDescriptor: QueryDescriptor;
   /**
    * The query type to make
@@ -74,7 +74,7 @@ type QueryOpts<T extends Query> = {
    * The sentry span to assicate the query with
    */
   span?: Span;
-};
+}
 
 /**
  * Queries the remote device for the port that the remote database server is
@@ -196,7 +196,7 @@ export default class RemoteDatabase {
   /**
    * Active device connection map
    */
-  #connections: Map<DeviceID, Connection> = new Map();
+  #connections = new Map<DeviceID, Connection>();
   /**
    * Locks for each device when locating the connection
    */

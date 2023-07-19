@@ -11,7 +11,7 @@ import {udpSend} from 'src/utils/udp';
 import {makeMediaSlotRequest} from './media';
 import {mediaSlotFromPacket, statusFromPacket} from './utils';
 
-type StatusEvents = {
+interface StatusEvents {
   /**
    * Fired each time the CDJ reports its status
    */
@@ -20,7 +20,7 @@ type StatusEvents = {
    * Fired when the CDJ reports its media slot status
    */
   mediaSlot: (info: MediaSlotInfo) => void;
-};
+}
 
 type Emitter = StrictEventEmitter<EventEmitter, StatusEvents>;
 

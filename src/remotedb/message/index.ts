@@ -50,14 +50,14 @@ const argsFieldMap = {
   [ArgumentType.Binary]: FieldType.Binary,
 };
 
-type Options<T extends MessageType> = {
+interface Options<T extends MessageType> {
   transactionId?: number;
   type: T;
   args: Field[];
-};
+}
 
 type ResponseType<T> = T extends Response ? T : never;
-type Data<T> = ReturnType<typeof responseTransform[ResponseType<T>]>;
+type Data<T> = ReturnType<(typeof responseTransform)[ResponseType<T>]>;
 
 /**
  * Representation of a set of fields sequenced into a known message format.

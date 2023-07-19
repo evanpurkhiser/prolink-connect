@@ -92,7 +92,7 @@ type ItemArgs = [
   NumberField, // Only holds artwork ID?
   NumberField,
   NumberField,
-  NumberField
+  NumberField,
 ];
 
 /**
@@ -203,7 +203,7 @@ const transformItem = {
  * Represents a generic Item, specialized to a specific item by providing a
  * ItemType to the template.
  */
-export type Item<T extends ItemType> = ReturnType<typeof transformItem[T]> & {type: T};
+export type Item<T extends ItemType> = ReturnType<(typeof transformItem)[T]> & {type: T};
 
 /**
  * Maps ItemTypes to Items

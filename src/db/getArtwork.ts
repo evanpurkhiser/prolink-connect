@@ -7,7 +7,7 @@ import {fetchFile} from 'src/nfs';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
 
-export type Options = {
+export interface Options {
   /**
    * The device to query the track artwork off of
    */
@@ -28,7 +28,7 @@ export type Options = {
    * The Sentry transaction span
    */
   span?: Span;
-};
+}
 
 export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>) {
   const {deviceId, trackSlot, trackType, track, span} = opts;
