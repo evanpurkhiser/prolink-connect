@@ -13,7 +13,5 @@ jobs:
       - run: yarn install
       - run: yarn test
       - run: yarn build
-      - name: yarn publish
-        run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc && yarn publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_AUTH_TOKEN }}
+      - run: npm publish --access=public
