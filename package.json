@@ -11,7 +11,8 @@
     "test": "jest",
     "lint": "eslint src/**/*.ts tests/**/*.ts",
     "preversion": "yarn lint; yarn test",
-    "prepare": "ts-patch install -s"
+    "prepare": "ts-patch install -s",
+    "precommit": "build"
   },
   "files": [
     "lib/"
@@ -20,7 +21,7 @@
     "node": ">=16.0.0"
   },
   "bin": {
-    "prolink-connect": "./lib/cli.js"
+    "prolink-connect": "lib/cli.js"
   },
   "sideEffects": false,
   "dependencies": {
