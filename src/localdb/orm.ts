@@ -1,4 +1,3 @@
-import sqlite3 from 'better-sqlite3';
 import {camelCase, mapKeys, mapValues, partition, snakeCase} from 'lodash';
 
 import {EntityFK, Playlist, PlaylistEntry, Track} from 'src/entities';
@@ -47,10 +46,10 @@ const trackRelationTableMap: Record<string, string> = {
  * May be used to populate a metadata database and query objects.
  */
 export class MetadataORM {
-  #conn: sqlite3.Database;
+  #conn: any;
 
   constructor() {
-    this.#conn = sqlite3(':memory:');
+    this.#conn = null;
     this.#conn.exec(generateSchema());
   }
 
