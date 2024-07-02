@@ -65,7 +65,7 @@ async function getMetadata(opts: TrackQueryOpts) {
     | ItemType.BitRate
     | ItemType.Remixer
     | ItemType.Year
-    | ItemType.OrigianlArtist;
+    | ItemType.OriginalArtist;
 
   const items = renderItems<MetadataItems>(
     conn,
@@ -100,7 +100,7 @@ async function getMetadata(opts: TrackQueryOpts) {
     color: findColor(Object.values(trackItems))!,
     label: trackItems[ItemType.Label] ?? null,
     remixer: trackItems?.[ItemType.Remixer] ?? null,
-    originalArtist: trackItems?.[ItemType.OrigianlArtist] ?? null,
+    originalArtist: trackItems?.[ItemType.OriginalArtist] ?? null,
     composer: null,
 
     fileName: '',
