@@ -131,7 +131,7 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
 
   // NOTE: We actually also get back a color, but we'll find that one later,
   // since each color is it's own item type.
-  type GenericMetadtaItems =
+  type GenericMetadataItems =
     | ItemType.AlbumTitle
     | ItemType.TrackTitle
     | ItemType.Genre
@@ -142,7 +142,7 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
     | ItemType.BitRate
     | ItemType.Comment;
 
-  const items = renderItems<GenericMetadtaItems>(
+  const items = renderItems<GenericMetadataItems>(
     conn,
     lookupDescriptor,
     resp.data.itemsAvailable,
@@ -151,7 +151,7 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
 
   // NOTE: We do a bit of any-ing here to help typescript understand we're
   // discriminating the type by our object key
-  const fileItems: Pick<Items, GenericMetadtaItems> = {} as any;
+  const fileItems: Pick<Items, GenericMetadataItems> = {} as any;
   for await (const item of items) {
     fileItems[item.type] = item as any;
   }
