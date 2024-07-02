@@ -22,7 +22,7 @@ async function cli() {
 
   signale.await('Autoconfiguring network.. waiting for devices');
   await network.autoconfigFromPeers();
-  signale.await('Autoconfigure successfull!');
+  signale.await('Autoconfigure successful!');
 
   signale.await('Connecting to network!');
   network.connect();
@@ -32,7 +32,7 @@ async function cli() {
     return;
   }
 
-  signale.star('Network connected! Network services initalized');
+  signale.star('Network connected! Network services initialized');
 
   const processor = new MixstatusProcessor();
   network.statusEmitter.on('status', s => processor.handleState(s));

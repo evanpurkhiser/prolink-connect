@@ -21,7 +21,7 @@ export interface Options {
    */
   trackType: TrackType;
   /**
-   * The track id to retrive metadata for
+   * The track id to retrieve metadata for
    */
   trackId: number;
   /**

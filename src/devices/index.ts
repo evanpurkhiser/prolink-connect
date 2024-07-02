@@ -11,7 +11,7 @@ import {deviceFromPacket} from './utils';
 interface Config {
   /**
    * Time in milliseconds after which a device is considered to have
-   * disconnected if it has not broadcast an announcment.
+   * disconnected if it has not broadcast an announcement.
    *
    * @default 10000 ms
    */
@@ -81,7 +81,7 @@ class DeviceManager {
   constructor(announceSocket: Socket, config?: Config) {
     this.#config = {...defaultConfig, ...config};
 
-    // Begin listening for device announcments
+    // Begin listening for device announcements
     announceSocket.on('message', this.#handleAnnounce);
   }
 

@@ -72,7 +72,7 @@ const convertWaveformPreview = (args: Field[]): WaveformPreview => {
 const convertWaveformDetailed = (args: Field[]): WaveformDetailed => {
   const data = args[3].value as Buffer;
 
-  // Every byte reperesents one segment of the waveform, and there are 150
+  // Every byte represents one segment of the waveform, and there are 150
   // segments per second of audio. (These seem to correspond to 'half frames'
   // following the seconds in the player display.) Each byte encodes both a
   // color and height.

@@ -33,7 +33,7 @@ Nothing yet
 - Remote database calls could fail for requests that result in a large number
   of rows. Unless you were using the remotedb query interface directly, it is
   unlikely you would have ran into this problem. The two implemented queries do
-  not return emough rows to result in the error.
+  not return enough rows to result in the error.
 
 ## [v0.8.1] - 2021-04-23
 

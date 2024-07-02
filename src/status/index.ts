@@ -27,7 +27,7 @@ type Emitter = StrictEventEmitter<EventEmitter, StatusEvents>;
 type MediaSlotOptions = Parameters<typeof makeMediaSlotRequest>[0];
 
 /**
- * The status emitter will report every time a device status is recieved
+ * The status emitter will report every time a device status is received
  */
 class StatusEmitter {
   #statusSocket: Socket;
@@ -41,7 +41,7 @@ class StatusEmitter {
   #mediaSlotQueryLock = new Mutex();
 
   /**
-   * @param statusSocket A UDP socket to recieve CDJ status packets on
+   * @param statusSocket A UDP socket to receive CDJ status packets on
    */
   constructor(statusSocket: Socket) {
     this.#statusSocket = statusSocket;

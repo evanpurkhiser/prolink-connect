@@ -30,14 +30,14 @@ describe('DeviceManager', () => {
     const disconnectedFn = jest.fn();
     dm.on('disconnected', disconnectedFn);
 
-    // Mocked mesage value
+    // Mocked message value
     const deadBeef = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
 
     const deviceExample = mockDevice();
 
     dfpMock.mockReturnValue(deviceExample);
 
-    // Trigger device announcment
+    // Trigger device announcement
     mockSocket.emit('message', deadBeef);
 
     expect(deviceFromPacket).toHaveBeenCalledWith(deadBeef);
@@ -46,21 +46,21 @@ describe('DeviceManager', () => {
     expect(dm.devices.size).toBe(1);
     expect(dm.devices.get(1)).toBe(deviceExample);
 
-    // Reset our emitter mocks for the next announcment
+    // Reset our emitter mocks for the next announcement
     announceFn.mockClear();
     connectedFn.mockReset();
 
     // Move forward 75ms, the device should not have timed out yet
     jest.advanceTimersByTime(75);
 
-    // Trigger device announcment
+    // Trigger device announcement
     mockSocket.emit('message', deadBeef);
 
     expect(connectedFn).not.toHaveBeenCalled();
     expect(announceFn).toHaveBeenCalledWith(deviceExample);
 
     // Device is still kept alive, as it has not expired since its last
-    // announcment
+    // announcement
     jest.advanceTimersByTime(75);
 
     // Device will now timeout
@@ -96,14 +96,14 @@ describe('DeviceManager', () => {
 
     dfpMock.mockReturnValue(null);
 
-    // Trigger device announcment
+    // Trigger device announcement
     mockSocket.emit('message', Buffer.of());
 
     expect(announceFn).not.toHaveBeenCalled();
     expect(dm.devices.size).toBe(0);
   });
 
-  it('does not announce or track virtual CDJ announcments', () => {
+  it('does not announce or track virtual CDJ announcements', () => {
     const dm = new DeviceManager(mockSocket, {deviceTimeout: 100});
 
     const announceFn = jest.fn();
@@ -113,7 +113,7 @@ describe('DeviceManager', () => {
 
     dfpMock.mockReturnValue(deviceExample);
 
-    // Trigger device announcment
+    // Trigger device announcement
     mockSocket.emit('message', Buffer.of());
 
     expect(announceFn).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('DeviceManager', () => {
 
     dfpMock.mockReturnValue(deviceExample);
 
-    // Trigger device announcment
+    // Trigger device announcement
     mockSocket.emit('message', Buffer.of());
 
     await expect(gotDevice).resolves.toBe(deviceExample);

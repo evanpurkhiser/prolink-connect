@@ -62,11 +62,11 @@ const defaultConfig: MixstatusConfig = {
 interface MixstatusEvents {
   /**
    * Fired when a track is considered to be on-air and is being heard by the
-   * audiance
+   * audience
    */
   nowPlaying: (state: CDJStatus.State) => void;
   /**
-   * Fired when a track has stopped and is completley offair
+   * Fired when a track has stopped and is completely offair
    */
   stopped: (opt: {deviceId: DeviceID}) => void;
   /**
@@ -140,7 +140,7 @@ export class MixstatusProcessor {
   }
 
   /**
-   * Update the configration
+   * Update the configuration
    */
   configure(config?: Partial<MixstatusConfig>) {
     this.#config = {...this.#config, ...config};
@@ -224,7 +224,7 @@ export class MixstatusProcessor {
   };
 
   #setMayStop = async () => {
-    // We handle the set ending interupt as a async timeout as in the case with
+    // We handle the set ending interrupt as a async timeout as in the case with
     // a set ending, the DJ may immediately turn off the CDJs, stopping state
     // packets meaning we can't process on a heartbeat.
     if (!this.#isSetActive) {
@@ -397,7 +397,7 @@ export class MixstatusProcessor {
     }
 
     // If a device has been in a 'potentially stopped' state for long enough,
-    // we can mark the track as truely stopped.
+    // we can mark the track as truly stopped.
     const stoppedAt = this.#lastStoppedTimes.get(deviceId);
     const requiredStopTime =
       this.#config.allowedInterruptBeats *

@@ -71,7 +71,7 @@ interface DatabaseEvents {
    *
    * There is a period of time between hydrationProgress reporting 100% copletion,
    * and the database being flushed, so it may be useful to wait for this event
-   * before considering the databas to be fully hydrated.
+   * before considering the database to be fully hydrated.
    */
   hydrationDone: (opts: HydrationDoneOpts) => void;
 }
@@ -196,7 +196,7 @@ class LocalDatabase {
       }));
 
     // Rekordbox exports to both the `.PIONEER` and `PIONEER` folder, depending
-    // on the media devices filesystem (HFS, FAT32, etc). Unfortuantely there's no
+    // on the media devices filesystem (HFS, FAT32, etc). Unfortunately there's no
     // way for us to know the type of filesystem, so we have to try both
     const path = 'PIONEER/rekordbox/export.pdb';
 
@@ -265,8 +265,8 @@ class LocalDatabase {
 
     const id = getMediaId(media);
 
-    // Aquire a lock for this device slot that will not release until we've
-    // guarnteed the existance of the database.
+    // Acquire a lock for this device slot that will not release until we've
+    // guaranteed the existence of the database.
     const db = await lock.runExclusive(
       () =>
         this.#dbs.find(db => db.id === id) ?? this.#hydrateDatabase(device, slot, media)

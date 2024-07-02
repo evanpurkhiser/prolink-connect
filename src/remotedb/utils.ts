@@ -54,8 +54,8 @@ export async function* renderItems<T extends ItemType = ItemType>(
     // Request another page of items
     if (itemsRead % LIMIT === 0) {
       // XXX: itemsRead + count should NOT exceed the total. A larger value
-      // will push the offset back to accomadate for the extra items, ensuring
-      // we always recieve count items.
+      // will push the offset back to accommodate for the extra items, ensuring
+      // we always receive count items.
       const count = Math.min(LIMIT, total - itemsRead);
       const message = makeRenderMessage(descriptor, itemsRead, count, total);
 

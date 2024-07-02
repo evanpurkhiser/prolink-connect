@@ -6,7 +6,7 @@ import {EntityFK, Playlist, PlaylistEntry, Track} from 'src/entities';
 import {generateSchema} from './schema';
 
 /**
- * Table names availble
+ * Table names available
  */
 export enum Table {
   Artist = 'artist',
@@ -91,7 +91,7 @@ export class MetadataORM {
       .prepare(`select * from ${Table.Track} where id = ?`)
       .get(id);
 
-    // Map row columns to camel case compatability
+    // Map row columns to camel case compatibility
     const trackRow = mapKeys(row, (_, k) => camelCase(k)) as Track<EntityFK.WithFKs>;
 
     trackRow.beatGrid = null;
@@ -102,7 +102,7 @@ export class MetadataORM {
     trackRow.autoloadHotcues = !!trackRow.autoloadHotcues;
     trackRow.kuvoPublic = !!trackRow.kuvoPublic;
 
-    // Explicity restore date objects
+    // Explicitly restore date objects
     trackRow.analyzeDate = new Date(trackRow.analyzeDate as any);
     trackRow.dateAdded = new Date(trackRow.dateAdded as any);
 

@@ -40,8 +40,8 @@ export interface NetworkConfig {
    * use a ID within the 1-6 range, as the CDJs will not respond to metadata
    * requests outside of the range of 1-6
    *
-   * Note that rekordbox analized media connected to the CDJ is accessed out of
-   * band of the networks remote database protocl, and is not limited by this
+   * Note that rekordbox analyzed media connected to the CDJ is accessed out of
+   * band of the networks remote database protocol, and is not limited by this
    * restriction.
    */
   vcdjId: number;
@@ -361,7 +361,7 @@ export class ProlinkNetwork {
   }
 
   /**
-   * Get (and initalize) the {@link MixstatusProcessor} service. This service can
+   * Get (and initialize) the {@link MixstatusProcessor} service. This service can
    * be used to monitor the 'status' of devices on the network as a whole.
    */
   get mixstatus() {

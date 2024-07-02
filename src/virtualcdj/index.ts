@@ -87,7 +87,7 @@ export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
   const unknown1 = [0x01, 0x02];
   const unknown2 = [0x01, 0x00, 0x00, 0x00];
 
-  // The packet blow is constructed in the followig format:
+  // The packet blow is constructed in the following format:
   //
   //  - 0x00: 10 byte header
   //  - 0x0A: 02 byte announce packet type
@@ -126,7 +126,7 @@ export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
  */
 export class Announcer {
   /**
-   * The announce socket to use to make the announcments
+   * The announce socket to use to make the announcements
    */
   #announceSocket: Socket;
   /**

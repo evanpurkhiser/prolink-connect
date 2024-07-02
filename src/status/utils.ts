@@ -100,7 +100,7 @@ export function mediaSlotFromPacket(packet: Buffer) {
 }
 
 /**
- * calcPitch converts a uint24 byte value into a flaot32 pitch.
+ * calcPitch converts a uint24 byte value into a float32 pitch.
  *
  * The pitch information ranges from 0x000000 (meaning -100%, complete stop) to
  * 0x200000 (+100%).

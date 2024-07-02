@@ -178,7 +178,7 @@ export async function lookupPath(
 
   tx?.finish();
 
-  // We can gaurentee this will be set since we will have failed to lookup the
+  // We can guarantee this will be set since we will have failed to lookup the
   // file above
   return info!;
 }

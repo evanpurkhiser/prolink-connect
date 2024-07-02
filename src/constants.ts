@@ -22,7 +22,7 @@ export const BEAT_PORT = 50001;
 export const STATUS_PORT = 50002;
 
 /**
- * The ammount of time in ms between sending each announcment packet.
+ * The amount of time in ms between sending each announcement packet.
  */
 export const ANNOUNCE_INTERVAL = 1500;
 

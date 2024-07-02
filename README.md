@@ -15,7 +15,7 @@
 
 ---
 
-This library implments the Pioneer PROLINK network protocol + additional
+This library implements the Pioneer PROLINK network protocol + additional
 functionality to interact with the prolink network. This library is used as
 part of [Prolink Tools](https://prolink.tools/).
 
@@ -53,14 +53,14 @@ async function main() {
   // Bring the prolink network online.
   //
   // This will begin listening for prolink devices on the network that send
-  // regular announcment packets over UDP.
+  // regular announcement packets over UDP.
   //
   // This will FAIL if Rekordbox is running on the same computer, or a second
   // instance of the prolink-connect library is running on the same machine.
   console.info('Bringing the network online');
   const network = await bringOnline();
 
-  // Once online we can listen for appearning on the network
+  // Once online we can listen for appearing on the network
   network.deviceManager.on('connected', device =>
     console.log('New device on network:', device)
   );

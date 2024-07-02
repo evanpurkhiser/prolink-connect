@@ -45,7 +45,7 @@ class StringUTF16LE {
 }
 
 /**
- * RPC XDR data types. This implemenets nearly the entire XDR spec for the
+ * RPC XDR data types. This implements nearly the entire XDR spec for the
  * ONC-RPC protocol.
  */
 export const rpc = XDR.config((xdr: any) => {

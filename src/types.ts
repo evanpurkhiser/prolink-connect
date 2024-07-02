@@ -328,7 +328,7 @@ export interface PlaylistContents {
 export enum NetworkState {
   /**
    * The network is offline when we don't have an open connection to the network
-   * (no connection to the announcment and or status UDP socket is present).
+   * (no connection to the announcement and or status UDP socket is present).
    */
   Offline,
   /**
@@ -342,7 +342,7 @@ export enum NetworkState {
   Connected,
   /**
    * The network may have failed to connect if we aren't able to open the
-   * announcment and or status UDP socket.
+   * announcement and or status UDP socket.
    */
   Failed,
 }

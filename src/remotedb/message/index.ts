@@ -28,7 +28,7 @@ enum ArgumentType {
 }
 
 /**
- * The message argument list always containts 12 slots
+ * The message argument list always contains 12 slots
  */
 const ARG_COUNT = 12;
 
@@ -80,7 +80,7 @@ export class Message<T extends MessageType = MessageType> {
     const magicHeader = await readField(stream, FieldType.UInt32);
 
     if (magicHeader.value !== REMOTEDB_MAGIC) {
-      throw new Error('Did not recieve expected magic value. Corrupt message');
+      throw new Error('Did not receive expected magic value. Corrupt message');
     }
 
     // 02. Read transaction ID
