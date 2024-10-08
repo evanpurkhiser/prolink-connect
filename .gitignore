@@ -1,2 +1,4 @@
 lib
 docs
+.idea
+node_modules

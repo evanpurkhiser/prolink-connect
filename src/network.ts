@@ -45,6 +45,12 @@ export interface NetworkConfig {
    * restriction.
    */
   vcdjId: number;
+
+  /**
+   * Packets sent from and to a CDJ-3000 are different then other CDJS.
+   * This boolean changes these packets to make sure you can communicate with a CDJ-3000
+   */
+  enableCDJ3000Compatibility: boolean;
 }
 
 interface ConnectionService {
@@ -184,7 +190,7 @@ export class ProlinkNetwork {
    *
    * Defaults the Virtual CDJ ID to 5.
    */
-  async autoconfigFromPeers() {
+  async autoconfigFromPeers(enableCDJ3000Compatibility: boolean) {
     const tx = Sentry.startTransaction({name: 'autoConfigure'});
     // wait for first device to appear on the network
     const firstDevice = await new Promise<Device>(resolve =>
@@ -206,7 +212,12 @@ export class ProlinkNetwork {
       throw new Error('Unable to determine network interface');
     }
 
-    this.#config = {...this.#config, vcdjId: DEFAULT_VCDJ_ID, iface};
+    this.#config = {
+      ...this.#config,
+      vcdjId: DEFAULT_VCDJ_ID,
+      iface,
+      enableCDJ3000Compatibility: enableCDJ3000Compatibility,
+    };
     tx.finish();
   }
 
@@ -224,7 +235,11 @@ export class ProlinkNetwork {
     const tx = Sentry.startTransaction({name: 'connect'});
 
     // Create VCDJ for the interface's broadcast address
-    const vcdj = getVirtualCDJ(this.#config.iface, this.#config.vcdjId);
+    const vcdj = getVirtualCDJ(
+      this.#config.iface,
+      this.#config.vcdjId,
+      this.#config.enableCDJ3000Compatibility
+    );
 
     // Start announcing
     const announcer = new Announcer(vcdj, this.#announceSocket, this.deviceManager);

@@ -17,12 +17,17 @@ import {buildName} from 'src/utils';
 /**
  * Constructs a virtual CDJ Device.
  */
-export const getVirtualCDJ = (iface: NetworkInterfaceInfoIPv4, id: DeviceID): Device => ({
+export const getVirtualCDJ = (
+  iface: NetworkInterfaceInfoIPv4,
+  id: DeviceID,
+  enableCDJ3000Compatibility: boolean
+): Device => ({
   id,
   name: VIRTUAL_CDJ_NAME,
   type: DeviceType.CDJ,
   ip: new ip.Address4(iface.address),
   macAddr: new Uint8Array(iface.mac.split(':').map(s => parseInt(s, 16))),
+  enableCDJ3000Compatibility: enableCDJ3000Compatibility,
 });
 
 /**
@@ -85,7 +90,12 @@ export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
 
   // unknown padding bytes
   const unknown1 = [0x01, 0x02];
-  const unknown2 = [0x01, 0x00, 0x00, 0x00];
+  const unknown2 = [
+    deviceToAnnounce.enableCDJ3000Compatibility ? 0x02 : 0x01,
+    0x00,
+    0x00,
+    0x00,
+  ];
 
   // The packet blow is constructed in the following format:
   //
@@ -114,7 +124,7 @@ export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
     ...d.ip.toArray(),
     ...unknown2,
     ...[d.type],
-    ...[0x00],
+    ...[deviceToAnnounce.enableCDJ3000Compatibility ? 0x64 : 0x00],
   ];
 
   return Uint8Array.from(parts);

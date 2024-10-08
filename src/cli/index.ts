@@ -21,7 +21,7 @@ async function cli() {
   );
 
   signale.await('Autoconfiguring network.. waiting for devices');
-  await network.autoconfigFromPeers();
+  await network.autoconfigFromPeers(true);
   signale.await('Autoconfigure successful!');
 
   signale.await('Connecting to network!');
