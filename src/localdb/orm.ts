@@ -88,7 +88,7 @@ export class MetadataORM {
    */
   findTrack(id: number): Track {
     const row: Record<string, any> = this.#conn
-      .prepare(`select * from ${Table.Track} where id = ?`)
+      .prepare<any, any>(`select * from ${Table.Track} where id = ?`)
       .get(id);
 
     // Map row columns to camel case compatibility
@@ -124,7 +124,7 @@ export class MetadataORM {
       }
 
       const relationItem: Record<string, any> = this.#conn
-        .prepare(`select * from ${table} where id = ?`)
+        .prepare<any, any>(`select * from ${table} where id = ?`)
         .get(fk);
 
       track[relation] = relationItem;
@@ -147,7 +147,7 @@ export class MetadataORM {
 
     // Lookup playlists / folders for this playlist ID
     const playlistRows: Array<Record<string, any>> = this.#conn
-      .prepare(`select * from ${Table.Playlist} where ${parentCondition}`)
+      .prepare<any, any>(`select * from ${Table.Playlist} where ${parentCondition}`)
       .all(playlistId);
 
     const [folders, playlists] = partition(
@@ -156,7 +156,7 @@ export class MetadataORM {
     );
 
     const entryRows: Array<Record<string, any>> = this.#conn
-      .prepare(`select * from ${Table.PlaylistEntry} where playlist_id = ?`)
+      .prepare<any, any>(`select * from ${Table.PlaylistEntry} where playlist_id = ?`)
       .all(playlistId);
 
     const trackEntries = entryRows.map(
