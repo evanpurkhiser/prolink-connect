@@ -3686,6 +3686,13 @@ minimatch@^5.0.1, minimatch@^5.1.0:
   dependencies:
     brace-expansion "^2.0.1"
 
+minimatch@^9.0.5:
+  version "9.0.5"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-9.0.5.tgz#d74f9dd6b57d83d8e98cfb82133b03978bc929e5"
+  integrity sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==
+  dependencies:
+    brace-expansion "^2.0.1"
+
 minimist@^1.2.0, minimist@^1.2.3, minimist@^1.2.6:
   version "1.2.7"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.7.tgz#daa1c4d91f507390437c6a8bc01078e7000c4d18"
@@ -4847,12 +4854,12 @@ typedoc@^0.23.17:
     minimatch "^5.1.0"
     shiki "^0.11.1"
 
-typescript-transform-paths@^3.4.3:
-  version "3.4.3"
-  resolved "https://registry.yarnpkg.com/typescript-transform-paths/-/typescript-transform-paths-3.4.3.tgz#e078bd2be7edcf1211d0ecef1577c88fb8a7ee5c"
-  integrity sha512-XE/FVJ7BiD6qdDFJYx9XaVJiR/43bsLB1PgghyUJF81FwWXQ9h6P6WvYOjrxMdIcZ7Elq27txievYpExiaENPQ==
+typescript-transform-paths@^3.5.2:
+  version "3.5.2"
+  resolved "https://registry.yarnpkg.com/typescript-transform-paths/-/typescript-transform-paths-3.5.2.tgz#d05de79b625ce4229b908cf7a897d15c6553a511"
+  integrity sha512-IRDVXfU7oscLwTvLabXprFrFCMUdBJbdUDtxbHFEsau9FlqrrdgS8PfwUltKDAh75vJFkQ8QdXAt/nzIWWp+fA==
   dependencies:
-    minimatch "^3.0.4"
+    minimatch "^9.0.5"
 
 typescript@^5.7.2:
   version "5.7.2"
