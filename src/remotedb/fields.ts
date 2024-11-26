@@ -13,22 +13,24 @@ export enum FieldType {
   String = 0x26,
 }
 
-/**
- * The generic interface for all field types
- */
-export interface BaseField {
+export abstract class BaseField {
+  // The constructor property (which is used to access the class from an
+  // instance of it) must be set to the BaseClass object so we can access the
+  // `.type` property.
+  //
+  // @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+  declare ['constructor']: typeof BaseField;
+
   /**
    * The raw field data
    */
-  data: Buffer;
+  declare data: Buffer;
   /**
    * Corce the field into a buffer. This differs from reading the data
    * property in that it will include the field type header.
    */
-  readonly buffer: Buffer;
-}
+  abstract buffer: Buffer;
 
-export class BaseField {
   /**
    * Declares the type of field this class represents
    */
@@ -40,16 +42,6 @@ export class BaseField {
    * reading the field type, returning the next number of bytes to read.
    */
   static bytesToRead: number | ((reportedLength: number) => number);
-
-  // The constructor property (which is used to access the class from an
-  // instance of it) must be set to the BaseClass object so we can access the
-  // `.type` property.
-  //
-  // @see https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
-  //
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  ['constructor']: typeof BaseField;
 }
 
 export type NumberField<T extends number = number> = BaseField & {

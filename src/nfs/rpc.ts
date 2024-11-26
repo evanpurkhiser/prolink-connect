@@ -62,11 +62,9 @@ export class RpcConnection {
     this.mutex = new Mutex();
   }
 
-  get connected() {
-    // TODO: Figure out what logic we can do here to determine if the socket is
-    // still open.
-    return true;
-  }
+  // TODO: Turn this into a getter and figure out what logic we can do here
+  // to determine if the socket is still open.
+  connected = true;
 
   setupRequest({program, version, procedure, data}: Omit<RpcCall, 'port'>) {
     const auth = new rpc.Auth({
