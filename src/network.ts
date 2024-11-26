@@ -182,7 +182,7 @@ export class ProlinkNetwork {
    * Wait for another device to show up on the network to determine which network
    * interface to listen on.
    *
-   * Defaults the Virtual CDJ ID to 5.
+   * Defaults the Virtual CDJ ID to 7.
    */
   async autoconfigFromPeers() {
     const tx = Sentry.startTransaction({name: 'autoConfigure'});
