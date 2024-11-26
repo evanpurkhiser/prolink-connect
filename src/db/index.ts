@@ -64,16 +64,16 @@ class Database {
     return device.type === DeviceType.Rekordbox || requiresCdjRemote
       ? LookupStrategy.Remote
       : device.type === DeviceType.CDJ && type === TrackType.RB
-      ? LookupStrategy.Local
-      : LookupStrategy.NoneAvailable;
+        ? LookupStrategy.Local
+        : LookupStrategy.NoneAvailable;
   };
 
   #getMediaLookupStrategy = (device: Device, slot: MediaSlot) =>
     device.type === DeviceType.Rekordbox && slot === MediaSlot.RB
       ? LookupStrategy.Remote
       : device.type === DeviceType.Rekordbox
-      ? LookupStrategy.NoneAvailable
-      : LookupStrategy.Local;
+        ? LookupStrategy.NoneAvailable
+        : LookupStrategy.Local;
 
   /**
    * Reports weather or not the CDJs can be communicated to over the remote

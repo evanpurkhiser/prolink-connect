@@ -76,8 +76,8 @@ export class MetadataORM {
       value instanceof Date
         ? value.toISOString()
         : typeof value === 'boolean'
-        ? Number(value)
-        : value
+          ? Number(value)
+          : value
     );
 
     stmt.run(data);

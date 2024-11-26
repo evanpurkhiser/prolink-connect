@@ -15,7 +15,7 @@ export const makeCueLoopEntry = (
       ? {type: 'hot_loop', offset, length, button}
       : {type: 'hot_cue', offset, button}
     : isLoop
-    ? {type: 'loop', offset, length}
-    : isCue
-    ? {type: 'cue_point', offset}
-    : null;
+      ? {type: 'loop', offset, length}
+      : isCue
+        ? {type: 'cue_point', offset}
+        : null;
