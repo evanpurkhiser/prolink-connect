@@ -71,7 +71,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
-    "typedoc": "^0.26.11",
+    "typedoc": "^0.27.4",
     "typedoc-plugin-missing-exports": "^3.1.0",
     "typescript": "^5.7.2",
     "typescript-transform-paths": "^3.5.2",
