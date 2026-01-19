@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/node';
 import {Mutex} from 'async-mutex';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
@@ -17,6 +16,15 @@ import {
   TrackType,
 } from 'src/types';
 import {getSlotName} from 'src/utils';
+import * as Telemetry from 'src/utils/telemetry';
+
+// Debug logging for hydration
+const DEBUG = process.env.NP_PRODJLINK_TAG === '1';
+function debugLog(msg: string, ...args: any[]) {
+  if (DEBUG) {
+    console.log(`[LocalDB] ${msg}`, ...args);
+  }
+}
 
 import {MetadataORM} from './orm';
 import {hydrateDatabase, HydrationProgress} from './rekordbox';
@@ -174,7 +182,7 @@ class LocalDatabase {
    * Downloads and hydrates a new in-memory sqlite database
    */
   #hydrateDatabase = async (device: Device, slot: DatabaseSlot, media: MediaSlotInfo) => {
-    const tx = Sentry.startTransaction({name: 'hydrateDatabase'});
+    const tx = Telemetry.startTransaction({name: 'hydrateDatabase'});
 
     tx.setTag('slot', getSlotName(media.slot));
     tx.setData('numTracks', media.trackCount.toString());
@@ -239,6 +247,9 @@ class LocalDatabase {
    * @returns null if no rekordbox media present
    */
   async get(deviceId: DeviceID, slot: DatabaseSlot) {
+    const slotName = slot === MediaSlot.USB ? 'USB' : 'SD';
+    debugLog(`get: Starting for device ${deviceId} slot ${slotName}`);
+
     const lockKey = `${deviceId}-${slot}`;
     const lock =
       this.#slotLocks.get(lockKey) ??
@@ -246,32 +257,59 @@ class LocalDatabase {
 
     const device = this.#deviceManager.devices.get(deviceId);
     if (device === undefined) {
+      debugLog(`get: Device ${deviceId} not found in device manager`);
       return null;
     }
 
     if (device.type !== DeviceType.CDJ) {
+      debugLog(`get: Device ${deviceId} is not a CDJ (type: ${device.type})`);
       throw new Error('Cannot create database from devices that are not CDJs');
     }
 
-    const media = await this.#statusEmitter.queryMediaSlot({
-      hostDevice: this.#hostDevice,
-      device,
-      slot,
-    });
+    debugLog(`get: Querying media slot for device ${deviceId} slot ${slotName}...`);
+    let media;
+    try {
+      media = await this.#statusEmitter.queryMediaSlot({
+        hostDevice: this.#hostDevice,
+        device,
+        slot,
+      });
+    } catch (error) {
+      // Timeout or other error - treat as no media
+      debugLog(
+        `get: Media slot query failed for device ${deviceId} slot ${slotName}: ${error}`
+      );
+      return null;
+    }
+    debugLog(
+      `get: Media slot query result: tracksType=${media.tracksType}, trackCount=${media.trackCount}, name=${media.name}`
+    );
 
     if (media.tracksType !== TrackType.RB) {
+      debugLog(
+        `get: Device ${deviceId} slot ${slotName} is not rekordbox (type: ${media.tracksType}, RB type: ${TrackType.RB})`
+      );
       return null;
     }
 
     const id = getMediaId(media);
+    debugLog(`get: Media ID: ${id}, checking cache...`);
 
     // Acquire a lock for this device slot that will not release until we've
     // guaranteed the existence of the database.
-    const db = await lock.runExclusive(
-      () =>
-        this.#dbs.find(db => db.id === id) ?? this.#hydrateDatabase(device, slot, media)
-    );
+    const db = await lock.runExclusive(() => {
+      const cached = this.#dbs.find(db => db.id === id);
+      if (cached) {
+        debugLog(`get: Found cached database for ${id}`);
+        return cached;
+      }
+      debugLog(
+        `get: No cache, starting hydration for device ${deviceId} slot ${slotName}...`
+      );
+      return this.#hydrateDatabase(device, slot, media);
+    });
 
+    debugLog(`get: Completed for device ${deviceId} slot ${slotName}`);
     return db.orm;
   }
 
@@ -279,16 +317,51 @@ class LocalDatabase {
    * Preload the databases for all connected devices.
    */
   async preload() {
-    const loaders = [...this.#deviceManager.devices.values()]
-      .filter(device => device.type === DeviceType.CDJ)
-      .map(device =>
-        Promise.all([
-          this.get(device.id, MediaSlot.USB),
-          this.get(device.id, MediaSlot.SD),
-        ])
+    const allDevices = [...this.#deviceManager.devices.values()];
+    const cdjDevices = allDevices.filter(device => device.type === DeviceType.CDJ);
+
+    debugLog(`preload: ${allDevices.length} total devices, ${cdjDevices.length} CDJs`);
+    for (const d of allDevices) {
+      debugLog(
+        `  Device ${d.id}: ${d.name} (type: ${d.type}, CDJ type: ${DeviceType.CDJ})`
       );
+    }
+
+    if (cdjDevices.length === 0) {
+      debugLog('preload: No CDJ devices found, skipping');
+      return;
+    }
+
+    const loaders = cdjDevices.map(device => {
+      debugLog(`preload: Starting load for device ${device.id} (${device.name})`);
+      return Promise.all([
+        this.get(device.id, MediaSlot.USB)
+          .then(r => {
+            debugLog(
+              `preload: USB slot for device ${device.id} completed: ${r ? 'has data' : 'null'}`
+            );
+            return r;
+          })
+          .catch(e => {
+            debugLog(`preload: USB slot for device ${device.id} failed:`, e.message);
+            throw e;
+          }),
+        this.get(device.id, MediaSlot.SD)
+          .then(r => {
+            debugLog(
+              `preload: SD slot for device ${device.id} completed: ${r ? 'has data' : 'null'}`
+            );
+            return r;
+          })
+          .catch(e => {
+            debugLog(`preload: SD slot for device ${device.id} failed:`, e.message);
+            throw e;
+          }),
+      ]);
+    });
 
     await Promise.all(loaders);
+    debugLog('preload: All devices completed');
   }
 }
 

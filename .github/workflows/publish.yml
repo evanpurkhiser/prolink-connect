@@ -1,17 +1,40 @@
-name: publish
+name: Publish to npm
 
 on:
   push:
-    tags: ['v*']
+    branches:
+      - main
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: volta-cli/action@v4
-      - run: yarn install
-      - run: yarn test
-      - run: yarn build
-      - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_AUTH_TOKEN }}
-      - run: npm publish --access=public
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Load NPM token from 1Password
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          NODE_AUTH_TOKEN: op://NPM/5f5d7gg4ptzjfhcllrygt734wi/add more/npm_access_token
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public

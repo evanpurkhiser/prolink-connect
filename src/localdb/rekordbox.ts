@@ -1,5 +1,3 @@
-import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/tracing';
 import {KaitaiStream} from 'kaitai-struct';
 
 import {
@@ -19,8 +17,19 @@ import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
 import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import {MetadataORM, Table} from 'src/localdb/orm';
 import {makeCueLoopEntry} from 'src/localdb/utils';
-import {BeatGrid, CueAndLoop, HotcueButton, WaveformHD} from 'src/types';
+import {
+  BeatGrid,
+  CueAndLoop,
+  ExtendedCue,
+  HotcueButton,
+  Phrase,
+  SongStructure,
+  WaveformHD,
+  WaveformPreviewData,
+} from 'src/types';
 import {convertWaveformHDData} from 'src/utils/converters';
+import {TelemetrySpan as Span} from 'src/utils/telemetry';
+import * as Telemetry from 'src/utils/telemetry';
 
 // NOTE: Kaitai doesn't currently have a good typescript exporter, so we will
 //       be making liberal usage of any in these utilities. We still guarantee
@@ -45,6 +54,14 @@ interface AnlzResponseDAT {
    * Embedded cue and loop information
    */
   cueAndLoops: CueAndLoop[] | null;
+  /**
+   * Standard waveform preview (400 bytes, PWAV tag)
+   */
+  waveformPreview: WaveformPreviewData | null;
+  /**
+   * Tiny waveform preview (100 bytes, PWV2 tag)
+   */
+  waveformTiny: WaveformPreviewData | null;
 }
 
 /**
@@ -52,9 +69,25 @@ interface AnlzResponseDAT {
  */
 interface AnlzResponseEXT {
   /**
-   * HD Waveform information
+   * HD Waveform information (PWV5 tag)
    */
   waveformHd: WaveformHD | null;
+  /**
+   * Extended cues with colors and comments (PCO2 tag)
+   */
+  extendedCues: ExtendedCue[] | null;
+  /**
+   * Song structure / phrase analysis (PSSI tag)
+   */
+  songStructure: SongStructure | null;
+  /**
+   * Monochrome detailed waveform (PWV3 tag)
+   */
+  waveformDetail: Uint8Array | null;
+  /**
+   * Color waveform preview (PWV4 tag, 7200 bytes = 1200 columns × 6 bytes)
+   */
+  waveformColorPreview: Uint8Array | null;
 }
 
 interface AnlzResponse {
@@ -134,27 +167,49 @@ export async function loadAnlz<T extends keyof AnlzResponse>(
   const resultExt = result as AnlzResponseEXT;
 
   for (const section of anlz.sections) {
-    if (section.fourcc === SectionTags.BEAT_GRID) {
-      resultDat.beatGrid = makeBeatGrid(section);
-      continue;
-    }
-    if (section.fourcc === SectionTags.CUES) {
-      resultDat.cueAndLoops = makeCueAndLoop(section);
-      continue;
-    }
-    if (section.fourcc === SectionTags.WAVE_COLOR_SCROLL) {
-      resultExt.waveformHd = makeWaveformHd(section);
-      continue;
-    }
+    switch (section.fourcc) {
+      case SectionTags.BEAT_GRID:
+        resultDat.beatGrid = makeBeatGrid(section);
+        break;
 
-    // TODO: The following sections haven't yet been extracted into the local
-    //       database.
-    //
-    // [SectionTags.CUES_2]: null,             <- In the EXT file
-    // [SectionTags.SONG_STRUCTURE]: null,     <- In the EXT file
-    // [SectionTags.WAVE_PREVIEW]: null,
-    // [SectionTags.WAVE_SCROLL]: null,
-    // [SectionTags.WAVE_COLOR_PREVIEW]: null, <- In the EXT file
+      case SectionTags.CUES:
+        resultDat.cueAndLoops = makeCueAndLoop(section);
+        break;
+
+      case SectionTags.CUES_2:
+        resultExt.extendedCues = makeExtendedCues(section);
+        break;
+
+      case SectionTags.WAVE_PREVIEW:
+        resultDat.waveformPreview = makeWaveformPreview(section);
+        break;
+
+      case SectionTags.WAVE_TINY:
+        resultDat.waveformTiny = makeWaveformPreview(section);
+        break;
+
+      case SectionTags.WAVE_SCROLL:
+        resultExt.waveformDetail = Buffer.from(section.body.entries);
+        break;
+
+      case SectionTags.WAVE_COLOR_PREVIEW:
+        resultExt.waveformColorPreview = Buffer.from(section.body.entries);
+        break;
+
+      case SectionTags.WAVE_COLOR_SCROLL:
+        resultExt.waveformHd = makeWaveformHd(section);
+        break;
+
+      case SectionTags.SONG_STRUCTURE:
+        resultExt.songStructure = makeSongStructure(section);
+        break;
+
+      // VBR and PATH tags are defined but not currently extracted
+      // as they're not commonly needed in the application
+      case SectionTags.VBR:
+      case SectionTags.PATH:
+        break;
+    }
   }
 
   return result;
@@ -178,19 +233,33 @@ class RekordboxHydrator {
    * connection with entities derived from the rekordbox entries.
    */
   async hydrateFromPdb(pdbData: Buffer, span?: Span) {
+    const PROFILE = process.env.NP_PROFILE_HYDRATION === '1';
+
     const tx = span
       ? span.startChild({op: 'hydrateFromPdb'})
-      : Sentry.startTransaction({name: 'hydrateFromPdb'});
+      : Telemetry.startTransaction({name: 'hydrateFromPdb'});
 
     const parseTx = tx.startChild({op: 'parsePdbData', data: {size: pdbData.length}});
+    const parseStart = PROFILE ? performance.now() : 0;
     const stream = new KaitaiStream(pdbData);
     const db = new RekordboxPdb(stream);
+    if (PROFILE) {
+      console.log(
+        `[HYDRATION PROFILE] PDB parsing: ${(performance.now() - parseStart).toFixed(1)}ms (${(pdbData.length / 1024 / 1024).toFixed(2)} MB)`
+      );
+    }
     parseTx.finish();
 
     const hydrateTx = tx.startChild({op: 'hydration'});
+    const hydrateStart = PROFILE ? performance.now() : 0;
     await Promise.all(
       db.tables.map((table: any) => this.hydrateFromTable(table, hydrateTx))
     );
+    if (PROFILE) {
+      console.log(
+        `[HYDRATION PROFILE] Total hydration: ${(performance.now() - hydrateStart).toFixed(1)}ms`
+      );
+    }
     hydrateTx.finish();
 
     tx.finish();
@@ -210,22 +279,76 @@ class RekordboxHydrator {
       return;
     }
 
+    // Profiling: track time spent in each phase
+    const PROFILE = process.env.NP_PROFILE_HYDRATION === '1';
+    const profile = {
+      countLoop: 0,
+      entityCreation: 0,
+      sqliteInsert: 0,
+      yieldTime: 0,
+      total: 0,
+    };
+    const profileStart = PROFILE ? performance.now() : 0;
+
     let totalSaved = 0;
     let totalItems = 0;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for (const _ of tableRows(table)) {
+    const countStart = PROFILE ? performance.now() : 0;
+    for (const _row of tableRows(table)) {
+      void _row; // Intentionally unused - just counting
       totalItems++;
+    }
+    if (PROFILE) {
+      profile.countLoop = performance.now() - countStart;
     }
 
     tx.setData('items', totalItems);
 
-    for (const row of tableRows(table)) {
-      this.#orm.insertEntity(tableName, createObject(row));
-      this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
+    // Use transaction for bulk inserts (10-100x faster)
+    this.#orm.beginTransaction();
 
-      // Allow additional tasks to occur during hydration
-      await new Promise(r => setTimeout(r, 0));
+    try {
+      for (const row of tableRows(table)) {
+        const createStart = PROFILE ? performance.now() : 0;
+        const entity = createObject(row);
+        if (PROFILE) {
+          profile.entityCreation += performance.now() - createStart;
+        }
+
+        const insertStart = PROFILE ? performance.now() : 0;
+        this.#orm.insertEntity(tableName, entity);
+        if (PROFILE) {
+          profile.sqliteInsert += performance.now() - insertStart;
+        }
+
+        totalSaved++;
+
+        // Report progress and yield every 100 rows (instead of every row)
+        if (totalSaved % 100 === 0 || totalSaved === totalItems) {
+          this.#onProgress({complete: totalSaved, table: tableName, total: totalItems});
+          // Yield to event loop periodically to keep UI responsive
+          const yieldStart = PROFILE ? performance.now() : 0;
+          await new Promise(r => setTimeout(r, 0));
+          if (PROFILE) {
+            profile.yieldTime += performance.now() - yieldStart;
+          }
+        }
+      }
+    } finally {
+      this.#orm.commit();
+    }
+
+    if (PROFILE) {
+      profile.total = performance.now() - profileStart;
+      console.log(`[HYDRATION PROFILE] ${tableName} (${totalItems} rows):`);
+      console.log(`  Count loop:      ${profile.countLoop.toFixed(1)}ms`);
+      console.log(`  Entity creation: ${profile.entityCreation.toFixed(1)}ms`);
+      console.log(`  SQLite insert:   ${profile.sqliteInsert.toFixed(1)}ms`);
+      console.log(`  Yield time:      ${profile.yieldTime.toFixed(1)}ms`);
+      console.log(`  Total:           ${profile.total.toFixed(1)}ms`);
+      console.log(
+        `  Unaccounted:     ${(profile.total - profile.countLoop - profile.entityCreation - profile.sqliteInsert - profile.yieldTime).toFixed(1)}ms`
+      );
     }
 
     tx.finish();
@@ -422,6 +545,146 @@ function makeCueAndLoop(data: any) {
  */
 function makeWaveformHd(data: any) {
   return convertWaveformHDData(Buffer.from(data.body.entries));
+}
+
+/**
+ * Parse extended cues (PCO2) with colors and comments
+ */
+function makeExtendedCues(data: any): ExtendedCue[] {
+  return data.body.cues.map((entry: any) => {
+    const cue: ExtendedCue = {
+      hotCue: entry.hotCue,
+      type: entry.type,
+      time: entry.time,
+    };
+
+    // Add loop end time if this is a loop
+    if (entry.type === 2 && entry.loopTime !== undefined) {
+      cue.loopTime = entry.loopTime;
+    }
+
+    // Add color ID for memory points/loops
+    if (entry.colorId !== undefined && entry.colorId > 0) {
+      cue.colorId = entry.colorId;
+    }
+
+    // Add hot cue color information
+    if (entry.colorCode !== undefined && entry.colorCode > 0) {
+      cue.colorCode = entry.colorCode;
+      cue.colorRgb = {
+        r: entry.colorRed ?? 0,
+        g: entry.colorGreen ?? 0,
+        b: entry.colorBlue ?? 0,
+      };
+    }
+
+    // Add comment if present
+    if (entry.lenComment > 0 && entry.comment) {
+      cue.comment = entry.comment;
+    }
+
+    // Add quantized loop information if present
+    if (entry.loopNumerator !== undefined && entry.loopNumerator > 0) {
+      cue.loopNumerator = entry.loopNumerator;
+      cue.loopDenominator = entry.loopDenominator ?? 1;
+    }
+
+    return cue;
+  });
+}
+
+/**
+ * Parse song structure (PSSI) with phrase analysis
+ */
+function makeSongStructure(data: any): SongStructure {
+  const moodMap: Record<number, 'high' | 'mid' | 'low'> = {
+    1: 'high',
+    2: 'mid',
+    3: 'low',
+  };
+
+  const bankMap: Record<number, SongStructure['bank']> = {
+    0: 'default',
+    1: 'cool',
+    2: 'natural',
+    3: 'hot',
+    4: 'subtle',
+    5: 'warm',
+    6: 'vivid',
+    7: 'club_1',
+    8: 'club_2',
+  };
+
+  // Phrase type mappings based on mood
+  const phraseTypeMap: Record<'high' | 'mid' | 'low', Record<number, string>> = {
+    high: {
+      1: 'Intro',
+      2: 'Up',
+      3: 'Down',
+      5: 'Chorus',
+      6: 'Outro',
+    },
+    mid: {
+      1: 'Intro',
+      2: 'Verse 1',
+      3: 'Verse 2',
+      4: 'Verse 3',
+      5: 'Verse 4',
+      6: 'Verse 5',
+      7: 'Verse 6',
+      8: 'Bridge',
+      9: 'Chorus',
+      10: 'Outro',
+    },
+    low: {
+      1: 'Intro',
+      2: 'Verse 1',
+      3: 'Verse 1',
+      4: 'Verse 1',
+      5: 'Verse 2',
+      6: 'Verse 2',
+      7: 'Verse 2',
+      8: 'Bridge',
+      9: 'Chorus',
+      10: 'Outro',
+    },
+  };
+
+  const mood = moodMap[data.body.mood] ?? 'high';
+  const bank = bankMap[data.body.rawBank] ?? 'default';
+
+  const phrases: Phrase[] = data.body.entries.map((entry: any) => {
+    const phrase: Phrase = {
+      index: entry.index,
+      beat: entry.beat,
+      kind: entry.kind,
+      phraseType: phraseTypeMap[mood][entry.kind] ?? 'Unknown',
+    };
+
+    // Add fill-in information if present
+    if (entry.fill > 0) {
+      phrase.fill = entry.fill;
+      phrase.fillBeat = entry.beatFill;
+    }
+
+    return phrase;
+  });
+
+  return {
+    mood,
+    bank,
+    endBeat: data.body.endBeat,
+    phrases,
+  };
+}
+
+/**
+ * Parse waveform preview data (PWAV/PWV2)
+ */
+function makeWaveformPreview(data: any): WaveformPreviewData {
+  return {
+    data: Buffer.from(data.body.data),
+  };
 }
 
 const {PageType} = RekordboxPdb;

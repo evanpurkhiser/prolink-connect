@@ -1,16 +1,52 @@
 import * as XDR from 'js-xdr';
-import {calculatePadding, slicePadding} from 'js-xdr/lib/util';
+
+/**
+ * Calculate padding needed to align to 4-byte boundary (XDR requirement)
+ */
+function calculatePadding(length: number): number {
+  const remainder = length % 4;
+  return remainder === 0 ? 0 : 4 - remainder;
+}
+
+/**
+ * Skip padding bytes in the IO stream
+ */
+function skipPadding(io: any, padding: number): void {
+  if (padding > 0) {
+    io._index += padding;
+  }
+}
+
+/**
+ * Read bytes from IO without automatic padding handling
+ */
+function readBytes(io: any, length: number): Buffer {
+  const from = io._index;
+  io._index += length;
+  if (io._length < io._index) {
+    throw new Error('attempt to read outside the boundary of the buffer');
+  }
+  return io._buffer.subarray(from, from + length);
+}
 
 /**
  * A xdr type to read the rest of the data in the buffer
  */
 const OpaqueData = {
   read(io: any) {
-    return io.slice().buffer();
+    // Read all remaining bytes from the buffer
+    const remaining = io._length - io._index;
+    if (remaining <= 0) {
+      return Buffer.alloc(0);
+    }
+    // Manually read without padding handling (we want all remaining bytes)
+    const from = io._index;
+    io._index = io._length;
+    return io._buffer.subarray(from, io._length);
   },
 
   write(value: any, io: any) {
-    io.writeBufferPadded(value);
+    io.write(value, value.length);
   },
 
   isValid(value: any) {
@@ -26,17 +62,17 @@ class StringUTF16LE {
   read(io: any) {
     const length = XDR.Int.read(io);
     const padding = calculatePadding(length);
-    const result = io.slice(length);
+    const result = readBytes(io, length);
 
-    slicePadding(io, padding);
+    skipPadding(io, padding);
 
-    return result.buffer().toString('utf16le');
+    return result.toString('utf16le');
   }
 
   write(value: any, io: any) {
     const data = Buffer.from(value, 'utf16le');
     XDR.Int.write(data.length, io);
-    io.writeBufferPadded(data);
+    io.write(data, data.length);
   }
 
   isValid(value: any) {

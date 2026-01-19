@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/node';
+import * as Telemetry from 'src/utils/telemetry';
 
 import {Field, NumberField, StringField} from 'src/remotedb/fields';
 
@@ -227,9 +227,9 @@ export const fieldsToItem = (args: Field[]) => {
   if (transformer === undefined) {
     transformer = () => null;
 
-    Sentry.captureMessage(
+    Telemetry.captureMessage(
       `No item transformer registered for item type ${type}`,
-      Sentry.Severity.Error
+      Telemetry.Severity.Error
     );
   }
 

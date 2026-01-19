@@ -36,6 +36,17 @@ Thank you to [@brunchboy](https://github.com/brunchboy) for his work on
   (or not!) tracks stored in the connected Rekordbox formatted USB / SD
   device, or via Rekordbox link.
 
+- **Extended ANLZ Support** - Full support for rekordbox analysis files including:
+  - Extended cues with RGB colors and comments (PCO2)
+  - Song structure / phrase analysis for CDJ-3000 (PSSI)
+  - Multiple waveform formats (PWAV, PWV2, PWV3, PWV4, PWV5)
+  - See [EXTENDED_ANLZ.md](docs/EXTENDED_ANLZ.md) for details
+
+- **CDJ-3000 Features** - Complete support for CDJ-3000 specific features:
+  - Absolute position tracking (30ms updates)
+  - Compatible startup packets for devices on channels 5-6
+  - See [ABSOLUTE_POSITION.md](docs/ABSOLUTE_POSITION.md) for details
+
 ## Library usage
 
 ### Connecting to the network

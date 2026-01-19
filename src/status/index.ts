@@ -9,7 +9,7 @@ import {CDJStatus, MediaSlotInfo} from 'src/types';
 import {udpSend} from 'src/utils/udp';
 
 import {makeMediaSlotRequest} from './media';
-import {mediaSlotFromPacket, statusFromPacket} from './utils';
+import {mediaSlotFromPacket, onAirFromPacket, statusFromPacket} from './utils';
 
 interface StatusEvents {
   /**
@@ -20,6 +20,10 @@ interface StatusEvents {
    * Fired when the CDJ reports its media slot status
    */
   mediaSlot: (info: MediaSlotInfo) => void;
+  /**
+   * Fired when the mixer broadcasts on-air channel status
+   */
+  onAir: (status: CDJStatus.OnAirStatus) => void;
 }
 
 type Emitter = StrictEventEmitter<EventEmitter, StatusEvents>;
@@ -67,6 +71,13 @@ class StatusEmitter {
       return this.#emitter.emit('mediaSlot', mediaSlot);
     }
 
+    // On-air status from mixer is also reported on this socket
+    const onAir = onAirFromPacket(message);
+
+    if (onAir !== undefined) {
+      return this.#emitter.emit('onAir', onAir);
+    }
+
     return undefined;
   };
 
@@ -78,7 +89,30 @@ class StatusEmitter {
 
     const media = await this.#mediaSlotQueryLock.runExclusive(async () => {
       await udpSend(this.#statusSocket, request, STATUS_PORT, options.device.ip.address);
-      return new Promise<MediaSlotInfo>(resolve => this.once('mediaSlot', resolve));
+
+      return new Promise<MediaSlotInfo>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          this.off('mediaSlot', handler);
+          reject(
+            new Error(
+              `Timeout waiting for media slot response from device ${options.device.id}`
+            )
+          );
+        }, 10000);
+
+        const handler = (info: MediaSlotInfo) => {
+          // Only resolve if this is for our device and slot
+          if (info.deviceId === options.device.id && info.slot === options.slot) {
+            clearTimeout(timeout);
+            resolve(info);
+          } else {
+            // Re-register for the next event
+            this.once('mediaSlot', handler);
+          }
+        };
+
+        this.once('mediaSlot', handler);
+      });
     });
 
     return media;

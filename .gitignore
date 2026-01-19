@@ -1,2 +1,4 @@
-lib
 docs
+node_modules
+coverage/
+lib/

@@ -1,17 +1,19 @@
-import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/tracing';
-
 import {Device, DeviceID, MediaSlot} from 'src/types';
 import {getSlotName} from 'src/utils';
+import {TelemetrySpan as Span} from 'src/utils/telemetry';
+import * as Telemetry from 'src/utils/telemetry';
 
 import {
   fetchFile as fetchFileCall,
+  fetchFileRange as fetchFileRangeInternal,
   FileInfo,
   getExports,
   lookupPath,
   makeProgramClient,
   mountFilesystem,
 } from './programs';
+
+export type {FileInfo} from './programs';
 import {RetryConfig, RpcConnection, RpcProgram} from './rpc';
 import {mount, nfs} from './xdr';
 
@@ -34,6 +36,11 @@ const slotMountMapping = {
   [MediaSlot.SD]: '/B/',
   [MediaSlot.RB]: '/',
 } as const;
+
+/**
+ * Media slots that support NFS access.
+ */
+export type NfsMediaSlot = keyof typeof slotMountMapping;
 
 /**
  * The module-level retry configuration for newly created RpcConnections.
@@ -141,10 +148,127 @@ interface FetchFileOptions {
   path: string;
   onProgress?: Parameters<typeof fetchFileCall>[2];
   span?: Span;
+  chunkSize?: number;
 }
 
 const badRoothandleError = (slot: MediaSlot, deviceId: DeviceID) =>
   new Error(`The slot (${slot}) is not exported on Device ${deviceId}`);
+
+interface FetchFileRangeOptions {
+  device: Device;
+  slot: keyof typeof slotMountMapping;
+  path: string;
+  offset: number;
+  length: number;
+  span?: Span;
+}
+
+/**
+ * Fetch a range of bytes from a file on a device's NFS server.
+ * Optimized for partial reads (e.g., reading file headers for metadata extraction).
+ */
+export async function fetchFileRange({
+  device,
+  slot,
+  path,
+  offset,
+  length,
+  span,
+}: FetchFileRangeOptions): Promise<Buffer> {
+  const tx = span
+    ? span.startChild({op: 'fetchFileRange'})
+    : Telemetry.startTransaction({name: 'fetchFileRange'});
+
+  const {mountClient, nfsClient} = await getClients(device.ip.address);
+  const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+
+  if (rootHandle === null) {
+    throw badRoothandleError(slot, device.id);
+  }
+
+  let fileInfo: FileInfo | null = null;
+
+  try {
+    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+  } catch {
+    rootHandleCache.delete(device.ip.address);
+    const newRootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+
+    if (newRootHandle === null) {
+      throw badRoothandleError(slot, device.id);
+    }
+
+    fileInfo = await lookupPath(nfsClient, newRootHandle, path, tx);
+  }
+
+  const actualOffset = Math.min(offset, fileInfo.size);
+  const actualLength = Math.min(length, fileInfo.size - actualOffset);
+
+  if (actualLength <= 0) {
+    tx.finish();
+    return Buffer.alloc(0);
+  }
+
+  const data = await fetchFileRangeInternal(
+    nfsClient,
+    fileInfo,
+    actualOffset,
+    actualLength,
+    tx
+  );
+
+  tx.setData('path', path);
+  tx.setData('slot', getSlotName(slot));
+  tx.setData('offset', actualOffset);
+  tx.setData('length', actualLength);
+  tx.setData('fileSize', fileInfo.size);
+  tx.finish();
+
+  return data;
+}
+
+/**
+ * Get file info (size, handle) without fetching the file content.
+ */
+export async function getFileInfo({
+  device,
+  slot,
+  path,
+  span,
+}: Omit<FetchFileOptions, 'onProgress' | 'chunkSize'>): Promise<FileInfo> {
+  const tx = span
+    ? span.startChild({op: 'getFileInfo'})
+    : Telemetry.startTransaction({name: 'getFileInfo'});
+
+  const {mountClient, nfsClient} = await getClients(device.ip.address);
+  const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+
+  if (rootHandle === null) {
+    throw badRoothandleError(slot, device.id);
+  }
+
+  let fileInfo: FileInfo;
+
+  try {
+    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+  } catch {
+    rootHandleCache.delete(device.ip.address);
+    const newRootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+
+    if (newRootHandle === null) {
+      throw badRoothandleError(slot, device.id);
+    }
+
+    fileInfo = await lookupPath(nfsClient, newRootHandle, path, tx);
+  }
+
+  tx.setData('path', path);
+  tx.setData('slot', getSlotName(slot));
+  tx.setData('size', fileInfo.size);
+  tx.finish();
+
+  return fileInfo;
+}
 
 /**
  * Fetch a file from a devices NFS server.
@@ -160,10 +284,11 @@ export async function fetchFile({
   path,
   onProgress,
   span,
+  chunkSize,
 }: FetchFileOptions) {
   const tx = span
     ? span.startChild({op: 'fetchFile'})
-    : Sentry.startTransaction({name: 'fetchFile'});
+    : Telemetry.startTransaction({name: 'fetchFile'});
 
   const {mountClient, nfsClient} = await getClients(device.ip.address);
   const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
@@ -190,7 +315,7 @@ export async function fetchFile({
     fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
   }
 
-  const file = await fetchFileCall(nfsClient, fileInfo, onProgress, tx);
+  const file = await fetchFileCall(nfsClient, fileInfo, onProgress, tx, chunkSize);
 
   tx.setData('path', path);
   tx.setData('slot', getSlotName(slot));

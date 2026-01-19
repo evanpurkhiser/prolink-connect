@@ -1,4 +1,4 @@
-import sqlite3 from 'better-sqlite3';
+import sqlite3 from 'better-sqlite3-multiple-ciphers';
 import {camelCase, mapKeys, mapValues, partition, snakeCase} from 'lodash';
 
 import {EntityFK, Playlist, PlaylistEntry, Track} from 'src/entities';
@@ -48,6 +48,8 @@ const trackRelationTableMap: Record<string, string> = {
  */
 export class MetadataORM {
   #conn: sqlite3.Database;
+  #stmtCache = new Map<string, sqlite3.Statement>();
+  #inTransaction = false;
 
   constructor() {
     this.#conn = sqlite3(':memory:');
@@ -55,21 +57,50 @@ export class MetadataORM {
   }
 
   close() {
+    this.#stmtCache.clear();
     this.#conn.close();
   }
 
   /**
+   * Begin a transaction for bulk inserts. Call commit() when done.
+   */
+  beginTransaction() {
+    if (!this.#inTransaction) {
+      this.#conn.exec('BEGIN TRANSACTION');
+      this.#inTransaction = true;
+    }
+  }
+
+  /**
+   * Commit the current transaction.
+   */
+  commit() {
+    if (this.#inTransaction) {
+      this.#conn.exec('COMMIT');
+      this.#inTransaction = false;
+    }
+  }
+
+  /**
    * Insert a entity object into the database.
+   * For bulk inserts, call beginTransaction() first and commit() when done.
    */
   insertEntity(table: Table, object: Record<string, any>) {
     const fields = Object.entries<any>(object);
+    const fieldNames = fields
+      .map(f => f[0])
+      .sort()
+      .join(',');
+    const cacheKey = `${table}:${fieldNames}`;
 
-    const slots = fields.map(f => `:${f[0]}`).join(', ');
-    const columns = fields.map(f => snakeCase(f[0])).join(', ');
-
-    const stmt = this.#conn.prepare(
-      `insert into ${table} (${columns}) values (${slots})`
-    );
+    // Reuse prepared statement for same table+fields combination
+    let stmt = this.#stmtCache.get(cacheKey);
+    if (!stmt) {
+      const slots = fields.map(f => `:${f[0]}`).join(', ');
+      const columns = fields.map(f => snakeCase(f[0])).join(', ');
+      stmt = this.#conn.prepare(`insert into ${table} (${columns}) values (${slots})`);
+      this.#stmtCache.set(cacheKey, stmt);
+    }
 
     // Translate date and booleans
     const data = mapValues(object, value =>

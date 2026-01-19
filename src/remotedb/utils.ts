@@ -1,4 +1,4 @@
-import {Span} from '@sentry/tracing';
+import {TelemetrySpan as Span} from 'src/utils/telemetry';
 
 import {Items, ItemType} from './message/item';
 import {MessageType} from './message/types';

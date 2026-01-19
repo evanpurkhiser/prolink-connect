@@ -1,9 +1,8 @@
-import {Span} from '@sentry/tracing';
-
 import LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
+import {TelemetrySpan as Span} from 'src/utils/telemetry';
 
 import {anlzLoader} from './utils';
 
