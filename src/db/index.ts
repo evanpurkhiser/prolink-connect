@@ -1,9 +1,7 @@
-import * as Sentry from '@sentry/node';
-import {SpanStatus} from '@sentry/tracing';
-
 import DeviceManager from 'src/devices';
 import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
+import {DatabaseType} from 'src/localdb/database-adapter';
 import RemoteDatabase from 'src/remotedb';
 import {
   Device,
@@ -14,8 +12,12 @@ import {
   Waveforms,
 } from 'src/types';
 import {getSlotName, getTrackTypeName} from 'src/utils';
+import * as Telemetry from 'src/utils/telemetry';
+import {SpanStatus} from 'src/utils/telemetry';
 
-import * as GetArtwork from './getArtwork';
+import * as GetArtworkFromFile from './getArtworkFromFile';
+import * as GetArtworkThumbnail from './getArtworkThumbnail';
+import * as GetFile from './getFile';
 import * as GetMetadata from './getMetadata';
 import * as GetPlaylist from './getPlaylist';
 import * as GetWaveforms from './getWaveforms';
@@ -85,6 +87,17 @@ class Database {
   }
 
   /**
+   * Get the database type (oneLibrary or pdb) for a loaded device slot.
+   * Returns null if the slot uses remote database or no database is loaded.
+   */
+  getDatabaseType(
+    deviceId: number,
+    slot: MediaSlot.USB | MediaSlot.SD
+  ): DatabaseType | null {
+    return this.#localDatabase.getDatabaseType(deviceId, slot);
+  }
+
+  /**
    * Retrieve metadata for a track on a specific device slot.
    */
   async getMetadata(opts: GetMetadata.Options) {
@@ -92,7 +105,7 @@ class Database {
 
     const tx = span
       ? span.startChild({op: 'dbGetMetadata'})
-      : Sentry.startTransaction({name: 'dbGetMetadata'});
+      : Telemetry.startTransaction({name: 'dbGetMetadata'});
 
     tx.setTag('deviceId', deviceId.toString());
     tx.setTag('trackType', getTrackTypeName(trackType));
@@ -126,14 +139,14 @@ class Database {
   }
 
   /**
-   * Retrieves the artwork for a track on a specific device slot.
+   * Retrieves the file off a specific device slot.
    */
-  async getArtwork(opts: GetArtwork.Options) {
+  async getFile(opts: GetArtworkThumbnail.Options) {
     const {deviceId, trackType, trackSlot, span} = opts;
 
     const tx = span
-      ? span.startChild({op: 'dbGetArtwork'})
-      : Sentry.startTransaction({name: 'dbGetArtwork'});
+      ? span.startChild({op: 'dbGetFile'})
+      : Telemetry.startTransaction({name: 'dbGetFile'});
 
     tx.setTag('deviceId', deviceId.toString());
     tx.setTag('trackType', getTrackTypeName(trackType));
@@ -150,11 +163,11 @@ class Database {
     let artwork: Buffer | null = null;
 
     if (strategy === LookupStrategy.Remote) {
-      artwork = await GetArtwork.viaRemote(this.#remoteDatabase, callOpts);
+      artwork = await GetFile.viaRemote(this.#remoteDatabase, device, callOpts);
     }
 
     if (strategy === LookupStrategy.Local) {
-      artwork = await GetArtwork.viaLocal(this.#localDatabase, device, callOpts);
+      artwork = await GetFile.viaLocal(this.#localDatabase, device, callOpts);
     }
 
     if (strategy === LookupStrategy.NoneAvailable) {
@@ -167,14 +180,96 @@ class Database {
   }
 
   /**
+   * Retrieves the low-resolution artwork thumbnail from the rekordbox database.
+   *
+   * This returns the pre-generated thumbnail stored in the rekordbox database,
+   * which is typically small (around 80x80 pixels).
+   *
+   * For full-resolution artwork extracted from the audio file, use getArtwork().
+   */
+  async getArtworkThumbnail(opts: GetArtworkThumbnail.Options) {
+    const {deviceId, trackType, trackSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetArtwork'})
+      : Telemetry.startTransaction({name: 'dbGetArtwork'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('trackType', getTrackTypeName(trackType));
+    tx.setTag('trackSlot', getSlotName(trackSlot));
+
+    const callOpts = {...opts, span: tx};
+
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
+      return null;
+    }
+
+    const strategy = this.#getTrackLookupStrategy(device, trackType);
+    let artwork: Buffer | null = null;
+
+    if (strategy === LookupStrategy.Remote) {
+      artwork = await GetArtworkThumbnail.viaRemote(this.#remoteDatabase, callOpts);
+    }
+
+    if (strategy === LookupStrategy.Local) {
+      artwork = await GetArtworkThumbnail.viaLocal(this.#localDatabase, device, callOpts);
+    }
+
+    if (strategy === LookupStrategy.NoneAvailable) {
+      tx.setStatus(SpanStatus.Unavailable);
+    }
+
+    tx.finish();
+
+    return artwork;
+  }
+
+  /**
+   * Retrieves artwork for a track by extracting it from the audio file via NFS.
+   *
+   * This is the primary method for getting artwork. It reads embedded artwork
+   * from the audio file (ID3 tags for MP3, metadata atoms for M4A, PICTURE
+   * blocks for FLAC, etc.) using partial file reads to minimize data transfer.
+   *
+   * For low-resolution thumbnails from the rekordbox database, use
+   * getArtworkThumbnail() instead.
+   */
+  async getArtwork(opts: GetArtworkFromFile.Options) {
+    const {deviceId, trackSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetArtwork'})
+      : Telemetry.startTransaction({name: 'dbGetArtwork'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('trackSlot', getSlotName(trackSlot));
+
+    const callOpts = {...opts, span: tx};
+
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
+      tx.setStatus(SpanStatus.NotFound);
+      tx.finish();
+      return null;
+    }
+
+    const artwork = await GetArtworkFromFile.viaFileExtraction(device, callOpts);
+
+    tx.finish();
+
+    return artwork;
+  }
+
+  /**
    * Retrieves the waveforms for a track on a specific device slot.
    */
-  async getWaveforms(opts: GetArtwork.Options) {
+  async getWaveforms(opts: GetArtworkThumbnail.Options) {
     const {deviceId, trackType, trackSlot, span} = opts;
 
     const tx = span
       ? span.startChild({op: 'dbGetWaveforms'})
-      : Sentry.startTransaction({name: 'dbGetWaveforms'});
+      : Telemetry.startTransaction({name: 'dbGetWaveforms'});
 
     tx.setTag('deviceId', deviceId.toString());
     tx.setTag('trackType', getTrackTypeName(trackType));
@@ -219,7 +314,7 @@ class Database {
 
     const tx = span
       ? span.startChild({op: 'dbGetPlaylist'})
-      : Sentry.startTransaction({name: 'dbGetPlaylist'});
+      : Telemetry.startTransaction({name: 'dbGetPlaylist'});
 
     tx.setTag('deviceId', deviceId.toString());
     tx.setTag('mediaSlot', getSlotName(mediaSlot));

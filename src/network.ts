@@ -1,6 +1,3 @@
-import * as Sentry from '@sentry/node';
-import {SpanStatus} from '@sentry/tracing';
-
 import {randomUUID} from 'crypto';
 import dgram, {Socket} from 'dgram';
 import {NetworkInterfaceInfoIPv4} from 'os';
@@ -10,11 +7,15 @@ import Control from 'src/control';
 import Database from 'src/db';
 import DeviceManager from 'src/devices';
 import LocalDatabase from 'src/localdb';
+import {DatabasePreference} from 'src/localdb/database-adapter';
 import {MixstatusProcessor} from 'src/mixstatus';
 import RemoteDatabase from 'src/remotedb';
 import StatusEmitter from 'src/status';
+import PositionEmitter from 'src/status/position';
 import {Device, NetworkState} from 'src/types';
 import {getMatchingInterface} from 'src/utils';
+import * as Telemetry from 'src/utils/telemetry';
+import {SpanStatus} from 'src/utils/telemetry';
 import {udpBind, udpClose} from 'src/utils/udp';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
 
@@ -45,6 +46,34 @@ export interface NetworkConfig {
    * restriction.
    */
   vcdjId: number;
+  /**
+   * The name to announce the virtual CDJ as on the network.
+   *
+   * This name will appear in device lists on other Pro DJ Link equipment.
+   *
+   * @default 'ProLink-Connect'
+   */
+  vcdjName?: string;
+  /**
+   * Enable full startup protocol for robust device negotiation.
+   * When enabled, the virtual CDJ will go through the complete startup
+   * sequence (stages 0x0a → 0x00 → 0x02 → 0x04 → 0x06) before regular
+   * keep-alive announcements.
+   *
+   * This is recommended for production setups with CDJ-3000 and DJM-V10
+   * hardware to ensure proper device discovery and network stability.
+   */
+  fullStartup?: boolean;
+  /**
+   * Database format preference for loading rekordbox databases.
+   *
+   * - 'auto': Try OneLibrary first (rekordbox 7.x+), fall back to PDB (rekordbox 6.x)
+   * - 'oneLibrary': Only use OneLibrary format (exportLibrary.db)
+   * - 'pdb': Only use PDB format (export.pdb)
+   *
+   * @default 'auto'
+   */
+  databasePreference?: DatabasePreference;
 }
 
 interface ConnectionService {
@@ -62,6 +91,7 @@ interface ConstructOpts {
   statusSocket: Socket;
   deviceManager: DeviceManager;
   statusEmitter: StatusEmitter;
+  positionEmitter: PositionEmitter;
 }
 
 /**
@@ -69,6 +99,7 @@ interface ConstructOpts {
  */
 type ConnectedServices =
   | 'statusEmitter'
+  | 'positionEmitter'
   | 'control'
   | 'db'
   | 'localdb'
@@ -88,24 +119,24 @@ export type ConnectedProlinkNetwork = ProlinkNetwork & {
  * This is the primary entrypoint for connecting to the prolink network.
  */
 export async function bringOnline(config?: NetworkConfig) {
-  Sentry.setTag('connectionId', randomUUID());
-  const tx = Sentry.startTransaction({name: 'bringOnline'});
+  Telemetry.setTag('connectionId', randomUUID());
+  const tx = Telemetry.startTransaction({name: 'bringOnline'});
 
   // Socket used to listen for devices on the network
-  const announceSocket = dgram.createSocket('udp4');
+  const announceSocket = dgram.createSocket({type: 'udp4', reuseAddr: true});
 
   // Socket used to listen for beat timing information
-  const beatSocket = dgram.createSocket('udp4');
+  const beatSocket = dgram.createSocket({type: 'udp4', reuseAddr: true});
 
   // Socket used to listen for status packets
-  const statusSocket = dgram.createSocket('udp4');
+  const statusSocket = dgram.createSocket({type: 'udp4', reuseAddr: true});
 
   try {
     await udpBind(announceSocket, ANNOUNCE_PORT, '0.0.0.0');
     await udpBind(beatSocket, BEAT_PORT, '0.0.0.0');
     await udpBind(statusSocket, STATUS_PORT, '0.0.0.0');
   } catch (err) {
-    Sentry.captureException(err);
+    Telemetry.captureException(err);
     tx.setStatus(SpanStatus.Unavailable);
     tx.finish();
 
@@ -114,6 +145,7 @@ export async function bringOnline(config?: NetworkConfig) {
 
   const deviceManager = new DeviceManager(announceSocket);
   const statusEmitter = new StatusEmitter(statusSocket);
+  const positionEmitter = new PositionEmitter(beatSocket);
 
   tx.finish();
 
@@ -124,6 +156,7 @@ export async function bringOnline(config?: NetworkConfig) {
     statusSocket,
     deviceManager,
     statusEmitter,
+    positionEmitter,
   });
 
   return network;
@@ -137,6 +170,7 @@ export class ProlinkNetwork {
   #statusSocket: Socket;
   #deviceManager: DeviceManager;
   #statusEmitter: StatusEmitter;
+  #positionEmitter: PositionEmitter;
 
   #config: null | NetworkConfig;
   #connection: null | ConnectionService;
@@ -152,6 +186,7 @@ export class ProlinkNetwork {
     statusSocket,
     deviceManager,
     statusEmitter,
+    positionEmitter,
   }: ConstructOpts) {
     this.#config = config ?? null;
 
@@ -160,6 +195,7 @@ export class ProlinkNetwork {
     this.#statusSocket = statusSocket;
     this.#deviceManager = deviceManager;
     this.#statusEmitter = statusEmitter;
+    this.#positionEmitter = positionEmitter;
 
     this.#connection = null;
     this.#mixstatus = null;
@@ -174,8 +210,8 @@ export class ProlinkNetwork {
    * You may need to disconnect and re-connect the network after making a
    * networking configuration change.
    */
-  configure(config: NetworkConfig) {
-    this.#config = {...this.#config, ...config};
+  configure(config: Partial<NetworkConfig>) {
+    this.#config = {...this.#config, ...config} as NetworkConfig;
   }
 
   /**
@@ -185,7 +221,7 @@ export class ProlinkNetwork {
    * Defaults the Virtual CDJ ID to 7.
    */
   async autoconfigFromPeers() {
-    const tx = Sentry.startTransaction({name: 'autoConfigure'});
+    const tx = Telemetry.startTransaction({name: 'autoConfigure'});
     // wait for first device to appear on the network
     const firstDevice = await new Promise<Device>(resolve =>
       this.#deviceManager.once('connected', resolve)
@@ -221,18 +257,38 @@ export class ProlinkNetwork {
       throw new Error(connectErrorHelp);
     }
 
-    const tx = Sentry.startTransaction({name: 'connect'});
+    const tx = Telemetry.startTransaction({name: 'connect'});
 
     // Create VCDJ for the interface's broadcast address
-    const vcdj = getVirtualCDJ(this.#config.iface, this.#config.vcdjId);
+    const vcdj = getVirtualCDJ(
+      this.#config.iface,
+      this.#config.vcdjId,
+      this.#config.vcdjName
+    );
+
+    // Update device manager to filter out our VCDJ name
+    if (this.#config.vcdjName !== undefined) {
+      this.#deviceManager.reconfigure({vcdjName: this.#config.vcdjName});
+    }
 
     // Start announcing
-    const announcer = new Announcer(vcdj, this.#announceSocket, this.deviceManager);
+    const announcer = new Announcer(
+      vcdj,
+      this.#announceSocket,
+      this.deviceManager,
+      this.#config.iface,
+      this.#config.fullStartup ?? false
+    );
     announcer.start();
 
     // Create remote and local databases
     const remotedb = new RemoteDatabase(this.#deviceManager, vcdj);
-    const localdb = new LocalDatabase(vcdj, this.#deviceManager, this.#statusEmitter);
+    const localdb = new LocalDatabase(
+      vcdj,
+      this.#deviceManager,
+      this.#statusEmitter,
+      this.#config.databasePreference ?? 'auto'
+    );
 
     // Create unified database
     const database = new Database(vcdj, localdb, remotedb, this.#deviceManager);
@@ -263,6 +319,13 @@ export class ProlinkNetwork {
       this.localdb?.disconnectForDevice(device);
     }
 
+    return this.close;
+  }
+
+  /**
+   * Close UDP sockets.
+   */
+  close() {
     return Promise.all([
       udpClose(this.#announceSocket),
       udpClose(this.#statusSocket),
@@ -318,6 +381,18 @@ export class ProlinkNetwork {
     // network to be Connected, it does not make sense to use it unless it is. So
     // we artificially return null if we are not connected
     return this.#state === NetworkState.Connected ? this.#statusEmitter : null;
+  }
+
+  /**
+   * Get the {@link PositionEmitter} service. This service provides events with
+   * absolute playhead position updates from CDJ-3000+ devices.
+   *
+   * Position packets are sent approximately every 30ms while a track is loaded,
+   * providing precise position tracking independent of beat grids. This enables
+   * accurate timecode/video sync even during scratching, reverse play, and loops.
+   */
+  get positionEmitter() {
+    return this.#state === NetworkState.Connected ? this.#positionEmitter : null;
   }
 
   /**

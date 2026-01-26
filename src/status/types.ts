@@ -113,3 +113,63 @@ export interface State {
    */
   packetNum: number;
 }
+
+/**
+ * Absolute position information from CDJ-3000+ devices.
+ * Sent every 30ms on port 50001 while a track is loaded.
+ * Provides precise playhead position independent of beat grid.
+ */
+export interface PositionState {
+  /**
+   * The device ID sending this position update.
+   */
+  deviceId: number;
+  /**
+   * Track length in seconds (rounded down to nearest second).
+   */
+  trackLength: number;
+  /**
+   * Absolute playhead position in milliseconds.
+   */
+  playhead: number;
+  /**
+   * Pitch slider value as shown on screen.
+   * For example, 3.26% is represented as 3.26.
+   */
+  pitch: number;
+  /**
+   * Effective BPM (track BPM adjusted by pitch) as shown on screen.
+   * null if BPM is unknown.
+   */
+  bpm: number | null;
+}
+
+/**
+ * On-Air status from DJM mixer.
+ * Broadcast by the mixer to indicate which channels are currently audible.
+ * Supports both 4-channel (DJM-900/1000) and 6-channel (DJM-V10) mixers.
+ */
+export interface OnAirStatus {
+  /**
+   * The mixer device ID (typically 33 / 0x21).
+   */
+  deviceId: number;
+  /**
+   * On-air flags for channels 1-4 (always present).
+   * 0x00 = channel is off-air (silenced)
+   * 0x01 = channel is on-air (audible)
+   */
+  channels: {
+    1: boolean;
+    2: boolean;
+    3: boolean;
+    4: boolean;
+    5?: boolean;
+    6?: boolean;
+  };
+  /**
+   * Whether this is a 6-channel variant (CDJ-3000 + DJM-V10).
+   * Determined by packet subtype (0x00 = 4-channel, 0x03 = 6-channel).
+   */
+  isSixChannel: boolean;
+}

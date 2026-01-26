@@ -1,8 +1,9 @@
-import sqlite3 from 'better-sqlite3';
+import sqlite3 from 'better-sqlite3-multiple-ciphers';
 import {camelCase, mapKeys, mapValues, partition, snakeCase} from 'lodash';
 
 import {EntityFK, Playlist, PlaylistEntry, Track} from 'src/entities';
 
+import {DatabaseAdapter, DatabaseType} from './database-adapter';
 import {generateSchema} from './schema';
 
 /**
@@ -46,8 +47,12 @@ const trackRelationTableMap: Record<string, string> = {
  *
  * May be used to populate a metadata database and query objects.
  */
-export class MetadataORM {
+export class MetadataORM implements DatabaseAdapter {
+  readonly type: DatabaseType = 'pdb';
+
   #conn: sqlite3.Database;
+  #stmtCache = new Map<string, sqlite3.Statement>();
+  #inTransaction = false;
 
   constructor() {
     this.#conn = sqlite3(':memory:');
@@ -55,21 +60,50 @@ export class MetadataORM {
   }
 
   close() {
+    this.#stmtCache.clear();
     this.#conn.close();
   }
 
   /**
+   * Begin a transaction for bulk inserts. Call commit() when done.
+   */
+  beginTransaction() {
+    if (!this.#inTransaction) {
+      this.#conn.exec('BEGIN TRANSACTION');
+      this.#inTransaction = true;
+    }
+  }
+
+  /**
+   * Commit the current transaction.
+   */
+  commit() {
+    if (this.#inTransaction) {
+      this.#conn.exec('COMMIT');
+      this.#inTransaction = false;
+    }
+  }
+
+  /**
    * Insert a entity object into the database.
+   * For bulk inserts, call beginTransaction() first and commit() when done.
    */
   insertEntity(table: Table, object: Record<string, any>) {
     const fields = Object.entries<any>(object);
+    const fieldNames = fields
+      .map(f => f[0])
+      .sort()
+      .join(',');
+    const cacheKey = `${table}:${fieldNames}`;
 
-    const slots = fields.map(f => `:${f[0]}`).join(', ');
-    const columns = fields.map(f => snakeCase(f[0])).join(', ');
-
-    const stmt = this.#conn.prepare(
-      `insert into ${table} (${columns}) values (${slots})`
-    );
+    // Reuse prepared statement for same table+fields combination
+    let stmt = this.#stmtCache.get(cacheKey);
+    if (!stmt) {
+      const slots = fields.map(f => `:${f[0]}`).join(', ');
+      const columns = fields.map(f => snakeCase(f[0])).join(', ');
+      stmt = this.#conn.prepare(`insert into ${table} (${columns}) values (${slots})`);
+      this.#stmtCache.set(cacheKey, stmt);
+    }
 
     // Translate date and booleans
     const data = mapValues(object, value =>
@@ -86,10 +120,14 @@ export class MetadataORM {
   /**
    * Locate a track by ID in the database
    */
-  findTrack(id: number): Track {
-    const row: Record<string, any> = this.#conn
+  findTrack(id: number): Track | null {
+    const row: Record<string, any> | undefined = this.#conn
       .prepare<any, any>(`select * from ${Table.Track} where id = ?`)
       .get(id);
+
+    if (!row) {
+      return null;
+    }
 
     // Map row columns to camel case compatibility
     const trackRow = mapKeys(row, (_, k) => camelCase(k)) as Track<EntityFK.WithFKs>;

@@ -1,4 +1,4 @@
-import {Span, SpanStatus} from '@sentry/tracing';
+import {TelemetrySpan as Span, SpanStatus} from 'src/utils/telemetry';
 import {PromiseReadable} from 'promise-readable';
 
 import {REMOTEDB_MAGIC} from 'src/remotedb/constants';

@@ -1,16 +1,68 @@
 # Changelog
 
-All notable changes to prolink-connect will be documented in this file.
+All notable changes to alphatheta-connect (formerly prolink-connect) will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
-- Bumped many pacakges
+## [v0.15.0] - 2026-01-19
+
+### Added
+
+- **Passive monitoring mode**: Monitor Pro DJ Link networks via packet capture (pcap) without joining the network as a virtual CDJ. Allows monitoring alongside rekordbox.
+- **Artwork extraction from audio files via NFS**: Extract album artwork directly from audio files (MP3, FLAC, AIFF, M4A) over NFS when artwork is not available in the rekordbox database.
+- **OneLibrary database support**: Full support for rekordbox 7.x's new OneLibrary format (exportLibrary.db) with SQLCipher encryption, including tracks, playlists, cues, hot cue banks, myTags, and history.
+- New ANLZ parsing for `.2EX` files (PWV6, PWV7, PWVC sections)
+- Comprehensive test suite for LocalDB and OneLibrary functionality
+
+### Changed
+
+- `getArtwork` is now the default method name (renamed from `getArtworkFromFile`)
+- `cap` moved to optionalDependencies for easier installation when passive mode is not needed
+
+## [v0.14.0] - 2026-01-16
+
+### Changed
+
+- Optimized database hydration with SQLite transactions (10-100x faster)
+- Added prepared statement caching for bulk inserts
+- Batched progress updates every 100 rows instead of every row
+- Fixed NFS buffer handling for reliable database streaming
+- Added error handling for media slot queries (returns null instead of throwing)
+
+### Added
+
+- Optional profiling via `NP_PROFILE_HYDRATION=1` environment variable
+- Optional debug logging via `NP_PRODJLINK_TAG=1` environment variable
+
+## [v0.13.0] - 2025-12-15
+
+### Added
+
+- CDJ-3000 support with absolute position packet handling
+- 6-channel on-air support for DJM-V10 mixers
+- Extended ANLZ features (PCO2, PSSI, enhanced waveforms)
+- Full DJ Link startup protocol (optional, for CDJ-3000 compatibility)
+- Socket reuse option for Rekordbox coexistence
+- Configurable virtual CDJ name via `network.configure({ vcdjName })`
+- Configurable Sentry DSN via `PROLINK_CONNECT_SENTRY_DSN` environment variable
+- Optional telemetry for performance monitoring
+
+### Changed
+
 - Require Node 20 minimum version
-- Fixed a typo in `ItemType.OriginalArtist` (was mispelled as `OrigianlArtist`)
-- Small comment correction for vCDJ ID on `autoconfigFromPeers`
+- Replaced js-xdr internal imports with local implementations for better bundling
+- Virtual CDJ now identifies as "Now Playing" on the ProLink network
+- Bumped all dependencies to latest versions
+
+### Fixed
+
+- TypeScript type union order in field declarations
+- Fixed a typo in `ItemType.OriginalArtist` (was misspelled as `OrigianlArtist`)
+- Network handling improvements for stability
+- Lint errors and test compatibility
 
 ## [v0.11.0] - 2022-10-24
 
@@ -189,7 +241,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Initial working implementation. This is currently being used to re-implement
   [prolink-tools](https://github.com/evanpurkhiser/prolink-tools).
 
-[unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.11.0...HEAD
+[unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.15.0...HEAD
+[v0.15.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.14.0...v0.15.0
+[v0.14.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.13.0...v0.14.0
+[v0.13.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.11.0...v0.13.0
 [v0.11.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.10.0...v0.11.0
 [v0.10.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.9.0...v0.10.0
 [v0.9.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.8.1...v0.9.0

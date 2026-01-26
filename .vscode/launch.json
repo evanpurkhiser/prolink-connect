@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Run `yarn build` then run cli.js.
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Run CLI",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "internalConsoleOptions": "openOnSessionStart",
+      // This is so signale shows up in the VSC terminal
+      "console": "integratedTerminal",
+      "preLaunchTask": "yarn build",
+      "program": "${workspaceFolder}/lib/cli.js",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "outFiles": ["${workspaceFolder}/lib/*.js"]
+    }
+  ]
+}

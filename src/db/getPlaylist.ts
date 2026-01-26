@@ -1,9 +1,8 @@
-import {Span} from '@sentry/tracing';
-
 import {Playlist} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
 import {DeviceID, MediaSlot, PlaylistContents, TrackType} from 'src/types';
+import {TelemetrySpan as Span} from 'src/utils/telemetry';
 
 export interface Options {
   /**

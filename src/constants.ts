@@ -26,6 +26,11 @@ export const STATUS_PORT = 50002;
  */
 export const ANNOUNCE_INTERVAL = 1500;
 
+/**
+ * The interval in ms between startup stage packets (0x0a, 0x00, 0x02, 0x04).
+ */
+export const STARTUP_STAGE_INTERVAL = 300;
+
 // prettier-ignore
 /**
  * All UDP packets on the PRO DJ LINK network start with this magic header.
@@ -38,7 +43,7 @@ export const PROLINK_HEADER = Uint8Array.of(
 /**
  * VirtualCDJName is the name given to the Virtual CDJ device.
  */
-export const VIRTUAL_CDJ_NAME = 'prolink-typescript';
+export const VIRTUAL_CDJ_NAME = 'ProLink-Connect';
 
 /**
  * VirtualCDJFirmware is a string indicating the firmware version reported with

@@ -16,10 +16,18 @@ interface Config {
    * @default 10000 ms
    */
   deviceTimeout?: number;
+  /**
+   * The name of the virtual CDJ to filter out from device announcements.
+   * This prevents our own device from appearing in the device list.
+   *
+   * @default VIRTUAL_CDJ_NAME constant
+   */
+  vcdjName?: string;
 }
 
-const defaultConfig = {
+const defaultConfig: Required<Config> = {
   deviceTimeout: 10000,
+  vcdjName: VIRTUAL_CDJ_NAME,
 };
 
 /**
@@ -136,7 +144,7 @@ class DeviceManager {
       return;
     }
 
-    if (device.name === VIRTUAL_CDJ_NAME) {
+    if (device.name === this.#config.vcdjName) {
       return;
     }
 

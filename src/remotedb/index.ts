@@ -1,5 +1,3 @@
-import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/tracing';
 import {Mutex} from 'async-mutex';
 import * as ip from 'ip-address';
 import PromiseSocket from 'promise-socket';
@@ -8,6 +6,8 @@ import {Socket} from 'net';
 
 import DeviceManager from 'src/devices';
 import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
+import {TelemetrySpan as Span} from 'src/utils/telemetry';
+import * as Telemetry from 'src/utils/telemetry';
 
 import {getMessageName, MessageType, Request, Response} from './message/types';
 import {REMOTEDB_SERVER_QUERY_PORT} from './constants';
@@ -162,7 +162,7 @@ export class QueryInterface {
 
     const tx = span
       ? span.startChild({op: 'remoteQuery', description: queryName})
-      : Sentry.startTransaction({name: 'remoteQuery', description: queryName});
+      : Telemetry.startTransaction({name: 'remoteQuery', description: queryName});
 
     const lookupDescriptor: LookupDescriptor = {
       ...queryDescriptor,
@@ -211,7 +211,7 @@ export default class RemoteDatabase {
    * Open a connection to the specified device for querying
    */
   connectToDevice = async (device: Device) => {
-    const tx = Sentry.startTransaction({name: 'connectRemotedb', data: {device}});
+    const tx = Telemetry.startTransaction({name: 'connectRemotedb', data: {device}});
 
     const {ip} = device;
 
@@ -254,7 +254,7 @@ export default class RemoteDatabase {
    * Disconnect from the specified device
    */
   disconnectFromDevice = async (device: Device) => {
-    const tx = Sentry.startTransaction({name: 'disconnectFromDevice', data: {device}});
+    const tx = Telemetry.startTransaction({name: 'disconnectFromDevice', data: {device}});
 
     const conn = this.#connections.get(device.id);
 

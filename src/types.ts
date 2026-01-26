@@ -21,7 +21,9 @@ export type {
 } from './entities';
 export type {HydrationProgress} from './localdb/rekordbox';
 export type {MixstatusConfig, MixstatusProcessor} from './mixstatus';
-export type {ConnectedProlinkNetwork, NetworkConfig, ProlinkNetwork} from './network';
+// Note: ProlinkNetwork is exported as a class from ./network, not re-exported here as type-only
+// to preserve method signatures like close()
+export type {ConnectedProlinkNetwork, NetworkConfig} from './network';
 export type {FetchProgress} from './nfs';
 
 /**
@@ -301,6 +303,126 @@ export type Hotcue = BareCuePoint & {
 export type Hotloop = {type: 'hot_loop'} & (Omit<Hotcue, 'type'> & Omit<Loop, 'type'>);
 
 export type CueAndLoop = CuePoint | Loop | Hotcue | Hotloop;
+
+/**
+ * Extended cue with color and comment support (PCO2 tag from rekordbox).
+ * Includes additional metadata like RGB colors, comments, and quantized loop information.
+ */
+export interface ExtendedCue {
+  /**
+   * Hot cue number (0 for memory points, 1-8 for hot cues A-H)
+   */
+  hotCue: number;
+  /**
+   * Type of cue: 1 = simple position/cue, 2 = loop
+   */
+  type: 1 | 2;
+  /**
+   * Position in milliseconds from the start of the track
+   */
+  time: number;
+  /**
+   * For loops, the end position in milliseconds
+   */
+  loopTime?: number;
+  /**
+   * Color ID referencing the color table (for memory points/loops)
+   */
+  colorId?: number;
+  /**
+   * Color code for the hot cue palette (0x00 = default green, 0x01-0x3e = palette colors)
+   */
+  colorCode?: number;
+  /**
+   * RGB color values used to illuminate the player's RGB LEDs
+   */
+  colorRgb?: {r: number; g: number; b: number};
+  /**
+   * User-assigned comment text for the cue
+   */
+  comment?: string;
+  /**
+   * For quantized loops, the numerator of the loop size fraction (e.g., 4 for a 4-beat loop)
+   */
+  loopNumerator?: number;
+  /**
+   * For quantized loops, the denominator of the loop size fraction (e.g., 1 for a 4-beat loop)
+   */
+  loopDenominator?: number;
+}
+
+/**
+ * A phrase within a track's song structure
+ */
+export interface Phrase {
+  /**
+   * Sequential phrase number starting from 1
+   */
+  index: number;
+  /**
+   * Beat number where this phrase begins
+   */
+  beat: number;
+  /**
+   * Raw phrase kind value from rekordbox
+   */
+  kind: number;
+  /**
+   * Human-readable phrase type (e.g., "Intro", "Verse 1", "Chorus")
+   */
+  phraseType: string;
+  /**
+   * Whether this phrase has a fill-in section (non-zero if present)
+   */
+  fill?: number;
+  /**
+   * Beat number where the fill-in begins (if present)
+   */
+  fillBeat?: number;
+}
+
+/**
+ * Song structure / phrase analysis (PSSI tag from rekordbox).
+ * Used by CDJ-3000 players for phrase-based navigation and lighting control.
+ */
+export interface SongStructure {
+  /**
+   * Overall mood classification of the track
+   */
+  mood: 'high' | 'mid' | 'low';
+  /**
+   * Stylistic bank assigned for lighting control
+   */
+  bank:
+    | 'default'
+    | 'cool'
+    | 'natural'
+    | 'hot'
+    | 'subtle'
+    | 'warm'
+    | 'vivid'
+    | 'club_1'
+    | 'club_2';
+  /**
+   * Beat number where the last phrase ends (track may continue after this)
+   */
+  endBeat: number;
+  /**
+   * List of identified phrases in the track
+   */
+  phrases: Phrase[];
+}
+
+/**
+ * Monochrome waveform preview data (PWAV/PWV2 tags).
+ * PWAV contains 400 bytes, PWV2 contains 100 bytes.
+ */
+export interface WaveformPreviewData {
+  /**
+   * Raw waveform data - each byte encodes height and whiteness
+   */
+  data: Uint8Array;
+}
 
 /**
  * Represents the contents of a playlist

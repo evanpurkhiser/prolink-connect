@@ -1,17 +1,166 @@
-name: publish
+name: Publish to npm
 
 on:
   push:
-    tags: ['v*']
+    branches:
+      - main
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Skip if this is a version bump commit from the bot
+    if: "!contains(github.event.head_commit.message, 'chore: release v')"
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: volta-cli/action@v4
-      - run: yarn install
-      - run: yarn test
-      - run: yarn build
-      - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_AUTH_TOKEN }}
-      - run: npm publish --access=public
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Load NPM token from 1Password
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          NODE_AUTH_TOKEN: op://NPM/5f5d7gg4ptzjfhcllrygt734wi/npm_access_token
+
+      - name: Install dependencies
+        run: |
+          if [ -f "yarn.lock" ]; then
+            npm install -g yarn
+            yarn install --frozen-lockfile
+          elif [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Determine version bump type
+        id: bump
+        run: |
+          # Get last tag or use initial commit
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${LAST_TAG}..HEAD"
+          fi
+
+          # Analyze commits to determine bump type
+          COMMITS=$(git log $RANGE --pretty=format:"%s" --no-merges 2>/dev/null || echo "")
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits to analyze"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check for breaking changes (major)
+          if echo "$COMMITS" | grep -qiE "^(feat|fix|refactor).*!:|BREAKING CHANGE"; then
+            echo "type=major" >> $GITHUB_OUTPUT
+          # Check for features (minor)
+          elif echo "$COMMITS" | grep -qiE "^feat"; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+          # Default to patch
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Bump version
+        if: steps.bump.outputs.skip != 'true'
+        id: version
+        run: |
+          BUMP_TYPE="${{ steps.bump.outputs.type }}"
+          OLD_VERSION=$(node -p "require('./package.json').version")
+
+          # Bump version
+          npm version $BUMP_TYPE --no-git-tag-version
+
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "old=$OLD_VERSION" >> $GITHUB_OUTPUT
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog entry
+        if: steps.bump.outputs.skip != 'true'
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.new }}"
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${LAST_TAG}..HEAD"
+          fi
+
+          # Get commits for changelog (one per line, prefixed with "- ")
+          COMMITS=$(git log $RANGE --pretty=format:"- %s" --no-merges)
+
+          # Build new changelog content using a temp file to avoid sed issues
+          {
+            echo "## v${NEW_VERSION}"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+          } > /tmp/new_entry.txt
+
+          if [ -f "CHANGELOG.md" ]; then
+            # Prepend new entry after the first header line
+            if head -1 CHANGELOG.md | grep -q "^# "; then
+              {
+                head -1 CHANGELOG.md
+                echo ""
+                cat /tmp/new_entry.txt
+                tail -n +2 CHANGELOG.md
+              } > /tmp/changelog_new.md
+              mv /tmp/changelog_new.md CHANGELOG.md
+            else
+              {
+                echo "# Changelog"
+                echo ""
+                cat /tmp/new_entry.txt
+                cat CHANGELOG.md
+              } > /tmp/changelog_new.md
+              mv /tmp/changelog_new.md CHANGELOG.md
+            fi
+          else
+            {
+              echo "# Changelog"
+              echo ""
+              cat /tmp/new_entry.txt
+            } > CHANGELOG.md
+          fi
+
+      - name: Commit and tag
+        if: steps.bump.outputs.skip != 'true'
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.new }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add package.json package-lock.json CHANGELOG.md 2>/dev/null || git add package.json CHANGELOG.md
+          git commit -m "chore: release v${NEW_VERSION}"
+          git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
+          git push && git push --tags
+
+      - name: Publish to npm
+        if: steps.bump.outputs.skip != 'true'
+        run: npm publish --access public

@@ -150,6 +150,8 @@ export class MixstatusProcessor {
   on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
   off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
   once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
+  removeAllListeners = (event?: keyof MixstatusEvents) =>
+    this.#emitter.removeAllListeners(event);
 
   /**
    * Helper to account for the useOnAirStatus config. If not configured
