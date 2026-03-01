@@ -60,7 +60,7 @@ export function mediaSlotFromPacket(packet: Buffer) {
   }
 
   const name = packet
-    .slice(0x2c, 0x0c + 40)
+    .slice(0x2c, 0x2c + 40)
     .toString()
     .replace(/\0/g, '');
 
