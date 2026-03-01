@@ -211,7 +211,11 @@ export interface Waveforms {
    */
   waveformHd: WaveformHD;
 
-  // TODO: Add other waveform types
+  /**
+   * Color waveform preview (PWV4 tag).
+   * Raw bytes: 1200 columns × 6 bytes per column (3 frequency bands × 2 bytes each).
+   */
+  waveformColorPreview?: Uint8Array;
 }
 
 /**

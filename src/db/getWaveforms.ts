@@ -72,5 +72,8 @@ export async function viaLocal(
 
   const anlz = await loadAnlz(track, 'EXT', anlzLoader({device, slot: trackSlot}));
 
-  return {waveformHd: anlz.waveformHd} as Waveforms;
+  return {
+    waveformHd: anlz.waveformHd,
+    waveformColorPreview: anlz.waveformColorPreview ?? undefined,
+  } as Waveforms;
 }

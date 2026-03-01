@@ -3633,7 +3633,7 @@ merge-stream@^2.0.0:
   integrity sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==
 
 "metadata-connect@file:../metadata-connect":
-  version "1.1.1"
+  version "1.1.2"
   resolved "file:../metadata-connect"
 
 micromatch@^4.0.0, micromatch@^4.0.4:
