@@ -1,4 +1,4 @@
-import {Device, DeviceID, MediaSlot} from 'src/types';
+import {Device, DeviceID, DeviceType, MediaSlot} from 'src/types';
 import {getSlotName} from 'src/utils';
 import {TelemetrySpan as Span} from 'src/utils/telemetry';
 import * as Telemetry from 'src/utils/telemetry';
@@ -11,6 +11,8 @@ import {
   lookupPath,
   makeProgramClient,
   mountFilesystem,
+  REKORDBOX_PORTMAP_PORT,
+  STANDARD_PORTMAP_PORT,
 } from './programs';
 
 export type {FileInfo} from './programs';
@@ -34,13 +36,61 @@ interface ClientSet {
 const slotMountMapping = {
   [MediaSlot.USB]: '/C/',
   [MediaSlot.SD]: '/B/',
-  [MediaSlot.RB]: '/',
 } as const;
 
 /**
  * Media slots that support NFS access.
  */
-export type NfsMediaSlot = keyof typeof slotMountMapping;
+export type NfsMediaSlot = MediaSlot.USB | MediaSlot.SD | MediaSlot.RB;
+
+/**
+ * Parse a Windows absolute path (e.g. `C:\Users\chris\Music\track.mp3`)
+ * into the NFS mount path and relative file path.
+ *
+ * @internal Exported for testing
+ */
+export function parseWindowsPath(filePath: string): {mountPath: string; nfsPath: string} | null {
+  const match = filePath.match(/^([A-Za-z]):[/\\](.*)$/);
+  if (!match) return null;
+  return {
+    mountPath: `/${match[1].toUpperCase()}/`,
+    nfsPath: match[2].replace(/\\/g, '/'),
+  };
+}
+
+/**
+ * Resolve the NFS mount path and file path for a given slot.
+ *
+ * For USB/SD slots, the mount path is well-known (/C/ and /B/).
+ * For the RB slot, the mount path is extracted from the file path returned
+ * by remotedb:
+ * - Windows: `C:\Users\chris\Music\track.mp3` → mount `/C/`, path `Users/chris/Music/track.mp3`
+ * - macOS: `/Users/chris/Music/track.mp3` → mount `/`, path `Users/chris/Music/track.mp3`
+ *
+ * @internal Exported for testing
+ */
+export function resolveNfsPath(
+  slot: NfsMediaSlot,
+  filePath: string
+): {mountPath: string; nfsPath: string} {
+  if (slot === MediaSlot.RB) {
+    // Windows: C:\Users\chris\Music\track.mp3 → mount /C/, path Users/...
+    const parsed = parseWindowsPath(filePath);
+    if (parsed) return parsed;
+
+    // macOS: /Users/chris/Music/track.mp3 → mount /, path Users/...
+    if (filePath.startsWith('/')) {
+      return {
+        mountPath: '/',
+        nfsPath: filePath.slice(1),
+      };
+    }
+  }
+  return {
+    mountPath: slotMountMapping[slot as keyof typeof slotMountMapping],
+    nfsPath: filePath,
+  };
+}
 
 /**
  * The module-level retry configuration for newly created RpcConnections.
@@ -55,13 +105,27 @@ let retryConfig: RetryConfig = {};
 const clientsCache = new Map<string, ClientSet>();
 
 /**
+ * Get the portmapper port for the given device. Rekordbox software uses a
+ * non-standard port (50111) while CDJs and other hardware use the standard
+ * port (111).
+ *
+ * @internal Exported for testing
+ */
+export function getPortmapPort(device: Device): number {
+  return device.type === DeviceType.Rekordbox
+    ? REKORDBOX_PORTMAP_PORT
+    : STANDARD_PORTMAP_PORT;
+}
+
+/**
  * Given a device address running a nfs and mountd RPC server, provide
  * RpcProgram clients that may be used to call these services.
  *
  * NOTE: This function will cache the clients for the address, recreating the
  * connections if the cached clients have disconnected.
  */
-async function getClients(address: string) {
+async function getClients(device: Device) {
+  const {address} = device.ip;
   const cachedSet = clientsCache.get(address);
 
   if (cachedSet !== undefined && cachedSet.conn.connected) {
@@ -74,16 +138,17 @@ async function getClients(address: string) {
   }
 
   const conn = new RpcConnection(address, retryConfig);
+  const portmapPort = getPortmapPort(device);
 
   const mountClient = await makeProgramClient(conn, {
     id: mount.Program,
     version: mount.Version,
-  });
+  }, portmapPort);
 
   const nfsClient = await makeProgramClient(conn, {
     id: nfs.Program,
     version: nfs.Version,
-  });
+  }, portmapPort);
 
   const set = {conn, mountClient, nfsClient};
   clientsCache.set(address, set);
@@ -93,40 +158,40 @@ async function getClients(address: string) {
 
 interface GetRootHandleOptions {
   device: Device;
-  slot: keyof typeof slotMountMapping;
+  mountPath: string;
   mountClient: RpcProgram;
   span?: Span;
 }
 
 /**
- * This module maintains a singleton cached list of (device address + slot) -> file
+ * This module maintains a singleton cached list of (device address + mount path) -> file
  * handles. The file handles may become stale in this list should the devices
  * connected to the players slot change.
  */
-const rootHandleCache = new Map<string, Map<MediaSlot, Buffer>>();
+const rootHandleCache = new Map<string, Map<string, Buffer>>();
 
 /**
- * Locate the root filehandle of the given device slot.
+ * Locate the root filehandle of the given device mount path.
  *
- * NOTE: This function will cache the root handle for the device + slot. Should
+ * NOTE: This function will cache the root handle for the device + mount path. Should
  *       the device have changed the slot will not longer be valid (TODO,
  *       verify this). It is up to the caller to clear the cache and get the
  *       new root handle in that case.
  */
-async function getRootHandle({device, slot, mountClient, span}: GetRootHandleOptions) {
+async function getRootHandle({device, mountPath, mountClient, span}: GetRootHandleOptions) {
   const tx = span?.startChild({op: 'getRootHandle'});
 
   const {address} = device.ip;
 
-  const deviceSlotCache = rootHandleCache.get(address) ?? new Map<MediaSlot, Buffer>();
-  const cachedRootHandle = deviceSlotCache.get(slot);
+  const deviceMountCache = rootHandleCache.get(address) ?? new Map<string, Buffer>();
+  const cachedRootHandle = deviceMountCache.get(mountPath);
 
   if (cachedRootHandle !== undefined) {
     return cachedRootHandle;
   }
 
   const exports = await getExports(mountClient, tx);
-  const targetExport = exports.find(e => e.filesystem === slotMountMapping[slot]);
+  const targetExport = exports.find(e => e.filesystem === mountPath);
 
   if (targetExport === undefined) {
     return null;
@@ -134,8 +199,8 @@ async function getRootHandle({device, slot, mountClient, span}: GetRootHandleOpt
 
   const rootHandle = await mountFilesystem(mountClient, targetExport, tx);
 
-  deviceSlotCache.set(slot, rootHandle);
-  rootHandleCache.set(address, deviceSlotCache);
+  deviceMountCache.set(mountPath, rootHandle);
+  rootHandleCache.set(address, deviceMountCache);
 
   tx?.finish();
 
@@ -144,7 +209,7 @@ async function getRootHandle({device, slot, mountClient, span}: GetRootHandleOpt
 
 interface FetchFileOptions {
   device: Device;
-  slot: keyof typeof slotMountMapping;
+  slot: NfsMediaSlot;
   path: string;
   onProgress?: Parameters<typeof fetchFileCall>[2];
   span?: Span;
@@ -156,7 +221,7 @@ const badRoothandleError = (slot: MediaSlot, deviceId: DeviceID) =>
 
 interface FetchFileRangeOptions {
   device: Device;
-  slot: keyof typeof slotMountMapping;
+  slot: NfsMediaSlot;
   path: string;
   offset: number;
   length: number;
@@ -179,8 +244,9 @@ export async function fetchFileRange({
     ? span.startChild({op: 'fetchFileRange'})
     : Telemetry.startTransaction({name: 'fetchFileRange'});
 
-  const {mountClient, nfsClient} = await getClients(device.ip.address);
-  const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+  const {mountPath, nfsPath} = resolveNfsPath(slot, path);
+  const {mountClient, nfsClient} = await getClients(device);
+  const rootHandle = await getRootHandle({device, mountPath, mountClient, span: tx});
 
   if (rootHandle === null) {
     throw badRoothandleError(slot, device.id);
@@ -189,16 +255,16 @@ export async function fetchFileRange({
   let fileInfo: FileInfo | null = null;
 
   try {
-    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+    fileInfo = await lookupPath(nfsClient, rootHandle, nfsPath, tx);
   } catch {
     rootHandleCache.delete(device.ip.address);
-    const newRootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+    const newRootHandle = await getRootHandle({device, mountPath, mountClient, span: tx});
 
     if (newRootHandle === null) {
       throw badRoothandleError(slot, device.id);
     }
 
-    fileInfo = await lookupPath(nfsClient, newRootHandle, path, tx);
+    fileInfo = await lookupPath(nfsClient, newRootHandle, nfsPath, tx);
   }
 
   const actualOffset = Math.min(offset, fileInfo.size);
@@ -240,8 +306,9 @@ export async function getFileInfo({
     ? span.startChild({op: 'getFileInfo'})
     : Telemetry.startTransaction({name: 'getFileInfo'});
 
-  const {mountClient, nfsClient} = await getClients(device.ip.address);
-  const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+  const {mountPath, nfsPath} = resolveNfsPath(slot, path);
+  const {mountClient, nfsClient} = await getClients(device);
+  const rootHandle = await getRootHandle({device, mountPath, mountClient, span: tx});
 
   if (rootHandle === null) {
     throw badRoothandleError(slot, device.id);
@@ -250,16 +317,16 @@ export async function getFileInfo({
   let fileInfo: FileInfo;
 
   try {
-    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+    fileInfo = await lookupPath(nfsClient, rootHandle, nfsPath, tx);
   } catch {
     rootHandleCache.delete(device.ip.address);
-    const newRootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+    const newRootHandle = await getRootHandle({device, mountPath, mountClient, span: tx});
 
     if (newRootHandle === null) {
       throw badRoothandleError(slot, device.id);
     }
 
-    fileInfo = await lookupPath(nfsClient, newRootHandle, path, tx);
+    fileInfo = await lookupPath(nfsClient, newRootHandle, nfsPath, tx);
   }
 
   tx.setData('path', path);
@@ -290,8 +357,9 @@ export async function fetchFile({
     ? span.startChild({op: 'fetchFile'})
     : Telemetry.startTransaction({name: 'fetchFile'});
 
-  const {mountClient, nfsClient} = await getClients(device.ip.address);
-  const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+  const {mountPath, nfsPath} = resolveNfsPath(slot, path);
+  const {mountClient, nfsClient} = await getClients(device);
+  const rootHandle = await getRootHandle({device, mountPath, mountClient, span: tx});
 
   if (rootHandle === null) {
     throw badRoothandleError(slot, device.id);
@@ -302,17 +370,17 @@ export async function fetchFile({
   let fileInfo: FileInfo | null = null;
 
   try {
-    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+    fileInfo = await lookupPath(nfsClient, rootHandle, nfsPath, tx);
   } catch {
     rootHandleCache.delete(device.ip.address);
-    const rootHandle = await getRootHandle({device, slot, mountClient, span: tx});
+    const rootHandle = await getRootHandle({device, mountPath, mountClient, span: tx});
 
     if (rootHandle === null) {
       throw badRoothandleError(slot, device.id);
     }
 
     // Desperately try once more to lookup the file
-    fileInfo = await lookupPath(nfsClient, rootHandle, path, tx);
+    fileInfo = await lookupPath(nfsClient, rootHandle, nfsPath, tx);
   }
 
   const file = await fetchFileCall(nfsClient, fileInfo, onProgress, tx, chunkSize);

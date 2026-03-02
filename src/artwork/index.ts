@@ -56,7 +56,11 @@ export async function extractArtworkFromDevice(
   slot: NfsMediaSlot,
   filePath: string
 ): Promise<ExtractedArtwork | null> {
+  console.debug(`[artwork-nfs] getFileInfo: device=${device.ip.address}, slot=${slot}, path=${filePath}`);
   const fileInfo = await getFileInfo({device, slot, path: filePath});
+  console.debug(`[artwork-nfs] File found: ${fileInfo.size} bytes`);
   const reader = createNfsFileReader(device, slot, filePath, fileInfo.size);
-  return extractArtwork(reader);
+  const result = await extractArtwork(reader);
+  console.debug(`[artwork-nfs] extractArtwork result: ${result ? `${result.mimeType} (${result.data.length}b)` : 'null'}`);
+  return result;
 }

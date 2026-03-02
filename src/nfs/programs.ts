@@ -16,9 +16,24 @@ interface Program {
 }
 
 /**
+ * Standard portmapper port used by CDJs and other hardware.
+ */
+export const STANDARD_PORTMAP_PORT = 111;
+
+/**
+ * Non-standard portmapper port used by rekordbox software.
+ * Rekordbox registers its RPC services on this port instead of 111.
+ */
+export const REKORDBOX_PORTMAP_PORT = 50111;
+
+/**
  * Queries for the listening port of a RPC program
  */
-export async function makeProgramClient(conn: RpcConnection, program: Program) {
+export async function makeProgramClient(
+  conn: RpcConnection,
+  program: Program,
+  portmapPort: number = STANDARD_PORTMAP_PORT
+) {
   const getPortData = new portmap.GetPort({
     program: program.id,
     version: program.version,
@@ -27,7 +42,7 @@ export async function makeProgramClient(conn: RpcConnection, program: Program) {
   });
 
   const data = await conn.call({
-    port: 111,
+    port: portmapPort,
     program: portmap.Program,
     version: portmap.Version,
     procedure: portmap.Procedure.getPort().value,

@@ -2,6 +2,7 @@ import {extractArtworkFromDevice, isArtworkExtractionSupported} from 'src/artwor
 import {Track} from 'src/entities';
 import {NfsMediaSlot} from 'src/nfs';
 import {Device, DeviceID, MediaSlot} from 'src/types';
+import {getSlotName} from 'src/utils';
 import {TelemetrySpan as Span} from 'src/utils/telemetry';
 import * as Telemetry from 'src/utils/telemetry';
 
@@ -26,19 +27,28 @@ export async function viaFileExtraction(
     trackSlot !== MediaSlot.SD &&
     trackSlot !== MediaSlot.RB
   ) {
+    console.debug(
+      `[artwork-nfs] Skipping: unsupported slot ${getSlotName(trackSlot)} (device ${device.name})`
+    );
     return null;
   }
 
   const slot = trackSlot as NfsMediaSlot;
 
   if (!track.filePath) {
+    console.debug('[artwork-nfs] Skipping: no filePath on track');
     return null;
   }
 
   const extension = track.filePath.split('.').pop()?.toLowerCase() ?? '';
   if (!isArtworkExtractionSupported(extension)) {
+    console.debug(`[artwork-nfs] Skipping: unsupported extension ".${extension}" (${track.filePath})`);
     return null;
   }
+
+  console.debug(
+    `[artwork-nfs] Extracting from ${track.filePath} (slot=${getSlotName(trackSlot)}, device=${device.name} @ ${device.ip.address})`
+  );
 
   const tx = span
     ? span.startChild({op: 'getArtworkFromFile'})
@@ -48,11 +58,15 @@ export async function viaFileExtraction(
     const artwork = await extractArtworkFromDevice(device, slot, track.filePath);
 
     if (!artwork) {
+      console.debug('[artwork-nfs] No embedded artwork found in file');
       tx.setData('result', 'no_artwork');
       tx.finish();
       return null;
     }
 
+    console.debug(
+      `[artwork-nfs] Success: ${artwork.mimeType} (${artwork.data.length} bytes)`
+    );
     tx.setData('result', 'success');
     tx.setData('mimeType', artwork.mimeType);
     tx.setData('size', artwork.data.length);
@@ -60,6 +74,8 @@ export async function viaFileExtraction(
 
     return artwork.data;
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`[artwork-nfs] NFS extraction failed: ${msg}`);
     tx.setData('result', 'error');
     tx.finish();
     Telemetry.captureException(error);

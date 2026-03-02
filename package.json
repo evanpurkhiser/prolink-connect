@@ -1,6 +1,6 @@
 {
   "name": "alphatheta-connect",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
   "contributors": [
@@ -89,6 +89,7 @@
     "typedoc-plugin-missing-exports": "^4.1.0",
     "typescript": "^5.9.3",
     "typescript-transform-paths": "^3.5.5",
+    "vitest": "^4.0.18",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
     "webpack-node-externals": "^3.0.0"
