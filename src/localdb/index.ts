@@ -8,6 +8,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 import DeviceManager from 'src/devices';
+import {MAX_CDJ_DEVICE_ID, MIN_CDJ_DEVICE_ID} from 'src/constants';
 import {fetchFile, FetchProgress} from 'src/nfs';
 import StatusEmitter from 'src/status';
 import {
@@ -366,8 +367,8 @@ class LocalDatabase {
       return null;
     }
 
-    if (device.type !== DeviceType.CDJ) {
-      throw new Error('Cannot create database from devices that are not CDJs');
+    if (device.type !== DeviceType.CDJ || device.id < MIN_CDJ_DEVICE_ID || device.id > MAX_CDJ_DEVICE_ID) {
+      return null;
     }
 
     let media;
@@ -417,7 +418,9 @@ class LocalDatabase {
    */
   async preload() {
     const allDevices = [...this.#deviceManager.devices.values()];
-    const cdjDevices = allDevices.filter(device => device.type === DeviceType.CDJ);
+    const cdjDevices = allDevices.filter(
+      device => device.type === DeviceType.CDJ && device.id >= MIN_CDJ_DEVICE_ID && device.id <= MAX_CDJ_DEVICE_ID
+    );
 
     if (cdjDevices.length === 0) {
       return;

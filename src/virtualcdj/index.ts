@@ -444,13 +444,15 @@ export class Announcer {
         return;
     }
 
-    // Broadcast packet to all known devices
-    const devices = [...this.#deviceManager.devices.values()];
+    // Send to all devices except Stagehand which crashes on our packets
+    const devices = [...this.#deviceManager.devices.values()].filter(
+      d => !d.name.toLowerCase().includes('stagehand')
+    );
     devices.forEach(device =>
       this.#announceSocket.send(packet, ANNOUNCE_PORT, device.ip.address)
     );
 
-    // Also broadcast to network if no devices yet
+    // Also broadcast to network if no CDJs found yet
     if (devices.length === 0) {
       const broadcastAddr = this.#vcdj.ip.endAddress().address;
       this.#announceSocket.send(packet, ANNOUNCE_PORT, broadcastAddr);
@@ -512,12 +514,15 @@ export class Announcer {
         ? makeStage06Packet(this.#vcdj, peerCount)
         : makeAnnouncePacket(this.#vcdj);
 
-      const devices = [...this.#deviceManager.devices.values()];
+      // Send to all devices except Stagehand which crashes on our packets
+      const devices = [...this.#deviceManager.devices.values()].filter(
+        d => !d.name.toLowerCase().includes('stagehand')
+      );
       devices.forEach(device =>
         this.#announceSocket.send(packet, ANNOUNCE_PORT, device.ip.address)
       );
 
-      // Also broadcast if no devices
+      // Also broadcast if no CDJs found
       if (devices.length === 0) {
         const broadcastAddr = this.#vcdj.ip.endAddress().address;
         this.#announceSocket.send(packet, ANNOUNCE_PORT, broadcastAddr);

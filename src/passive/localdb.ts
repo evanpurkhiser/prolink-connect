@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
+import {MAX_CDJ_DEVICE_ID, MIN_CDJ_DEVICE_ID} from 'src/constants';
 import {DatabaseAdapter, DatabasePreference} from 'src/localdb/database-adapter';
 import {OneLibraryAdapter} from 'src/localdb/onelibrary';
 import {MetadataORM} from 'src/localdb/orm';
@@ -394,8 +395,8 @@ export class PassiveLocalDatabase {
       this.#slotLocks.get(lockKey) ??
       this.#slotLocks.set(lockKey, new Mutex()).get(lockKey)!;
 
-    if (device.type !== DeviceType.CDJ) {
-      throw new Error('Cannot create database from devices that are not CDJs');
+    if (device.type !== DeviceType.CDJ || device.id < MIN_CDJ_DEVICE_ID || device.id > MAX_CDJ_DEVICE_ID) {
+      return null;
     }
 
     if (media.tracksType !== TrackType.RB) {
@@ -431,7 +432,7 @@ export class PassiveLocalDatabase {
       this.#slotLocks.get(lockKey) ??
       this.#slotLocks.set(lockKey, new Mutex()).get(lockKey)!;
 
-    if (device.type !== DeviceType.CDJ) {
+    if (device.type !== DeviceType.CDJ || device.id < MIN_CDJ_DEVICE_ID || device.id > MAX_CDJ_DEVICE_ID) {
       return null;
     }
 
@@ -483,7 +484,9 @@ export class PassiveLocalDatabase {
    */
   async preload() {
     const allDevices = [...this.#deviceManager.devices.values()];
-    const cdjDevices = allDevices.filter(device => device.type === DeviceType.CDJ);
+    const cdjDevices = allDevices.filter(
+      device => device.type === DeviceType.CDJ && device.id >= MIN_CDJ_DEVICE_ID && device.id <= MAX_CDJ_DEVICE_ID
+    );
 
     if (cdjDevices.length === 0) {
       return;

@@ -230,6 +230,12 @@ export class PassiveRemoteDatabase {
         args: {trackId},
       });
 
+      track.filePath = await conn.query({
+        queryDescriptor,
+        query: Query.GetTrackInfo,
+        args: {trackId},
+      });
+
       return track;
     } catch (err) {
       // Connection may have been closed, remove it

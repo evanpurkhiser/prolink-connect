@@ -5,7 +5,22 @@ All notable changes to alphatheta-connect (formerly prolink-connect) will be doc
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v0.16.0] - 2026-03-01
+
+### Fixed
+
+- Prevent Pioneer Stagehand lighting app from crashing by excluding it from announcer packets
+- Restrict database queries to CDJ devices with IDs 1-6 to avoid querying non-player devices
+- Return null instead of throwing when requesting databases from non-CDJ devices
+
+### Changed
+
+- Virtual CDJ firmware version updated from 1.43 to 3.20
+
+### Added
+
+- NFS access for rekordbox (RB) media slot with support for both macOS and Windows file paths
+- Query filePath from remote database for track lookups
 
 ## [v0.15.0] - 2026-01-19
 
@@ -240,23 +255,3 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Initial working implementation. This is currently being used to re-implement
   [prolink-tools](https://github.com/evanpurkhiser/prolink-tools).
-
-[unreleased]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.15.0...HEAD
-[v0.15.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.14.0...v0.15.0
-[v0.14.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.13.0...v0.14.0
-[v0.13.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.11.0...v0.13.0
-[v0.11.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.10.0...v0.11.0
-[v0.10.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.9.0...v0.10.0
-[v0.9.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.8.1...v0.9.0
-[v0.8.1]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.8.0...v0.8.1
-[v0.8.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.2...v0.8.0
-[v0.7.2]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.1...v0.7.2
-[v0.7.1]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.7.0...v0.7.1
-[v0.7.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.6.0...v0.7.0
-[v0.6.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.5.0...v0.6.0
-[v0.5.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.4.0...v0.5.0
-[v0.4.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.3.0...v0.4.0
-[v0.3.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.2.0...v0.3.0
-[v0.2.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.1.0...v0.2.0
-[v0.1.0]: https://github.com/evanpurkhiser/prolink-connect/compare/v0.1.0-prerelease.21...v0.1.0
-[v0.1.0-prerelease.21]: https://github.com/evanpurkhiser/prolink-connect/compare/ef4b95d...v0.1.0-prerelease.21

@@ -49,4 +49,11 @@ export const VIRTUAL_CDJ_NAME = 'ProLink-Connect';
  * VirtualCDJFirmware is a string indicating the firmware version reported with
  * status packets.
  */
-export const VIRTUAL_CDJ_FIRMWARE = '1.43';
+export const VIRTUAL_CDJ_FIRMWARE = '3.20';
+
+/**
+ * CDJs use device IDs 1-6. Devices outside this range (e.g. Stagehand at 154)
+ * should not be queried for media slots or databases as they may crash.
+ */
+export const MIN_CDJ_DEVICE_ID = 1;
+export const MAX_CDJ_DEVICE_ID = 6;
