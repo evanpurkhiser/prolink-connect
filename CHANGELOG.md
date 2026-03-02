@@ -5,6 +5,17 @@ All notable changes to alphatheta-connect (formerly prolink-connect) will be doc
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.17.0] - 2026-03-02
+
+### Added
+
+- `.2EX` file loading via `loadAnlz(track, '2EX', resolver)` with graceful fallback for older exports
+- TypeScript types for 3-band waveform data: `Waveform3BandPreview`, `Waveform3BandDetail`, `VocalConfig`
+- Parser functions for PWV6 (3-band color preview), PWV7 (3-band color detail), and PWVC (vocal config) sections
+- `AnlzResponse2EX` response type with nullable fields for each section
+- `getTrackAnalysis()` now loads `.2EX` files in parallel with `.EXT` and includes 3-band waveform and vocal config data
+- Comprehensive test suite for `.2EX` parsing (40 unit and integration tests)
+
 ## [v0.16.0] - 2026-03-01
 
 ### Fixed
