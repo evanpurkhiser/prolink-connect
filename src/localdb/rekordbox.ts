@@ -10,6 +10,7 @@ export {hydrateDatabase, loadAnlz} from './rekordbox/index';
 export type {
   AnlzResolver,
   AnlzResponse,
+  AnlzResponse2EX,
   AnlzResponseDAT,
   AnlzResponseEXT,
   HydrationOptions,

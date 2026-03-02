@@ -4,6 +4,9 @@ import {
   CueAndLoop,
   ExtendedCue,
   SongStructure,
+  VocalConfig,
+  Waveform3BandDetail,
+  Waveform3BandPreview,
   WaveformHD,
   WaveformPreviewData,
 } from 'src/types';
@@ -64,9 +67,28 @@ export interface AnlzResponseEXT {
   waveformColorPreview: Uint8Array | null;
 }
 
+/**
+ * Data returned from loading 2EX anlz files
+ */
+export interface AnlzResponse2EX {
+  /**
+   * 3-band color waveform preview (PWV6 tag)
+   */
+  waveform3BandPreview: Waveform3BandPreview | null;
+  /**
+   * 3-band color detail waveform (PWV7 tag)
+   */
+  waveform3BandDetail: Waveform3BandDetail | null;
+  /**
+   * Vocal detection config (PWVC tag)
+   */
+  vocalConfig: VocalConfig | null;
+}
+
 export interface AnlzResponse {
   DAT: AnlzResponseDAT;
   EXT: AnlzResponseEXT;
+  '2EX': AnlzResponse2EX;
 }
 
 /**

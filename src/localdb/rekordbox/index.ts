@@ -8,6 +8,9 @@ import {
   makeCueAndLoop,
   makeExtendedCues,
   makeSongStructure,
+  makeVocalConfig,
+  makeWaveform3BandDetail,
+  makeWaveform3BandPreview,
   makeWaveformHd,
   makeWaveformPreview,
 } from './anlz-parsers';
@@ -15,6 +18,7 @@ import {RekordboxHydrator} from './hydrator';
 import type {
   AnlzResolver,
   AnlzResponse,
+  AnlzResponse2EX,
   AnlzResponseDAT,
   AnlzResponseEXT,
   HydrationOptions,
@@ -27,6 +31,7 @@ const {SectionTags} = RekordboxAnlz;
 export type {
   AnlzResolver,
   AnlzResponse,
+  AnlzResponse2EX,
   AnlzResponseDAT,
   AnlzResponseEXT,
   HydrationOptions,
@@ -60,6 +65,7 @@ export async function loadAnlz<T extends keyof AnlzResponse>(
   const result = {} as AnlzResponse[T];
   const resultDat = result as AnlzResponseDAT;
   const resultExt = result as AnlzResponseEXT;
+  const result2ex = result as AnlzResponse2EX;
 
   for (const section of anlz.sections) {
     switch (section.fourcc) {
@@ -97,6 +103,18 @@ export async function loadAnlz<T extends keyof AnlzResponse>(
 
       case SectionTags.SONG_STRUCTURE:
         resultExt.songStructure = makeSongStructure(section);
+        break;
+
+      case SectionTags.WAVE_COLOR_3BAND_PREVIEW:
+        result2ex.waveform3BandPreview = makeWaveform3BandPreview(section);
+        break;
+
+      case SectionTags.WAVE_COLOR_3BAND_DETAIL:
+        result2ex.waveform3BandDetail = makeWaveform3BandDetail(section);
+        break;
+
+      case SectionTags.VOCAL_CONFIG:
+        result2ex.vocalConfig = makeVocalConfig(section);
         break;
 
       // VBR and PATH tags are defined but not currently extracted

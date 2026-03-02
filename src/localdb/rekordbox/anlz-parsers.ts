@@ -6,6 +6,9 @@ import {
   HotcueButton,
   Phrase,
   SongStructure,
+  VocalConfig,
+  Waveform3BandDetail,
+  Waveform3BandPreview,
   WaveformHD,
   WaveformPreviewData,
 } from 'src/types';
@@ -185,5 +188,37 @@ export function makeSongStructure(data: any): SongStructure {
 export function makeWaveformPreview(data: any): WaveformPreviewData {
   return {
     data: Buffer.from(data.body.data),
+  };
+}
+
+/**
+ * Parse 3-band color waveform preview (PWV6 from .2EX files)
+ */
+export function makeWaveform3BandPreview(data: any): Waveform3BandPreview {
+  return {
+    numEntries: data.body.lenEntries,
+    data: Buffer.from(data.body.entries),
+  };
+}
+
+/**
+ * Parse 3-band color detail waveform (PWV7 from .2EX files)
+ */
+export function makeWaveform3BandDetail(data: any): Waveform3BandDetail {
+  return {
+    samplesPerBeat: data.body.samplesPerBeat,
+    numEntries: data.body.lenEntries,
+    data: Buffer.from(data.body.entries),
+  };
+}
+
+/**
+ * Parse vocal detection config (PWVC from .2EX files)
+ */
+export function makeVocalConfig(data: any): VocalConfig {
+  return {
+    thresholdLow: data.body.thresholdLow,
+    thresholdMid: data.body.thresholdMid,
+    thresholdHigh: data.body.thresholdHigh,
   };
 }

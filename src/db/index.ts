@@ -20,6 +20,7 @@ import * as GetArtworkThumbnail from './getArtworkThumbnail';
 import * as GetFile from './getFile';
 import * as GetMetadata from './getMetadata';
 import * as GetPlaylist from './getPlaylist';
+import * as GetTrackAnalysis from './getTrackAnalysis';
 import * as GetWaveforms from './getWaveforms';
 
 enum LookupStrategy {
@@ -300,6 +301,45 @@ class Database {
     tx.finish();
 
     return waveforms;
+  }
+
+  /**
+   * Retrieves all analysis data from the EXT file for a track.
+   * Returns extended cues, song structure, waveform color preview, and HD waveform.
+   */
+  async getTrackAnalysis(opts: GetTrackAnalysis.Options) {
+    const {deviceId, trackType, trackSlot, span} = opts;
+
+    const tx = span
+      ? span.startChild({op: 'dbGetTrackAnalysis'})
+      : Telemetry.startTransaction({name: 'dbGetTrackAnalysis'});
+
+    tx.setTag('deviceId', deviceId.toString());
+    tx.setTag('trackType', getTrackTypeName(trackType));
+    tx.setTag('trackSlot', getSlotName(trackSlot));
+
+    const callOpts = {...opts, span: tx};
+
+    const device = await this.#deviceManager.getDeviceEnsured(deviceId);
+    if (device === null) {
+      tx.finish();
+      return null;
+    }
+
+    const strategy = this.#getTrackLookupStrategy(device, trackType);
+    let analysis: GetTrackAnalysis.TrackAnalysis | null = null;
+
+    if (strategy === LookupStrategy.Local) {
+      analysis = await GetTrackAnalysis.viaLocal(this.#localDatabase, device, callOpts);
+    }
+
+    if (strategy === LookupStrategy.NoneAvailable || strategy === LookupStrategy.Remote) {
+      tx.setStatus(SpanStatus.Unavailable);
+    }
+
+    tx.finish();
+
+    return analysis;
   }
 
   /**

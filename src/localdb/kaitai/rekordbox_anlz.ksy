@@ -5,6 +5,7 @@ meta:
   file-extension:
     - dat
     - ext
+    - 2ex
   license: EPL-1.0
   endian: be
 
@@ -81,6 +82,9 @@ types:
             'section_tags::wave_color_preview': wave_color_preview_tag  # PWV4, in .EXT
             'section_tags::wave_color_scroll': wave_color_scroll_tag    # PWV5, in .EXT
             'section_tags::song_structure': song_structure_tag          # PSSI, in .EXT
+            'section_tags::wave_color_3band_preview': wave_color_3band_preview_tag  # PWV6, in .2EX
+            'section_tags::wave_color_3band_detail': wave_color_3band_detail_tag    # PWV7, in .2EX
+            'section_tags::vocal_config': vocal_config_tag              # PWVC, in .2EX
             _: unknown_tag
     -webide-representation: '{fourcc}'
 
@@ -501,6 +505,82 @@ types:
         type: u2
         enum: mood_low_phrase
 
+  wave_color_3band_preview_tag:
+    doc: |
+      A 3-band color waveform preview (PWV6, found in .2EX files).
+      Same resolution as PWV4 (typically 1200 entries) but with 3 bytes
+      per entry representing low, mid, and high frequency band amplitudes.
+    doc-ref: https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#color-3band-preview-waveform
+    seq:
+      - id: len_entry_bytes
+        type: u4
+        doc: |
+          The size of each entry, in bytes. Seems to always be 3.
+      - id: num_channels
+        type: u4
+        doc: |
+          Number of frequency channels. Seems to always be 3.
+      - id: len_entries
+        type: u4
+        doc: |
+          The number of waveform data points.
+      - type: u4  # unknown1
+      - type: u4  # unknown2
+      - id: entries
+        size: len_entries * len_entry_bytes
+
+  wave_color_3band_detail_tag:
+    doc: |
+      A 3-band color detail waveform (PWV7, found in .2EX files).
+      Higher resolution than PWV6, with approximately 150 entries per
+      second of audio. Each entry is 3 bytes (low, mid, high).
+    doc-ref: https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#color-3band-detail-waveform
+    seq:
+      - id: len_entry_bytes
+        type: u4
+        doc: |
+          The size of each entry, in bytes. Seems to always be 3.
+      - id: num_channels
+        type: u4
+        doc: |
+          Number of frequency channels. Seems to always be 3.
+      - id: len_entries
+        type: u4
+        doc: |
+          The number of waveform data points.
+      - id: samples_per_beat
+        type: u2
+        doc: |
+          The number of waveform samples per beat. Typically 150.
+      - type: u2  # unknown
+      - id: entries
+        size: len_entries * len_entry_bytes
+
+  vocal_config_tag:
+    doc: |
+      Vocal detection configuration (PWVC, found in .2EX files).
+      Contains threshold values used to classify frequency content
+      as vocal or non-vocal.
+    doc-ref: https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#vocal-config
+    seq:
+      - id: len_entry_bytes
+        type: u4
+        doc: |
+          The size of the configuration data.
+      - type: u2  # unknown
+      - id: threshold_low
+        type: u2
+        doc: |
+          Low frequency vocal detection threshold.
+      - id: threshold_mid
+        type: u2
+        doc: |
+          Mid frequency vocal detection threshold.
+      - id: threshold_high
+        type: u2
+        doc: |
+          High frequency vocal detection threshold.
+
   unknown_tag: {}
 
 enums:
@@ -516,6 +596,9 @@ enums:
     0x50575634: wave_color_preview  # PWV4 (seen in .EXT)
     0x50575635: wave_color_scroll   # PWV5 (seen in .EXT)
     0x50535349: song_structure      # PSSI (seen in .EXT)
+    0x50575636: wave_color_3band_preview  # PWV6 (seen in .2EX)
+    0x50575637: wave_color_3band_detail   # PWV7 (seen in .2EX)
+    0x50575643: vocal_config              # PWVC (seen in .2EX)
 
   cue_list_type:
     0: memory_cues

@@ -19,6 +19,7 @@ export type {
   Playlist,
   Track,
 } from './entities';
+export type {TrackAnalysis} from './db/getTrackAnalysis';
 export type {HydrationProgress} from './localdb/rekordbox';
 export type {MixstatusConfig, MixstatusProcessor} from './mixstatus';
 // Note: ProlinkNetwork is exported as a class from ./network, not re-exported here as type-only
@@ -415,6 +416,44 @@ export interface SongStructure {
    * List of identified phrases in the track
    */
   phrases: Phrase[];
+}
+
+/**
+ * 3-band color waveform preview (PWV6 tag from .2EX files).
+ * Same resolution as PWV4 (typically 1200 entries) but with separate
+ * low, mid, and high frequency band amplitudes.
+ *
+ * @see https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#color-3band-preview-waveform
+ */
+export interface Waveform3BandPreview {
+  numEntries: number;
+  /** Raw interleaved bytes: numEntries × 3 (low, mid, high per entry) */
+  data: Uint8Array;
+}
+
+/**
+ * 3-band color detail waveform (PWV7 tag from .2EX files).
+ * Higher resolution than PWV6, approximately 150 entries per second.
+ *
+ * @see https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#color-3band-detail-waveform
+ */
+export interface Waveform3BandDetail {
+  samplesPerBeat: number;
+  numEntries: number;
+  /** Raw interleaved bytes: numEntries × 3 (low, mid, high per entry) */
+  data: Uint8Array;
+}
+
+/**
+ * Vocal detection configuration (PWVC tag from .2EX files).
+ * Threshold values used to classify frequency content as vocal or non-vocal.
+ *
+ * @see https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#vocal-config
+ */
+export interface VocalConfig {
+  thresholdLow: number;
+  thresholdMid: number;
+  thresholdHigh: number;
 }
 
 /**
