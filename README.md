@@ -1,5 +1,3 @@
-A Typescript / JavaScript library that is able to talk to AlphaTheta ProDJLink enabled DJ equipment
-
 <p align="center">
 <img src=".github/logo.svg" alt="alphatheta-connect" />
 </p>
@@ -19,7 +17,7 @@ A Typescript / JavaScript library that is able to talk to AlphaTheta ProDJLink e
 
 This library implements the AlphaTheta PROLINK network protocol + additional
 functionality to interact with the prolink network. This library is used as
-part of [Prolink Tools](https://prolink.tools/).
+part of [Now Playing](https://nowplayingapp.com/).
 
 Alternative implementations of the Prolink protocol: [Java](https://github.com/Deep-Symmetry/beat-link), [golang](https://github.com/evanpurkhiser/prolink-go).
 
@@ -48,10 +46,23 @@ Alternative implementations of the Prolink protocol: [Java](https://github.com/D
   sequence for better compatibility with certain device configurations.
   See [FULL_STARTUP.md](docs/FULL_STARTUP.md) for details.
 
+- **Metadata Extraction via NFS** *(new)* - Extract complete track metadata (title,
+  artist, album, BPM, key, artwork) directly from audio files on connected media
+  using partial file reads — only file headers are downloaded, not entire files.
+
+- **3-Band Waveforms & Vocal Detection** *(new)* - Parse `.2EX` analysis files for
+  3-band color waveform preview (PWV6), 3-band color detail waveform (PWV7), and
+  vocal detection config (PWVC).
+
+- **Track Analysis API** *(new)* - Unified `getTrackAnalysis()` method that retrieves
+  all analysis data (extended cues, song structure, waveforms, 3-band waveforms,
+  vocal config) from both EXT and 2EX files in a single call.
+
 - **Extended ANLZ Support** - Full support for rekordbox analysis files including:
   - Extended cues with RGB colors and comments (PCO2)
   - Song structure / phrase analysis for CDJ-3000 (PSSI)
-  - Multiple waveform formats (PWAV, PWV2, PWV3, PWV4, PWV5)
+  - Multiple waveform formats (PWAV, PWV2, PWV3, PWV4, PWV5, PWV6, PWV7)
+  - Vocal detection config (PWVC)
   - See [EXTENDED_ANLZ.md](docs/EXTENDED_ANLZ.md) for details
 
 - **CDJ-3000 Features** - Complete support for CDJ-3000 specific features:
