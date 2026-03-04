@@ -1,98 +1,179 @@
 /**
  * Example: Vocal Detection Configuration Lookup
  *
- * Reads the local rekordbox OneLibrary database, finds a specific track
- * in a playlist, and displays its vocal detection configuration (PWVC)
- * from the .2EX analysis file.
+ * Reads the local rekordbox master.db, finds a specific track in a playlist,
+ * and displays its vocal detection configuration (PWVC) from the .2EX
+ * analysis file.
  *
  * Usage:
- *   npx ts-node examples/vocal-config-lookup.ts <usb-root>
- *
- * Example:
- *   npx ts-node examples/vocal-config-lookup.ts /Volumes/MYUSB
+ *   npx ts-node examples/vocal-config-lookup.ts
  */
 
+import Blowfish from '../../rekordbox-connect/node_modules/egoroof-blowfish';
+import Database from 'better-sqlite3-multiple-ciphers';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
-
-import {OneLibraryAdapter} from 'src/localdb/onelibrary';
-import {loadAnlz} from 'src/localdb/rekordbox';
 
 const PLAYLIST_NAME = 'Melodic Vox';
 const TRACK_TITLE = 'Walking On A Dream (BLOND:ISH Extended Remix)';
 
-async function main() {
-  const usbRoot = process.argv[2];
-  if (!usbRoot) {
-    console.error('Usage: npx ts-node examples/vocal-config-lookup.ts <usb-root>');
-    console.error('  <usb-root>  Path to the USB drive root (e.g. /Volumes/MYUSB)');
-    process.exit(1);
-  }
+// Local paths
+const RB_ROOT = path.join(os.homedir(), 'Library', 'Pioneer', 'rekordbox');
+const SHARE_ROOT = path.join(RB_ROOT, 'share');
+const OPTIONS_PATH = path.join(
+  os.homedir(),
+  'Library',
+  'Application Support',
+  'Pioneer',
+  'rekordboxAgent',
+  'storage',
+  'options.json'
+);
 
-  // Find the exportLibrary.db on the USB
-  const dbPath = path.join(usbRoot, 'PIONEER', 'rekordbox', 'exportLibrary.db');
-  if (!fs.existsSync(dbPath)) {
-    console.error(`Database not found at: ${dbPath}`);
-    process.exit(1);
-  }
+// ANLZ section tag (big-endian fourcc)
+const PWVC_TAG = 0x50575643; // "PWVC"
 
+// ============================================================================
+// Open master.db using password from options.json
+// ============================================================================
+
+function openMasterDb(): Database.Database {
+  const options = JSON.parse(fs.readFileSync(OPTIONS_PATH, 'utf8'));
+
+  const dbPathOpt = options.options.find((o: string[]) => o[0] === 'db-path');
+  const dpOpt = options.options.find((o: string[]) => o[0] === 'dp');
+  if (!dbPathOpt || !dpOpt) throw new Error('Missing db-path or dp in options.json');
+
+  const bf = new Blowfish('ZOwUlUZYqe9Rdm6j', Blowfish.MODE.ECB, Blowfish.PADDING.PKCS5);
+  const password = bf.decode(Buffer.from(dpOpt[1], 'base64'), Blowfish.TYPE.STRING).trim();
+
+  const dbPath = dbPathOpt[1];
   console.log(`Opening database: ${dbPath}\n`);
-  const db = new OneLibraryAdapter(dbPath);
+
+  const db = new Database(dbPath, {readonly: true});
+  db.pragma('cipher = sqlcipher');
+  db.pragma('legacy = 4');
+  db.pragma(`key = '${password}'`);
+
+  return db;
+}
+
+// ============================================================================
+// Parse PWVC from .2EX binary
+// ============================================================================
+
+interface VocalConfig {
+  thresholdLow: number;
+  thresholdMid: number;
+  thresholdHigh: number;
+}
+
+function parseVocalConfigFrom2EX(filePath: string): VocalConfig | null {
+  const buf = fs.readFileSync(filePath);
+  // Read actual header length from bytes 4-7 (not always 12)
+  const headerLen = buf.readUInt32BE(4);
+  let offset = headerLen;
+
+  while (offset + 12 <= buf.length) {
+    const fourcc = buf.readUInt32BE(offset);
+    const lenTag = buf.readUInt32BE(offset + 8);
+
+    if (fourcc === PWVC_TAG) {
+      const body = offset + 12;
+      return {
+        thresholdLow: buf.readUInt16BE(body + 6),
+        thresholdMid: buf.readUInt16BE(body + 8),
+        thresholdHigh: buf.readUInt16BE(body + 10),
+      };
+    }
+
+    offset += lenTag;
+  }
+
+  return null;
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+function main() {
+  const db = openMasterDb();
 
   try {
-    // Find the "Melodic Vox" playlist by walking the playlist tree
-    const playlistId = findPlaylistByName(db, PLAYLIST_NAME);
-    if (playlistId === null) {
+    // Load all playlists and find the target by name
+    const allPlaylists = db
+      .prepare('SELECT ID, Name, Attribute, ParentID FROM djmdPlaylist')
+      .all() as any[];
+
+    const playlist = allPlaylists.find(
+      (p: any) => p.Name === PLAYLIST_NAME && p.Attribute !== 1
+    );
+    if (!playlist) {
       console.error(`Playlist "${PLAYLIST_NAME}" not found`);
       process.exit(1);
     }
-    console.log(`Found playlist "${PLAYLIST_NAME}" (id: ${playlistId})`);
+    console.log(`Found playlist "${PLAYLIST_NAME}" (id: ${playlist.ID})`);
 
-    // Get track IDs from the playlist
-    const trackIds = db.findPlaylistContents(playlistId);
-    console.log(`Playlist has ${trackIds.length} tracks\n`);
+    // Get tracks in the playlist
+    const trackRows = db
+      .prepare(
+        `SELECT
+           c.ID, c.Title, c.BPM, c.AnalysisDataPath,
+           a.Name as artistName,
+           k.ScaleName as keyName
+         FROM djmdSongPlaylist sp
+         JOIN djmdContent c ON c.ID = sp.ContentID
+         LEFT JOIN djmdArtist a ON a.ID = c.ArtistID
+         LEFT JOIN djmdKey k ON k.ID = c.KeyID
+         WHERE sp.PlaylistID = @playlistId
+         ORDER BY sp.TrackNo`
+      )
+      .all({playlistId: playlist.ID}) as any[];
 
-    // Find the target track
-    const track = trackIds
-      .map(id => db.findTrack(id))
-      .find(t => t?.title === TRACK_TITLE);
+    console.log(`Playlist has ${trackRows.length} tracks\n`);
 
-    if (!track) {
+    // Find target track
+    const row = trackRows.find((r: any) => r.Title === TRACK_TITLE);
+    if (!row) {
       console.error(`Track "${TRACK_TITLE}" not found in playlist`);
       console.log('\nAvailable tracks:');
-      for (const id of trackIds) {
-        const t = db.findTrack(id);
-        if (t) console.log(`  - ${t.title}`);
+      for (const r of trackRows) {
+        console.log(`  - ${r.Title}`);
       }
       process.exit(1);
     }
 
-    console.log(`Track: ${track.artist?.name} - ${track.title}`);
-    console.log(`  BPM: ${track.tempo}`);
-    console.log(`  Key: ${track.key?.name ?? 'unknown'}`);
-    console.log(`  Analyze path: ${track.analyzePath}`);
+    // AnalysisDataPath is like /PIONEER/USBANLZ/.../ANLZ0000.DAT
+    // Strip .DAT and append .2EX
+    const analyzePath = row.AnalysisDataPath?.replace(/\.DAT$/, '') ?? null;
 
-    if (!track.analyzePath) {
+    console.log(`Track: ${row.artistName ?? 'Unknown'} - ${row.Title}`);
+    console.log(`  BPM: ${row.BPM ? row.BPM / 100 : 'unknown'}`);
+    console.log(`  Key: ${row.keyName ?? 'unknown'}`);
+    console.log(`  Analyze path: ${analyzePath}`);
+
+    if (!analyzePath) {
       console.error('\nTrack has no analysis path');
       process.exit(1);
     }
 
-    // Build a resolver that reads ANLZ files from the USB filesystem
-    const anlzResolver = async (anlzPath: string) => {
-      const fullPath = path.join(usbRoot, anlzPath);
-      return fs.readFileSync(fullPath);
-    };
+    // Read .2EX file from the share directory
+    const twoxPath = path.join(SHARE_ROOT, `${analyzePath}.2EX`);
+    console.log(`\nLoading: ${twoxPath}`);
 
-    // Load the .2EX analysis file
-    console.log(`\nLoading .2EX analysis data...`);
-    const anlz2ex = await loadAnlz(track, '2EX', anlzResolver);
+    if (!fs.existsSync(twoxPath)) {
+      console.error(`.2EX file not found at: ${twoxPath}`);
+      process.exit(1);
+    }
 
-    if (!anlz2ex.vocalConfig) {
-      console.log('No vocal detection configuration found in .2EX file');
+    const vc = parseVocalConfigFrom2EX(twoxPath);
+    if (!vc) {
+      console.log('No vocal detection configuration (PWVC) found in .2EX file');
       return;
     }
 
-    const vc = anlz2ex.vocalConfig;
     console.log('\n========================================');
     console.log('  Vocal Detection Configuration (PWVC)');
     console.log('========================================');
@@ -100,56 +181,13 @@ async function main() {
     console.log(`  Threshold Mid:  ${vc.thresholdMid}`);
     console.log(`  Threshold High: ${vc.thresholdHigh}`);
 
-    // Show normalized values (0-1 range used by the vocal boundary detector)
     console.log('\n  Normalized (÷ 65535):');
     console.log(`  Low:  ${(vc.thresholdLow / 65535).toFixed(4)}`);
     console.log(`  Mid:  ${(vc.thresholdMid / 65535).toFixed(4)}`);
     console.log(`  High: ${(vc.thresholdHigh / 65535).toFixed(4)}`);
-
-    // Show 3-band waveform info if available
-    if (anlz2ex.waveform3BandPreview) {
-      console.log(`\n  3-Band Preview: ${anlz2ex.waveform3BandPreview.numEntries} entries`);
-    }
-    if (anlz2ex.waveform3BandDetail) {
-      console.log(
-        `  3-Band Detail:  ${anlz2ex.waveform3BandDetail.numEntries} entries ` +
-          `(${anlz2ex.waveform3BandDetail.samplesPerBeat} samples/beat)`
-      );
-    }
   } finally {
     db.close();
   }
 }
 
-/**
- * Walk the playlist tree to find a playlist by name.
- */
-function findPlaylistByName(
-  db: OneLibraryAdapter,
-  name: string,
-  parentId?: number
-): number | null {
-  const {folders, playlists} = db.findPlaylist(parentId);
-
-  // Check playlists at this level
-  for (const pl of playlists) {
-    if (pl.name === name) {
-      return pl.id;
-    }
-  }
-
-  // Recurse into folders
-  for (const folder of folders) {
-    const found = findPlaylistByName(db, name, folder.id);
-    if (found !== null) {
-      return found;
-    }
-  }
-
-  return null;
-}
-
-main().catch(err => {
-  console.error('Error:', err.message);
-  process.exit(1);
-});
+main();
