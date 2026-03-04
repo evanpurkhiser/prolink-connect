@@ -78,10 +78,10 @@ function parseAnlzSections(buffer: Buffer): ParsedSection[] {
         body: { lenEntries, samplesPerBeat, entries },
       });
     } else if (fourcc === SectionTags.VOCAL_CONFIG) {
-      // PWVC: len_entry_bytes(4) + unknown(2) + threshold_low(2) + threshold_mid(2) + threshold_high(2)
-      const thresholdLow = buffer.readUInt16BE(bodyStart + 6);
-      const thresholdMid = buffer.readUInt16BE(bodyStart + 8);
-      const thresholdHigh = buffer.readUInt16BE(bodyStart + 10);
+      // PWVC: unknown(2) + threshold_low(2) + threshold_mid(2) + threshold_high(2)
+      const thresholdLow = buffer.readUInt16BE(bodyStart + 2);
+      const thresholdMid = buffer.readUInt16BE(bodyStart + 4);
+      const thresholdHigh = buffer.readUInt16BE(bodyStart + 6);
 
       sections.push({
         fourcc,

@@ -142,17 +142,16 @@ export function createPWVCSection(options: {
   thresholdMid?: number;
   thresholdHigh?: number;
 } = {}): Buffer {
-  const thresholdLow = options.thresholdLow ?? 10;
-  const thresholdMid = options.thresholdMid ?? 50;
-  const thresholdHigh = options.thresholdHigh ?? 90;
+  const thresholdLow = options.thresholdLow ?? 80;
+  const thresholdMid = options.thresholdMid ?? 100;
+  const thresholdHigh = options.thresholdHigh ?? 100;
 
-  // Body: len_entry_bytes(4) + unknown1(2) + threshold_low(2) + threshold_mid(2) + threshold_high(2)
-  const bodyLength = 4 + 2 + 2 + 2 + 2;
+  // Body: unknown(2) + threshold_low(2) + threshold_mid(2) + threshold_high(2) = 8 bytes
+  const bodyLength = 2 + 2 + 2 + 2;
   const body = Buffer.alloc(bodyLength);
 
   let offset = 0;
-  writeUInt32BE(body, 8, offset); offset += 4; // len_entry_bytes (size of config)
-  writeUInt16BE(body, 0, offset); offset += 2; // unknown1
+  writeUInt16BE(body, 0, offset); offset += 2; // unknown, always 0
   writeUInt16BE(body, thresholdLow, offset); offset += 2; // threshold_low
   writeUInt16BE(body, thresholdMid, offset); offset += 2; // threshold_mid
   writeUInt16BE(body, thresholdHigh, offset); // threshold_high

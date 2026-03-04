@@ -100,9 +100,9 @@ describe('Requesting Vocal Detection Configuration', () => {
         {
           fourcc: SECTION_TAGS.VOCAL_CONFIG,
           body: {
-            thresholdLow: 256,
-            thresholdMid: 1024,
-            thresholdHigh: 4096,
+            thresholdLow: 97,
+            thresholdMid: 114,
+            thresholdHigh: 130,
           },
         },
       ];
@@ -110,9 +110,9 @@ describe('Requesting Vocal Detection Configuration', () => {
       const result = await loadAnlz(mockTrack, '2EX', mockResolver);
 
       expect(result.vocalConfig).toEqual({
-        thresholdLow: 256,
-        thresholdMid: 1024,
-        thresholdHigh: 4096,
+        thresholdLow: 97,
+        thresholdMid: 114,
+        thresholdHigh: 130,
       });
     });
 
@@ -203,14 +203,14 @@ describe('Requesting Vocal Detection Configuration', () => {
       });
     });
 
-    it('handles max u16 threshold values', async () => {
+    it('handles maximum observed threshold values', async () => {
       mockSections = [
         {
           fourcc: SECTION_TAGS.VOCAL_CONFIG,
           body: {
-            thresholdLow: 65535,
-            thresholdMid: 65535,
-            thresholdHigh: 65535,
+            thresholdLow: 114,
+            thresholdMid: 146,
+            thresholdHigh: 159,
           },
         },
       ];
@@ -218,9 +218,9 @@ describe('Requesting Vocal Detection Configuration', () => {
       const result = await loadAnlz(mockTrack, '2EX', mockResolver);
 
       expect(result.vocalConfig).toEqual({
-        thresholdLow: 65535,
-        thresholdMid: 65535,
-        thresholdHigh: 65535,
+        thresholdLow: 114,
+        thresholdMid: 146,
+        thresholdHigh: 159,
       });
     });
 
@@ -274,9 +274,9 @@ describe('Requesting Vocal Detection Configuration', () => {
         {
           fourcc: SECTION_TAGS.VOCAL_CONFIG,
           body: {
-            thresholdLow: 512,
-            thresholdMid: 2048,
-            thresholdHigh: 8192,
+            thresholdLow: 80,
+            thresholdMid: 100,
+            thresholdHigh: 110,
           },
         },
       ];
@@ -285,9 +285,9 @@ describe('Requesting Vocal Detection Configuration', () => {
       const vocalConfig = twoxResult?.vocalConfig ?? null;
 
       expect(vocalConfig).toEqual({
-        thresholdLow: 512,
-        thresholdMid: 2048,
-        thresholdHigh: 8192,
+        thresholdLow: 80,
+        thresholdMid: 100,
+        thresholdHigh: 110,
       });
     });
   });

@@ -282,35 +282,35 @@ describe('.2EX Parser Functions', () => {
       expect(result.thresholdHigh).toBe(0);
     });
 
-    it('handles max u16 threshold values', () => {
+    it('handles maximum observed threshold values', () => {
       const kaitaiSection = {
         body: {
-          thresholdLow: 65535,
-          thresholdMid: 65535,
-          thresholdHigh: 65535,
+          thresholdLow: 114,
+          thresholdMid: 146,
+          thresholdHigh: 159,
         },
       };
 
       const result = makeVocalConfig(kaitaiSection);
-      expect(result.thresholdLow).toBe(65535);
-      expect(result.thresholdMid).toBe(65535);
-      expect(result.thresholdHigh).toBe(65535);
+      expect(result.thresholdLow).toBe(114);
+      expect(result.thresholdMid).toBe(146);
+      expect(result.thresholdHigh).toBe(159);
     });
 
     it('handles typical real-world threshold values', () => {
-      // Values seen in real .2EX files from rekordbox
+      // Values observed in 192 real .2EX files from rekordbox USB sticks
       const kaitaiSection = {
         body: {
-          thresholdLow: 256,
-          thresholdMid: 1024,
-          thresholdHigh: 4096,
+          thresholdLow: 97,
+          thresholdMid: 114,
+          thresholdHigh: 130,
         },
       };
 
       const result = makeVocalConfig(kaitaiSection);
-      expect(result.thresholdLow).toBe(256);
-      expect(result.thresholdMid).toBe(1024);
-      expect(result.thresholdHigh).toBe(4096);
+      expect(result.thresholdLow).toBe(97);
+      expect(result.thresholdMid).toBe(114);
+      expect(result.thresholdHigh).toBe(130);
     });
 
     it('returns a plain object with exactly 3 properties', () => {

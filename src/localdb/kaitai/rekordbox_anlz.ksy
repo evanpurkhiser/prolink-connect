@@ -560,26 +560,22 @@ types:
     doc: |
       Vocal detection configuration (PWVC, found in .2EX files).
       Contains threshold values used to classify frequency content
-      as vocal or non-vocal.
-    doc-ref: https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#vocal-config
+      as vocal or non-vocal. Body is 8 bytes: unknown(2) + 3 thresholds(2 each).
+      Observed threshold ranges: low 80-114, mid 80-146, high 98-159.
     seq:
-      - id: len_entry_bytes
-        type: u4
-        doc: |
-          The size of the configuration data.
-      - type: u2  # unknown
+      - type: u2  # unknown, always 0
       - id: threshold_low
         type: u2
         doc: |
-          Low frequency vocal detection threshold.
+          Low frequency vocal detection threshold. Observed range: 80-114.
       - id: threshold_mid
         type: u2
         doc: |
-          Mid frequency vocal detection threshold.
+          Mid frequency vocal detection threshold. Observed range: 80-146.
       - id: threshold_high
         type: u2
         doc: |
-          High frequency vocal detection threshold.
+          High frequency vocal detection threshold. Observed range: 98-159.
 
   unknown_tag: {}
 

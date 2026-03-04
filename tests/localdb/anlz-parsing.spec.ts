@@ -171,29 +171,29 @@ describe('ANLZ Binary Fixtures', () => {
       // Header length (always 12)
       expect(section.readUInt32BE(4)).toBe(12);
 
-      // Tag length: 12 header + 12 body
-      expect(section.readUInt32BE(8)).toBe(24);
+      // Tag length: 12 header + 8 body
+      expect(section.readUInt32BE(8)).toBe(20);
     });
 
     it('stores threshold_low correctly', () => {
       const section = createPWVCSection({thresholdLow: 15});
 
-      // threshold_low at offset 18 (12 header + 4 len_entry + 2 unknown)
-      expect(section.readUInt16BE(18)).toBe(15);
+      // threshold_low at offset 14 (12 header + 2 unknown)
+      expect(section.readUInt16BE(14)).toBe(15);
     });
 
     it('stores threshold_mid correctly', () => {
       const section = createPWVCSection({thresholdMid: 55});
 
-      // threshold_mid at offset 20
-      expect(section.readUInt16BE(20)).toBe(55);
+      // threshold_mid at offset 16
+      expect(section.readUInt16BE(16)).toBe(55);
     });
 
     it('stores threshold_high correctly', () => {
       const section = createPWVCSection({thresholdHigh: 95});
 
-      // threshold_high at offset 22
-      expect(section.readUInt16BE(22)).toBe(95);
+      // threshold_high at offset 18
+      expect(section.readUInt16BE(18)).toBe(95);
     });
 
     it('handles zero thresholds', () => {
@@ -203,21 +203,21 @@ describe('ANLZ Binary Fixtures', () => {
         thresholdHigh: 0,
       });
 
+      expect(section.readUInt16BE(14)).toBe(0);
+      expect(section.readUInt16BE(16)).toBe(0);
       expect(section.readUInt16BE(18)).toBe(0);
-      expect(section.readUInt16BE(20)).toBe(0);
-      expect(section.readUInt16BE(22)).toBe(0);
     });
 
-    it('handles max thresholds (u16)', () => {
+    it('handles max observed thresholds', () => {
       const section = createPWVCSection({
-        thresholdLow: 65535,
-        thresholdMid: 65535,
-        thresholdHigh: 65535,
+        thresholdLow: 114,
+        thresholdMid: 146,
+        thresholdHigh: 159,
       });
 
-      expect(section.readUInt16BE(18)).toBe(65535);
-      expect(section.readUInt16BE(20)).toBe(65535);
-      expect(section.readUInt16BE(22)).toBe(65535);
+      expect(section.readUInt16BE(14)).toBe(114);
+      expect(section.readUInt16BE(16)).toBe(146);
+      expect(section.readUInt16BE(18)).toBe(159);
     });
   });
 

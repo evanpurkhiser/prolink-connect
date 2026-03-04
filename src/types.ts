@@ -448,7 +448,9 @@ export interface Waveform3BandDetail {
  * Vocal detection configuration (PWVC tag from .2EX files).
  * Threshold values used to classify frequency content as vocal or non-vocal.
  *
- * @see https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#vocal-config
+ * Values are u16 but observed range across 192 real files is 80-159,
+ * matching the 0-255 byte scale used by waveform band values.
+ * Observed ranges: low 80-114, mid 80-146, high 98-159.
  */
 export interface VocalConfig {
   thresholdLow: number;

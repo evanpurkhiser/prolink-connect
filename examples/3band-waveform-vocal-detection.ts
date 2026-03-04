@@ -100,9 +100,9 @@ async function analyze3BandWaveform(track: Track, anlzLoader: (path: string) => 
     console.log('═══════════════════════════════════════════════════════════');
     console.log('  VOCAL DETECTION CONFIG (PWVC)');
     console.log('═══════════════════════════════════════════════════════════');
-    console.log(`\n  Threshold Low:  ${thresholdLow} (${(thresholdLow / 65535).toFixed(4)} normalized)`);
-    console.log(`  Threshold Mid:  ${thresholdMid} (${(thresholdMid / 65535).toFixed(4)} normalized)`);
-    console.log(`  Threshold High: ${thresholdHigh} (${(thresholdHigh / 65535).toFixed(4)} normalized)\n`);
+    console.log(`\n  Threshold Low:  ${thresholdLow} (${(thresholdLow / 255).toFixed(4)} normalized)`);
+    console.log(`  Threshold Mid:  ${thresholdMid} (${(thresholdMid / 255).toFixed(4)} normalized)`);
+    console.log(`  Threshold High: ${thresholdHigh} (${(thresholdHigh / 255).toFixed(4)} normalized)\n`);
   }
 
   // ============================================================================
@@ -118,10 +118,11 @@ async function analyze3BandWaveform(track: Track, anlzLoader: (path: string) => 
     const {thresholdLow, thresholdMid, thresholdHigh} = anlz2ex.vocalConfig;
     const bands = extractBands(data, numEntries);
 
-    // Normalize thresholds from u16 (0–65535) to match waveform range (0–1)
-    const normLow = thresholdLow / 65535;
-    const normMid = thresholdMid / 65535;
-    const normHigh = thresholdHigh / 65535;
+    // Normalize thresholds to match waveform range (0–1). Values are u16 but
+    // observed range is 0–255 (same byte scale as waveform band values).
+    const normLow = thresholdLow / 255;
+    const normMid = thresholdMid / 255;
+    const normHigh = thresholdHigh / 255;
 
     // A region is "vocal" when mid exceeds its threshold while low and high
     // stay below theirs — meaning the mid-frequency band dominates.
