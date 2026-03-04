@@ -1,6 +1,6 @@
 {
   "name": "alphatheta-connect",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "main": "lib/index.js",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
   "contributors": [
