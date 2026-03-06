@@ -6,6 +6,7 @@ import {ANNOUNCE_PORT, BEAT_PORT, DEFAULT_VCDJ_ID, STATUS_PORT} from 'src/consta
 import Control from 'src/control';
 import Database from 'src/db';
 import DeviceManager from 'src/devices';
+import {type Logger, noopLogger} from 'src/logger';
 import LocalDatabase from 'src/localdb';
 import {DatabasePreference} from 'src/localdb/database-adapter';
 import {MixstatusProcessor} from 'src/mixstatus';
@@ -74,6 +75,11 @@ export interface NetworkConfig {
    * @default 'auto'
    */
   databasePreference?: DatabasePreference;
+  /**
+   * Logger instance for diagnostic output.
+   * If not provided, logging is silently discarded.
+   */
+  logger?: Logger;
 }
 
 interface ConnectionService {
@@ -171,6 +177,7 @@ export class ProlinkNetwork {
   #deviceManager: DeviceManager;
   #statusEmitter: StatusEmitter;
   #positionEmitter: PositionEmitter;
+  #logger: Logger;
 
   #config: null | NetworkConfig;
   #connection: null | ConnectionService;
@@ -189,6 +196,7 @@ export class ProlinkNetwork {
     positionEmitter,
   }: ConstructOpts) {
     this.#config = config ?? null;
+    this.#logger = config?.logger ?? noopLogger;
 
     this.#announceSocket = announceSocket;
     this.#beatSocket = beatSocket;
@@ -212,6 +220,9 @@ export class ProlinkNetwork {
    */
   configure(config: Partial<NetworkConfig>) {
     this.#config = {...this.#config, ...config} as NetworkConfig;
+    if (config.logger !== undefined) {
+      this.#logger = config.logger;
+    }
   }
 
   /**
@@ -277,7 +288,8 @@ export class ProlinkNetwork {
       this.#announceSocket,
       this.deviceManager,
       this.#config.iface,
-      this.#config.fullStartup ?? false
+      this.#config.fullStartup ?? false,
+      this.#logger
     );
     announcer.start();
 

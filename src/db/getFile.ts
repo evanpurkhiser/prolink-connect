@@ -1,4 +1,5 @@
 import {Track} from 'src/entities';
+import {type Logger, noopLogger} from 'src/logger';
 import LocalDatabase from 'src/localdb';
 import {fetchFile} from 'src/nfs';
 import RemoteDatabase from 'src/remotedb';
@@ -27,6 +28,10 @@ export interface Options {
    * The Sentry transaction span
    */
   span?: Span;
+  /**
+   * Logger instance for diagnostic output
+   */
+  logger?: Logger;
 }
 
 const CHUNK_SIZE = 8192; // Maximum allowed XDR read size
@@ -36,7 +41,8 @@ export function viaRemote(
   _device: Device,
   _opts: Required<Options>
 ): null {
-  console.error('Getting a file from Rekordbox via ProDJ-Link is not yet supported.');
+  const logger = _opts.logger ?? noopLogger;
+  logger.error('Getting a file from Rekordbox via ProDJ-Link is not yet supported.');
   return null;
 
   // const conn = await remote.get(deviceId);
@@ -68,6 +74,7 @@ export async function viaLocal(
   opts: Required<Options>
 ) {
   const {deviceId, trackSlot, track} = opts;
+  const logger = opts.logger ?? noopLogger;
 
   if (trackSlot !== MediaSlot.USB && trackSlot !== MediaSlot.SD) {
     throw new Error('Expected USB or SD or RB slot for remote database query');
@@ -84,7 +91,7 @@ export async function viaLocal(
       slot: trackSlot,
       path: track.filePath,
       onProgress: progress => {
-        console.log(progress.read, progress.total);
+        logger.trace('%d %d', progress.read, progress.total);
       },
       chunkSize: CHUNK_SIZE,
     });

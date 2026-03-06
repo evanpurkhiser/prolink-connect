@@ -37,5 +37,9 @@ export type {
 } from './localdb/database-adapter';
 export {OneLibraryAdapter} from './localdb/onelibrary';
 
+// Logger interface for pluggable logging
+export {noopLogger} from './logger';
+export type {Logger} from './logger';
+
 // Types are exported last to avoid overwriting values with type-only exports
 export * from './types';

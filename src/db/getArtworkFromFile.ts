@@ -1,5 +1,6 @@
 import {extractArtworkFromDevice, isArtworkExtractionSupported} from 'src/artwork';
 import {Track} from 'src/entities';
+import {type Logger, noopLogger} from 'src/logger';
 import {NfsMediaSlot} from 'src/nfs';
 import {Device, DeviceID, MediaSlot} from 'src/types';
 import {getSlotName} from 'src/utils';
@@ -11,6 +12,7 @@ export interface Options {
   trackSlot: MediaSlot;
   track: Track;
   span?: Span;
+  logger?: Logger;
 }
 
 /**
@@ -21,13 +23,14 @@ export async function viaFileExtraction(
   opts: Options
 ): Promise<Buffer | null> {
   const {trackSlot, track, span} = opts;
+  const logger = opts.logger ?? noopLogger;
 
   if (
     trackSlot !== MediaSlot.USB &&
     trackSlot !== MediaSlot.SD &&
     trackSlot !== MediaSlot.RB
   ) {
-    console.debug(
+    logger.debug(
       `[artwork-nfs] Skipping: unsupported slot ${getSlotName(trackSlot)} (device ${device.name})`
     );
     return null;
@@ -36,17 +39,17 @@ export async function viaFileExtraction(
   const slot = trackSlot as NfsMediaSlot;
 
   if (!track.filePath) {
-    console.debug('[artwork-nfs] Skipping: no filePath on track');
+    logger.debug('[artwork-nfs] Skipping: no filePath on track');
     return null;
   }
 
   const extension = track.filePath.split('.').pop()?.toLowerCase() ?? '';
   if (!isArtworkExtractionSupported(extension)) {
-    console.debug(`[artwork-nfs] Skipping: unsupported extension ".${extension}" (${track.filePath})`);
+    logger.debug(`[artwork-nfs] Skipping: unsupported extension ".${extension}" (${track.filePath})`);
     return null;
   }
 
-  console.debug(
+  logger.debug(
     `[artwork-nfs] Extracting from ${track.filePath} (slot=${getSlotName(trackSlot)}, device=${device.name} @ ${device.ip.address})`
   );
 
@@ -55,16 +58,16 @@ export async function viaFileExtraction(
     : Telemetry.startTransaction({name: 'getArtworkFromFile'});
 
   try {
-    const artwork = await extractArtworkFromDevice(device, slot, track.filePath);
+    const artwork = await extractArtworkFromDevice(device, slot, track.filePath, logger);
 
     if (!artwork) {
-      console.debug('[artwork-nfs] No embedded artwork found in file');
+      logger.debug('[artwork-nfs] No embedded artwork found in file');
       tx.setData('result', 'no_artwork');
       tx.finish();
       return null;
     }
 
-    console.debug(
+    logger.debug(
       `[artwork-nfs] Success: ${artwork.mimeType} (${artwork.data.length} bytes)`
     );
     tx.setData('result', 'success');
@@ -75,7 +78,7 @@ export async function viaFileExtraction(
     return artwork.data;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.warn(`[artwork-nfs] NFS extraction failed: ${msg}`);
+    logger.warn(`[artwork-nfs] NFS extraction failed: ${msg}`);
     tx.setData('result', 'error');
     tx.finish();
     Telemetry.captureException(error);

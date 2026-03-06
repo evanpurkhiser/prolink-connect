@@ -12,6 +12,7 @@ import {
   VIRTUAL_CDJ_NAME,
 } from 'src/constants';
 import DeviceManager from 'src/devices';
+import {type Logger, noopLogger} from 'src/logger';
 import {Device, DeviceID, DeviceType} from 'src/types';
 import {buildName} from 'src/utils';
 
@@ -325,19 +326,25 @@ export class Announcer {
    * Network interface for the virtual CDJ
    */
   #iface: NetworkInterfaceInfoIPv4;
+  /**
+   * Logger instance for diagnostic output
+   */
+  #logger: Logger;
 
   constructor(
     vcdj: Device,
     announceSocket: Socket,
     deviceManager: DeviceManager,
     iface: NetworkInterfaceInfoIPv4,
-    fullStartup = false
+    fullStartup = false,
+    logger: Logger = noopLogger
   ) {
     this.#vcdj = vcdj;
     this.#announceSocket = announceSocket;
     this.#deviceManager = deviceManager;
     this.#iface = iface;
     this.#fullStartup = fullStartup;
+    this.#logger = logger;
   }
 
   start() {
@@ -359,7 +366,7 @@ export class Announcer {
     this.#conflictListener = (msg: Buffer) => {
       const conflictDeviceId = parseConflictPacket(msg);
       if (conflictDeviceId === this.#vcdj.id) {
-        console.warn(
+        this.#logger.warn(
           `Device ID ${this.#vcdj.id} is already in use. Finding alternative...`
         );
         this.#handleConflict();
@@ -401,12 +408,12 @@ export class Announcer {
     }
 
     if (newId === null) {
-      console.error('No available device IDs. All 32 slots are occupied.');
+      this.#logger.error('No available device IDs. All 32 slots are occupied.');
       this.stop();
       return;
     }
 
-    console.log(`Switching to device ID ${newId}`);
+    this.#logger.info(`Switching to device ID ${newId}`);
 
     // Update virtual CDJ with new ID
     this.#vcdj = getVirtualCDJ(this.#iface, newId as DeviceID);
