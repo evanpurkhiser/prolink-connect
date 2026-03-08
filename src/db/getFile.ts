@@ -39,7 +39,7 @@ const CHUNK_SIZE = 8192; // Maximum allowed XDR read size
 export function viaRemote(
   _remote: RemoteDatabase,
   _device: Device,
-  _opts: Required<Options>
+  _opts: Options
 ): null {
   const logger = _opts.logger ?? noopLogger;
   logger.error('Getting a file from Rekordbox via ProDJ-Link is not yet supported.');
@@ -71,7 +71,7 @@ export function viaRemote(
 export async function viaLocal(
   local: LocalDatabase,
   device: Device,
-  opts: Required<Options>
+  opts: Options
 ) {
   const {deviceId, trackSlot, track} = opts;
   const logger = opts.logger ?? noopLogger;
