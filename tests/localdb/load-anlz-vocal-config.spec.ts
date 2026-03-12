@@ -154,7 +154,6 @@ describe('Requesting Vocal Detection Configuration', () => {
         {
           fourcc: SECTION_TAGS.WAVE_COLOR_3BAND_DETAIL,
           body: {
-            samplesPerBeat: 150,
             lenEntries: 1000,
             entries: new Uint8Array(3000),
           },

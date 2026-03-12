@@ -79,15 +79,14 @@ async function analyze3BandWaveform(track: Track, anlzLoader: (path: string) => 
   // ============================================================================
 
   if (anlz2ex.waveform3BandDetail) {
-    const {samplesPerBeat, numEntries, data} = anlz2ex.waveform3BandDetail;
+    const {numEntries, data} = anlz2ex.waveform3BandDetail;
 
     console.log('═══════════════════════════════════════════════════════════');
     console.log('  3-BAND WAVEFORM DETAIL (PWV7)');
     console.log('═══════════════════════════════════════════════════════════');
     console.log(`\n  Entries: ${numEntries}`);
-    console.log(`  Samples per beat: ${samplesPerBeat}`);
     console.log(`  Raw data: ${data.length} bytes (${numEntries} × 3 bands)`);
-    console.log('  → Use for beat-level visualization or per-beat analysis\n');
+    console.log('  → Use for high-resolution visualization or per-entry analysis\n');
   }
 
   // ============================================================================

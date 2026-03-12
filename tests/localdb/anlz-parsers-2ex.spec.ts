@@ -133,23 +133,9 @@ describe('.2EX Parser Functions', () => {
   // makeWaveform3BandDetail (PWV7)
   // ==========================================================================
   describe('makeWaveform3BandDetail', () => {
-    it('extracts samplesPerBeat from Kaitai object', () => {
-      const kaitaiSection = {
-        body: {
-          samplesPerBeat: 150,
-          lenEntries: 1000,
-          entries: new Uint8Array(1000 * 3),
-        },
-      };
-
-      const result = makeWaveform3BandDetail(kaitaiSection);
-      expect(result.samplesPerBeat).toBe(150);
-    });
-
     it('extracts numEntries from Kaitai object', () => {
       const kaitaiSection = {
         body: {
-          samplesPerBeat: 150,
           lenEntries: 45000,
           entries: new Uint8Array(45000 * 3),
         },
@@ -163,7 +149,6 @@ describe('.2EX Parser Functions', () => {
       const entries = new Uint8Array([10, 20, 30, 40, 50, 60]);
       const kaitaiSection = {
         body: {
-          samplesPerBeat: 150,
           lenEntries: 2,
           entries,
         },
@@ -178,7 +163,6 @@ describe('.2EX Parser Functions', () => {
       const entries = new Uint8Array([0, 128, 255, 64, 192, 32]);
       const kaitaiSection = {
         body: {
-          samplesPerBeat: 150,
           lenEntries: 2,
           entries,
         },
@@ -188,8 +172,7 @@ describe('.2EX Parser Functions', () => {
       expect(Array.from(result.data)).toEqual([0, 128, 255, 64, 192, 32]);
     });
 
-    it('handles large detail waveform (5-min track at 150/sec)', () => {
-      // 5 minutes * 60 seconds * 150 samples/sec = 45000 entries
+    it('handles large detail waveform (5-min track)', () => {
       const numEntries = 45000;
       const entries = new Uint8Array(numEntries * 3);
       for (let i = 0; i < entries.length; i++) {
@@ -197,19 +180,17 @@ describe('.2EX Parser Functions', () => {
       }
 
       const kaitaiSection = {
-        body: { samplesPerBeat: 150, lenEntries: numEntries, entries },
+        body: { lenEntries: numEntries, entries },
       };
 
       const result = makeWaveform3BandDetail(kaitaiSection);
       expect(result.numEntries).toBe(45000);
       expect(result.data.length).toBe(135000);
-      expect(result.samplesPerBeat).toBe(150);
     });
 
     it('handles zero entries', () => {
       const kaitaiSection = {
         body: {
-          samplesPerBeat: 150,
           lenEntries: 0,
           entries: new Uint8Array(0),
         },
@@ -218,26 +199,12 @@ describe('.2EX Parser Functions', () => {
       const result = makeWaveform3BandDetail(kaitaiSection);
       expect(result.numEntries).toBe(0);
       expect(result.data.length).toBe(0);
-      expect(result.samplesPerBeat).toBe(150);
-    });
-
-    it('handles non-standard samplesPerBeat', () => {
-      const kaitaiSection = {
-        body: {
-          samplesPerBeat: 75,
-          lenEntries: 10,
-          entries: new Uint8Array(30),
-        },
-      };
-
-      const result = makeWaveform3BandDetail(kaitaiSection);
-      expect(result.samplesPerBeat).toBe(75);
     });
 
     it('creates an independent copy of the data', () => {
       const entries = new Uint8Array([10, 20, 30]);
       const kaitaiSection = {
-        body: { samplesPerBeat: 150, lenEntries: 1, entries },
+        body: { lenEntries: 1, entries },
       };
 
       const result = makeWaveform3BandDetail(kaitaiSection);

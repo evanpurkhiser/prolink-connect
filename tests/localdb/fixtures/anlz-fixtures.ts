@@ -67,32 +67,27 @@ function createSectionHeader(
 }
 
 /**
- * Create a PWV6 (wave_color_3channel) section
+ * Create a PWV6 (wave_color_3band_preview) section.
+ * Layout matches PWV4 (wave_color_preview): len_entry_bytes + len_entries + entries.
  */
 export function createPWV6Section(options: {
   numEntries?: number;
-  numChannels?: number;
   data?: Uint8Array;
 } = {}): Buffer {
   const numEntries = options.numEntries ?? 100;
-  const numChannels = options.numChannels ?? 3;
   const entryBytes = 3;
   const dataLength = numEntries * entryBytes;
 
-  // Create waveform data if not provided
   const data =
     options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
 
-  // Body: len_entry_bytes(4) + num_channels(4) + len_entries(4) + unknown(4) + unknown(4) + entries
-  const bodyLength = 4 + 4 + 4 + 4 + 4 + dataLength;
+  // Body: len_entry_bytes(4) + len_entries(4) + entries
+  const bodyLength = 4 + 4 + dataLength;
   const body = Buffer.alloc(bodyLength);
 
   let offset = 0;
   writeUInt32BE(body, entryBytes, offset); offset += 4; // len_entry_bytes
-  writeUInt32BE(body, numChannels, offset); offset += 4; // num_channels
   writeUInt32BE(body, numEntries, offset); offset += 4; // len_entries
-  writeUInt32BE(body, 0, offset); offset += 4; // unknown1
-  writeUInt32BE(body, 0, offset); offset += 4; // unknown2
   Buffer.from(data).copy(body, offset); // entries
 
   const header = createSectionHeader(SectionTags.WAVE_COLOR_3CHANNEL, bodyLength);
@@ -100,34 +95,28 @@ export function createPWV6Section(options: {
 }
 
 /**
- * Create a PWV7 (wave_hd) section
+ * Create a PWV7 (wave_color_3band_detail) section.
+ * Layout matches PWV5 (wave_color_scroll): len_entry_bytes + len_entries + unknown + entries.
  */
 export function createPWV7Section(options: {
   numEntries?: number;
-  numChannels?: number;
-  samplesPerBeat?: number;
   data?: Uint8Array;
 } = {}): Buffer {
   const numEntries = options.numEntries ?? 1000;
-  const numChannels = options.numChannels ?? 3;
-  const samplesPerBeat = options.samplesPerBeat ?? 150;
-  const entryBytes = 3; // RGB
+  const entryBytes = 3;
   const dataLength = numEntries * entryBytes;
 
-  // Create waveform data if not provided
   const data =
     options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
 
-  // Body: len_entry_bytes(4) + num_channels(4) + len_entries(4) + samples_per_beat(2) + unknown(2) + entries
-  const bodyLength = 4 + 4 + 4 + 2 + 2 + dataLength;
+  // Body: len_entry_bytes(4) + len_entries(4) + unknown(4) + entries
+  const bodyLength = 4 + 4 + 4 + dataLength;
   const body = Buffer.alloc(bodyLength);
 
   let offset = 0;
   writeUInt32BE(body, entryBytes, offset); offset += 4; // len_entry_bytes
-  writeUInt32BE(body, numChannels, offset); offset += 4; // num_channels
   writeUInt32BE(body, numEntries, offset); offset += 4; // len_entries
-  writeUInt16BE(body, samplesPerBeat, offset); offset += 2; // samples_per_beat
-  writeUInt16BE(body, 0, offset); offset += 2; // unknown
+  writeUInt32BE(body, 0x960000, offset); offset += 4; // unknown constant
   Buffer.from(data).copy(body, offset); // entries
 
   const header = createSectionHeader(SectionTags.WAVE_HD, bodyLength);

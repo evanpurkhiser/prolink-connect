@@ -510,49 +510,36 @@ types:
       A 3-band color waveform preview (PWV6, found in .2EX files).
       Same resolution as PWV4 (typically 1200 entries) but with 3 bytes
       per entry representing low, mid, and high frequency band amplitudes.
+      Layout is identical to wave_color_preview_tag (PWV4).
     doc-ref: https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#color-3band-preview-waveform
     seq:
       - id: len_entry_bytes
         type: u4
         doc: |
-          The size of each entry, in bytes. Seems to always be 3.
-      - id: num_channels
-        type: u4
-        doc: |
-          Number of frequency channels. Seems to always be 3.
+          The size of each entry, in bytes. Always 3 (low, mid, high).
       - id: len_entries
         type: u4
         doc: |
-          The number of waveform data points.
-      - type: u4  # unknown1
-      - type: u4  # unknown2
+          The number of waveform data points. Typically 1200.
       - id: entries
         size: len_entries * len_entry_bytes
 
   wave_color_3band_detail_tag:
     doc: |
       A 3-band color detail waveform (PWV7, found in .2EX files).
-      Higher resolution than PWV6, with approximately 150 entries per
-      second of audio. Each entry is 3 bytes (low, mid, high).
+      Higher resolution than PWV6. Each entry is 3 bytes (low, mid, high).
+      Layout is identical to wave_color_scroll_tag (PWV5).
     doc-ref: https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#color-3band-detail-waveform
     seq:
       - id: len_entry_bytes
         type: u4
         doc: |
-          The size of each entry, in bytes. Seems to always be 3.
-      - id: num_channels
-        type: u4
-        doc: |
-          Number of frequency channels. Seems to always be 3.
+          The size of each entry, in bytes. Always 3 (low, mid, high).
       - id: len_entries
         type: u4
         doc: |
-          The number of waveform data points.
-      - id: samples_per_beat
-        type: u2
-        doc: |
-          The number of waveform samples per beat. Typically 150.
-      - type: u2  # unknown
+          The number of columns of waveform data.
+      - type: u4  # unknown, observed 0x00960000
       - id: entries
         size: len_entries * len_entry_bytes
 

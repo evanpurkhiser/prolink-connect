@@ -125,6 +125,11 @@ export enum MediaSlot {
   SD = 0x02,
   USB = 0x03,
   RB = 0x04,
+  Unknown05 = 0x05, // Possibly TIDAL, Apple Music, or other streaming
+  StreamingDirectPlay = 0x06,
+  Unknown07 = 0x07, // Possibly TIDAL, Apple Music, or other streaming
+  Unknown08 = 0x08, // Possibly TIDAL, Apple Music, or other streaming
+  Beatport = 0x09,
 }
 
 /**
@@ -135,6 +140,7 @@ export enum TrackType {
   RB = 0x01,
   Unanalyzed = 0x02,
   AudioCD = 0x05,
+  Streaming = 0x06,
 }
 
 /**
@@ -438,7 +444,6 @@ export interface Waveform3BandPreview {
  * @see https://djl-analysis.deepsymmetry.org/djl-analysis/track-metadata.html#color-3band-detail-waveform
  */
 export interface Waveform3BandDetail {
-  samplesPerBeat: number;
   numEntries: number;
   /** Raw interleaved bytes: numEntries × 3 (low, mid, high per entry) */
   data: Uint8Array;

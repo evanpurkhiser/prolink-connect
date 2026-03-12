@@ -62,7 +62,7 @@ describe('ANLZ Binary Fixtures', () => {
       expect(section.readUInt32BE(4)).toBe(12);
 
       // Tag length includes header + body
-      const bodyLength = 4 + 4 + 4 + 4 + 4 + 100 * 3; // fields + data
+      const bodyLength = 4 + 4 + 100 * 3; // len_entry_bytes + len_entries + data
       expect(section.readUInt32BE(8)).toBe(12 + bodyLength);
     });
 
@@ -73,26 +73,19 @@ describe('ANLZ Binary Fixtures', () => {
       expect(section.readUInt32BE(12)).toBe(3); // 3 bytes per RGB entry
     });
 
-    it('stores num_channels correctly', () => {
-      const section = createPWV6Section({numChannels: 3});
-
-      // num_channels at offset 16
-      expect(section.readUInt32BE(16)).toBe(3);
-    });
-
     it('stores num_entries correctly', () => {
       const section = createPWV6Section({numEntries: 500});
 
-      // len_entries at offset 20
-      expect(section.readUInt32BE(20)).toBe(500);
+      // len_entries at offset 16
+      expect(section.readUInt32BE(16)).toBe(500);
     });
 
     it('stores waveform data correctly', () => {
       const data = new Uint8Array([255, 0, 128, 0, 255, 64, 100, 100, 100]);
       const section = createPWV6Section({numEntries: 3, data});
 
-      // Data starts at offset 32 (12 header + 20 body fields)
-      const extractedData = section.slice(32, 32 + 9);
+      // Data starts at offset 20 (12 header + 8 body fields)
+      const extractedData = section.slice(20, 20 + 9);
       expect(Array.from(extractedData)).toEqual(Array.from(data));
     });
 
@@ -101,7 +94,7 @@ describe('ANLZ Binary Fixtures', () => {
 
       // Data should be numEntries * 3 bytes
       const expectedDataLength = 10 * 3;
-      const totalLength = 12 + 20 + expectedDataLength; // header + body fields + data
+      const totalLength = 12 + 8 + expectedDataLength; // header + body fields + data
       expect(section.length).toBe(totalLength);
     });
   });
@@ -127,33 +120,19 @@ describe('ANLZ Binary Fixtures', () => {
       expect(section.readUInt32BE(12)).toBe(3); // 3 bytes per RGB entry
     });
 
-    it('stores num_channels correctly', () => {
-      const section = createPWV7Section({numChannels: 3});
-
-      // num_channels at offset 16
-      expect(section.readUInt32BE(16)).toBe(3);
-    });
-
     it('stores num_entries correctly', () => {
       const section = createPWV7Section({numEntries: 30000});
 
-      // len_entries at offset 20
-      expect(section.readUInt32BE(20)).toBe(30000);
-    });
-
-    it('stores samples_per_beat correctly', () => {
-      const section = createPWV7Section({samplesPerBeat: 150});
-
-      // samples_per_beat at offset 24 (u16)
-      expect(section.readUInt16BE(24)).toBe(150);
+      // len_entries at offset 16
+      expect(section.readUInt32BE(16)).toBe(30000);
     });
 
     it('stores waveform data correctly', () => {
       const data = new Uint8Array([10, 20, 30, 40, 50, 60]);
       const section = createPWV7Section({numEntries: 2, data});
 
-      // Data starts at offset 28 (12 header + 16 body fields)
-      const extractedData = section.slice(28, 28 + 6);
+      // Data starts at offset 24 (12 header + 12 body fields)
+      const extractedData = section.slice(24, 24 + 6);
       expect(Array.from(extractedData)).toEqual(Array.from(data));
     });
   });
@@ -266,7 +245,7 @@ describe('ANLZ Binary Fixtures', () => {
     it('creates valid 2EX file with all sections', () => {
       const buffer = create2EXFile({
         pwv6: {numEntries: 100},
-        pwv7: {numEntries: 500, samplesPerBeat: 150},
+        pwv7: {numEntries: 500},
         pwvc: {thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90},
       });
 
@@ -363,10 +342,10 @@ describe('ANLZ Binary Fixtures', () => {
         100, // Entry 3: R=100, G=100, B=100
       ]);
 
-      const section = createPWV6Section({numEntries: 3, numChannels: 3, data});
+      const section = createPWV6Section({numEntries: 3, data});
 
-      // Extract and verify data
-      const extractedData = section.slice(32, 32 + 9);
+      // Extract and verify data (offset 20 = 12 header + 4 len_entry_bytes + 4 len_entries)
+      const extractedData = section.slice(20, 20 + 9);
       expect(Array.from(extractedData)).toEqual(Array.from(data));
     });
 
@@ -375,13 +354,11 @@ describe('ANLZ Binary Fixtures', () => {
 
       const section = createPWV7Section({
         numEntries: 4,
-        numChannels: 3,
-        samplesPerBeat: 150,
         data,
       });
 
-      // Extract and verify data
-      const extractedData = section.slice(28, 28 + 12);
+      // Extract and verify data (offset 24 = 12 header + 4 len_entry_bytes + 4 len_entries + 4 unknown)
+      const extractedData = section.slice(24, 24 + 12);
       expect(Array.from(extractedData)).toEqual(Array.from(data));
     });
 
@@ -395,12 +372,12 @@ describe('ANLZ Binary Fixtures', () => {
 
       const section = createPWV7Section({numEntries, data});
 
-      // Verify data was stored
-      expect(section.readUInt32BE(20)).toBe(numEntries);
+      // Verify data was stored (len_entries at offset 16)
+      expect(section.readUInt32BE(16)).toBe(numEntries);
 
-      // Verify first and last bytes of data
-      expect(section[28]).toBe(0);
-      expect(section[28 + dataLength - 1]).toBe((dataLength - 1) % 256);
+      // Verify first and last bytes of data (data starts at offset 24)
+      expect(section[24]).toBe(0);
+      expect(section[24 + dataLength - 1]).toBe((dataLength - 1) % 256);
     });
   });
 

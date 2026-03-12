@@ -206,7 +206,6 @@ export function makeWaveform3BandPreview(data: any): Waveform3BandPreview {
  */
 export function makeWaveform3BandDetail(data: any): Waveform3BandDetail {
   return {
-    samplesPerBeat: data.body.samplesPerBeat,
     numEntries: data.body.lenEntries,
     data: Buffer.from(data.body.entries),
   };

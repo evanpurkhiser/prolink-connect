@@ -53,10 +53,10 @@ function parseAnlzSections(buffer: Buffer): ParsedSection[] {
     const bodyStart = offset + 12;
 
     if (fourcc === SectionTags.WAVE_COLOR_3CHANNEL) {
-      // PWV6: len_entry_bytes(4) + num_channels(4) + len_entries(4) + unknown(4) + unknown(4) + entries
-      const lenEntries = buffer.readUInt32BE(bodyStart + 8);
+      // PWV6: len_entry_bytes(4) + len_entries(4) + entries (same as PWV4)
       const lenEntryBytes = buffer.readUInt32BE(bodyStart);
-      const dataStart = bodyStart + 20;
+      const lenEntries = buffer.readUInt32BE(bodyStart + 4);
+      const dataStart = bodyStart + 8;
       const dataLength = lenEntries * lenEntryBytes;
       const entries = buffer.slice(dataStart, dataStart + dataLength);
 
@@ -65,17 +65,16 @@ function parseAnlzSections(buffer: Buffer): ParsedSection[] {
         body: { lenEntries, entries },
       });
     } else if (fourcc === SectionTags.WAVE_HD) {
-      // PWV7: len_entry_bytes(4) + num_channels(4) + len_entries(4) + samples_per_beat(2) + unknown(2) + entries
-      const lenEntries = buffer.readUInt32BE(bodyStart + 8);
+      // PWV7: len_entry_bytes(4) + len_entries(4) + unknown(4) + entries (same as PWV5)
       const lenEntryBytes = buffer.readUInt32BE(bodyStart);
-      const samplesPerBeat = buffer.readUInt16BE(bodyStart + 12);
-      const dataStart = bodyStart + 16;
+      const lenEntries = buffer.readUInt32BE(bodyStart + 4);
+      const dataStart = bodyStart + 12;
       const dataLength = lenEntries * lenEntryBytes;
       const entries = buffer.slice(dataStart, dataStart + dataLength);
 
       sections.push({
         fourcc,
-        body: { lenEntries, samplesPerBeat, entries },
+        body: { lenEntries, entries },
       });
     } else if (fourcc === SectionTags.VOCAL_CONFIG) {
       // PWVC: unknown(2) + threshold_low(2) + threshold_mid(2) + threshold_high(2)
@@ -141,7 +140,7 @@ describe('.2EX Integration Tests', () => {
     it('parses PWV7 from binary fixture end-to-end', () => {
       const inputData = new Uint8Array([10, 20, 30, 40, 50, 60]);
       const file = create2EXFile({
-        pwv7: { numEntries: 2, samplesPerBeat: 150, data: inputData },
+        pwv7: { numEntries: 2, data: inputData },
       });
 
       const sections = parseAnlzSections(file);
@@ -150,7 +149,6 @@ describe('.2EX Integration Tests', () => {
 
       const result = makeWaveform3BandDetail(pwv7Section!);
       expect(result.numEntries).toBe(2);
-      expect(result.samplesPerBeat).toBe(150);
       expect(Array.from(result.data)).toEqual(Array.from(inputData));
     });
 
@@ -175,7 +173,7 @@ describe('.2EX Integration Tests', () => {
 
       const file = create2EXFile({
         pwv6: { numEntries: 2, data: pwv6Data },
-        pwv7: { numEntries: 3, samplesPerBeat: 150, data: pwv7Data },
+        pwv7: { numEntries: 3, data: pwv7Data },
         pwvc: { thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90 },
       });
 
@@ -194,7 +192,6 @@ describe('.2EX Integration Tests', () => {
         sections.find(s => s.fourcc === SectionTags.WAVE_HD)!
       );
       expect(detail.numEntries).toBe(3);
-      expect(detail.samplesPerBeat).toBe(150);
       expect(Array.from(detail.data)).toEqual(Array.from(pwv7Data));
 
       // PWVC
@@ -302,7 +299,6 @@ describe('.2EX Integration Tests', () => {
     });
 
     it('handles realistic 30000-entry PWV7 detail data', () => {
-      // 200 seconds * 150 samples/sec = 30000 entries
       const numEntries = 30000;
       const data = new Uint8Array(numEntries * 3);
       for (let i = 0; i < data.length; i++) {
@@ -310,14 +306,13 @@ describe('.2EX Integration Tests', () => {
       }
 
       const file = create2EXFile({
-        pwv7: { numEntries, samplesPerBeat: 150, data },
+        pwv7: { numEntries, data },
       });
       const sections = parseAnlzSections(file);
       const result = makeWaveform3BandDetail(sections[0]);
 
       expect(result.numEntries).toBe(30000);
       expect(result.data.length).toBe(90000);
-      expect(result.samplesPerBeat).toBe(150);
 
       // Spot-check first and last entries
       expect(result.data[0]).toBe(0);
