@@ -81,22 +81,23 @@ async function getMetadata(opts: TrackQueryOpts) {
   }
 
   // Translate our trackItems into a (partial) Track entity.
+  // Use optional chaining for all fields since streaming tracks may omit some.
   const track: entities.Track = {
-    id: trackItems[ItemType.TrackTitle].id,
-    title: trackItems[ItemType.TrackTitle].title,
-    duration: trackItems[ItemType.Duration].duration,
-    tempo: trackItems[ItemType.Tempo].bpm,
-    comment: trackItems[ItemType.Comment].comment,
-    rating: trackItems[ItemType.Rating].rating,
+    id: trackItems[ItemType.TrackTitle]?.id ?? 0,
+    title: trackItems[ItemType.TrackTitle]?.title ?? '',
+    duration: trackItems[ItemType.Duration]?.duration ?? 0,
+    tempo: trackItems[ItemType.Tempo]?.bpm ?? 0,
+    comment: trackItems[ItemType.Comment]?.comment ?? '',
+    rating: trackItems[ItemType.Rating]?.rating ?? 0,
     year: trackItems?.[ItemType.Year]?.year,
     bitrate: trackItems?.[ItemType.BitRate]?.bitrate,
 
-    artwork: {id: trackItems[ItemType.TrackTitle].artworkId},
-    album: trackItems[ItemType.AlbumTitle],
-    artist: trackItems[ItemType.Artist],
-    genre: trackItems[ItemType.Genre],
-    key: trackItems[ItemType.Key],
-    color: findColor(Object.values(trackItems))!,
+    artwork: {id: trackItems[ItemType.TrackTitle]?.artworkId ?? 0},
+    album: trackItems[ItemType.AlbumTitle] ?? null,
+    artist: trackItems[ItemType.Artist] ?? null,
+    genre: trackItems[ItemType.Genre] ?? null,
+    key: trackItems[ItemType.Key] ?? null,
+    color: findColor(Object.values(trackItems)) ?? null,
     label: trackItems[ItemType.Label] ?? null,
     remixer: trackItems?.[ItemType.Remixer] ?? null,
     originalArtist: trackItems?.[ItemType.OriginalArtist] ?? null,
