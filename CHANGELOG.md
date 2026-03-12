@@ -5,6 +5,16 @@ All notable changes to alphatheta-connect (formerly prolink-connect) will be doc
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.18.0] - 2026-03-12
+
+### Added
+
+- **Streaming service detection**: Added support for detecting streaming sources (Beatport, Streaming Direct Play, TIDAL, Apple Music) via MediaSlot enum
+- `MediaSlot.StreamingDirectPlay = 0x06` for Streaming Direct Play tracks
+- `MediaSlot.Beatport = 0x09` for Beatport streaming tracks
+- Placeholder slots for unknown streaming services (0x05, 0x07, 0x08) - likely TIDAL and Apple Music
+- CDJ-3000X supports: Beatport, TIDAL, Apple Music, and Streaming Direct Play via CloudDirectPlay
+
 ## [v0.17.0] - 2026-03-02
 
 ### Added

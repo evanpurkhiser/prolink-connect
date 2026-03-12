@@ -23,6 +23,10 @@ Alternative implementations of the Prolink protocol: [Java](https://github.com/D
 
 ## Features
 
+- **Streaming Service Detection** *(new)* - Detect when tracks are loaded from
+  streaming services (Beatport, Streaming Direct Play, TIDAL, Apple Music) via
+  `MediaSlot` enum. Supports CDJ-3000X CloudDirectPlay streaming features.
+
 - **Support for AlphaTheta Opus Quad, XDJ-RX3, XDJ-RX2, XDJ-RX, and XDJ-XZ** *(new)* -
   Passive mode monitoring via pcap-based packet capture for all-in-one controllers
   where traditional virtual CDJ connection isn't possible.
