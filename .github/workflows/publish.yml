@@ -164,3 +164,25 @@ jobs:
       - name: Publish to npm
         if: steps.bump.outputs.skip != 'true'
         run: npm publish --access public
+
+      - name: Verify npm publish
+        if: steps.bump.outputs.skip != 'true'
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          EXPECTED_VERSION="${{ steps.version.outputs.new }}"
+
+          echo "Verifying ${PACKAGE_NAME}@${EXPECTED_VERSION} on npm..."
+
+          # Poll npm registry (propagation can take a few seconds)
+          for i in 1 2 3 4 5; do
+            PUBLISHED_VERSION=$(npm view "${PACKAGE_NAME}" version 2>/dev/null || echo "")
+            if [ "$PUBLISHED_VERSION" = "$EXPECTED_VERSION" ]; then
+              echo "Verified: ${PACKAGE_NAME}@${PUBLISHED_VERSION} is live on npm"
+              exit 0
+            fi
+            echo "Attempt $i: got '${PUBLISHED_VERSION}', expected '${EXPECTED_VERSION}'. Retrying in 10s..."
+            sleep 10
+          done
+
+          echo "::error::npm shows ${PACKAGE_NAME}@${PUBLISHED_VERSION} but expected ${EXPECTED_VERSION}"
+          exit 1
