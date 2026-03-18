@@ -5,6 +5,17 @@ All notable changes to alphatheta-connect (formerly prolink-connect) will be doc
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.18.1] - 2026-03-18
+
+### Fixed
+
+- **Windows passive mode**: Translate Node.js network interface names (e.g. "Ethernet") to Npcap device paths (`\Device\NPF_{GUID}`) when opening packet capture. Previously, `PcapAdapter.start()` would fail on Windows because the `cap` module requires Npcap device paths, not OS-level friendly names.
+
+### Added
+
+- `resolveWindowsInterface()` helper in PcapAdapter that cross-references `os.networkInterfaces()` with `Cap.deviceList()` by matching IPv4 addresses
+- Test suite for Windows interface resolution (9 tests covering matching, fallback, passthrough, and cross-platform behavior)
+
 ## [v0.18.0] - 2026-03-12
 
 ### Added
