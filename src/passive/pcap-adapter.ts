@@ -1,6 +1,7 @@
 import StrictEventEmitter from 'strict-event-emitter-types';
 
 import {EventEmitter} from 'events';
+import {networkInterfaces} from 'os';
 
 import {ANNOUNCE_PORT, BEAT_PORT, STATUS_PORT} from 'src/constants';
 
@@ -28,8 +29,19 @@ interface ProtocolConstants {
   IP: {UDP: number};
 }
 
+interface CapDeviceListEntry {
+  name: string;
+  description: string;
+  addresses: Array<{addr: string}>;
+}
+
+interface CapConstructor {
+  new (): CapInstance;
+  deviceList(): CapDeviceListEntry[];
+}
+
 interface CapModule {
-  Cap: new () => CapInstance;
+  Cap: CapConstructor;
   decoders: {
     PROTOCOL: ProtocolConstants;
     Ethernet: (buf: Buffer) => {info: {type: number}; offset: number};
@@ -148,14 +160,24 @@ export class PcapAdapter {
 
     this.#cap = new Cap();
 
+    // On Windows, translate Node.js interface name (e.g. "Ethernet") to Npcap
+    // device path (e.g. "\Device\NPF_{GUID}") by matching IPv4 addresses.
+    let deviceName = this.#iface;
+    if (process.platform === 'win32' && !deviceName.startsWith('\\Device\\')) {
+      const resolved = resolveWindowsInterface(this.#iface, Cap);
+      if (resolved) {
+        deviceName = resolved;
+      }
+    }
+
     // BPF filter for Pro DJ Link UDP ports
     const filter = `udp and (port ${ANNOUNCE_PORT} or port ${BEAT_PORT} or port ${STATUS_PORT})`;
 
     try {
-      this.#cap.open(this.#iface, filter, 65535, this.#buffer);
+      this.#cap.open(deviceName, filter, 65535, this.#buffer);
     } catch (err) {
       throw new Error(
-        `Failed to open interface "${this.#iface}" for packet capture. ` +
+        `Failed to open interface "${this.#iface}" (device: ${deviceName}) for packet capture. ` +
           `Ensure you have root/sudo privileges and the interface exists.\n` +
           `Original error: ${err}`
       );
@@ -252,6 +274,48 @@ export class PcapAdapter {
   get interfaceName() {
     return this.#iface;
   }
+}
+
+/**
+ * Resolve a Node.js network interface name (e.g. "Ethernet") to an Npcap
+ * device path (e.g. "\Device\NPF_{GUID}") on Windows.
+ *
+ * Node.js os.networkInterfaces() returns friendly names, but the cap module
+ * requires Npcap device paths. This function matches by comparing IPv4
+ * addresses between os.networkInterfaces() and Cap.deviceList().
+ */
+function resolveWindowsInterface(ifaceName: string, Cap: CapConstructor): string | null {
+  // Get the IPv4 addresses for the requested Node.js interface
+  const nodeInterfaces = networkInterfaces();
+  const nodeIface = nodeInterfaces[ifaceName];
+  if (!nodeIface) {
+    return null;
+  }
+
+  const nodeIpv4Addresses = new Set(
+    nodeIface
+      .filter(i => (i.family as any) === 'IPv4' || (i.family as any) === 4)
+      .map(i => i.address)
+  );
+
+  if (nodeIpv4Addresses.size === 0) {
+    return null;
+  }
+
+  // Find the cap device whose addresses overlap with the Node.js interface
+  const capDevices = Cap.deviceList();
+  for (const device of capDevices) {
+    if (!device.addresses) {
+      continue;
+    }
+    for (const addr of device.addresses) {
+      if (addr.addr && nodeIpv4Addresses.has(addr.addr)) {
+        return device.name;
+      }
+    }
+  }
+
+  return null;
 }
 
 export default PcapAdapter;
