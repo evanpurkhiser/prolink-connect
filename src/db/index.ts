@@ -48,7 +48,7 @@ class Database {
     hostDevice: Device,
     local: LocalDatabase,
     remote: RemoteDatabase,
-    deviceManager: DeviceManager
+    deviceManager: DeviceManager,
   ) {
     this.#hostDevice = hostDevice;
     this.#localDatabase = local;

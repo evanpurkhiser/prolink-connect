@@ -7,7 +7,7 @@ import {AddressInfo} from 'net';
 export function udpBind(
   conn: Socket,
   port?: number,
-  address?: string
+  address?: string,
 ): Promise<AddressInfo>;
 export function udpBind(conn: Socket, options: BindOptions): Promise<AddressInfo>;
 export function udpBind(conn: Socket, arg1?: any, arg2?: any): Promise<AddressInfo> {
@@ -40,7 +40,7 @@ export function udpSend(
   conn: Socket,
   msg: Buffer | string | Uint8Array | any[],
   port: number,
-  address: string
+  address: string,
 ): Promise<number>;
 export function udpSend(
   conn: Socket,
@@ -48,7 +48,7 @@ export function udpSend(
   offset: number,
   length: number,
   port: number,
-  address: string
+  address: string,
 ): Promise<number>;
 export function udpSend(
   conn: Socket,
@@ -56,13 +56,13 @@ export function udpSend(
   arg2: any,
   arg3: any,
   arg4?: any,
-  arg5?: any
+  arg5?: any,
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     try {
       if (arg4 !== undefined) {
         conn.send(arg1, arg2, arg3, arg4, arg5, (err, sent) =>
-          err ? reject(err) : resolve(sent)
+          err ? reject(err) : resolve(sent),
         );
       } else {
         conn.send(arg1, arg2, arg3, (err, sent) => (err ? reject(err) : resolve(sent)));

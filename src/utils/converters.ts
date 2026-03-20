@@ -26,10 +26,10 @@ export const convertWaveformHDData = (data: Buffer): WaveformHD => {
   //
   // | f  e  d | c  b  a | 9  8  7 | 6  5  4  3  2 | 1   0 |
   // [   red   |  green  |   blue  |     height    | ~ | ~ ]
-  const redMask    = 0b11100000_00000000; // prettier-ignore
-  const greenMask  = 0b00011100_00000000; // prettier-ignore
-  const blueMask   = 0b00000011_10000000; // prettier-ignore
-  const heightMask = 0b00000000_01111100; // prettier-ignore
+  const redMask    = 0b11100000_00000000; // oxfmt-ignore
+  const greenMask  = 0b00011100_00000000; // oxfmt-ignore
+  const blueMask   = 0b00000011_10000000; // oxfmt-ignore
+  const heightMask = 0b00000000_01111100; // oxfmt-ignore
 
   const ec = extractColor;
 

@@ -68,7 +68,7 @@ export function mediaSlotFromPacket(packet: Buffer) {
     packet
       .slice(0x6c, 0x6c + 24)
       .toString()
-      .replace(/\0/g, '')
+      .replace(/\0/g, ''),
   );
 
   const deviceId = packet[0x27];

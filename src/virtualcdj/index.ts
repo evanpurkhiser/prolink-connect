@@ -37,7 +37,7 @@ export function makeStatusPacket(device: Device): Uint8Array {
   // NOTE: Byte 0xb6 MUST be 1 in order for the CDJ to not think that our
   //       device is "running an older firmware"
   //
-  // prettier-ignore
+  // oxfmt-ignore
   const b = new Uint8Array([
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -157,7 +157,7 @@ export class Announcer {
 
     this.#intervalHandle = setInterval(
       () => [...this.#deviceManager.devices.values()].forEach(announceToDevice),
-      ANNOUNCE_INTERVAL
+      ANNOUNCE_INTERVAL,
     );
   }
 

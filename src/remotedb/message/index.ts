@@ -69,7 +69,7 @@ export class Message<T extends MessageType = MessageType> {
   static async fromStream<T extends Response>(
     stream: PromiseReadable<any>,
     expect: T,
-    span: Span
+    span: Span,
   ) {
     const tx = span.startChild({
       op: 'readFromStream',

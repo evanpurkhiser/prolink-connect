@@ -229,7 +229,7 @@ export const fieldsToItem = (args: Field[]) => {
 
     Sentry.captureMessage(
       `No item transformer registered for item type ${type}`,
-      Sentry.Severity.Error
+      Sentry.Severity.Error,
     );
   }
 

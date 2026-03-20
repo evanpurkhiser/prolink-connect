@@ -59,7 +59,7 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
 export async function viaLocal(
   local: LocalDatabase,
   device: Device,
-  opts: Required<Options>
+  opts: Required<Options>,
 ) {
   const {deviceId, trackSlot, track} = opts;
 

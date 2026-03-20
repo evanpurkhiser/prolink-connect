@@ -68,7 +68,7 @@ export class MetadataORM {
     const columns = fields.map(f => snakeCase(f[0])).join(', ');
 
     const stmt = this.#conn.prepare(
-      `insert into ${table} (${columns}) values (${slots})`
+      `insert into ${table} (${columns}) values (${slots})`,
     );
 
     // Translate date and booleans
@@ -77,7 +77,7 @@ export class MetadataORM {
         ? value.toISOString()
         : typeof value === 'boolean'
           ? Number(value)
-          : value
+          : value,
     );
 
     stmt.run(data);
@@ -152,7 +152,7 @@ export class MetadataORM {
 
     const [folders, playlists] = partition(
       playlistRows.map(row => mapKeys(row, (_, k) => camelCase(k)) as Playlist),
-      p => p.isFolder
+      p => p.isFolder,
     );
 
     const entryRows: Array<Record<string, any>> = this.#conn
@@ -160,7 +160,7 @@ export class MetadataORM {
       .all(playlistId);
 
     const trackEntries = entryRows.map(
-      row => mapKeys(row, (_, k) => camelCase(k)) as PlaylistEntry<EntityFK.WithFKs>
+      row => mapKeys(row, (_, k) => camelCase(k)) as PlaylistEntry<EntityFK.WithFKs>,
     );
 
     return {folders, playlists, trackEntries};

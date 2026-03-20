@@ -239,7 +239,7 @@ export class MixstatusProcessor {
     const shouldEnd = await new Promise<boolean>(resolve => {
       const endTimeout = setTimeout(
         () => resolve(true),
-        this.#config.timeBetweenSets * 1000
+        this.#config.timeBetweenSets * 1000,
       );
       this.#cancelSetEnding = () => {
         clearTimeout(endTimeout);

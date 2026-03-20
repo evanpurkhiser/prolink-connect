@@ -113,7 +113,7 @@ export const MessageType = {
 } as const;
 
 const MessageTypeInverse = Object.fromEntries(
-  Object.entries(MessageType).map(e => [e[1], e[0]])
+  Object.entries(MessageType).map(e => [e[1], e[0]]),
 );
 
 /**

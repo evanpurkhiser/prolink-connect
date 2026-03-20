@@ -188,7 +188,7 @@ export class ProlinkNetwork {
     const tx = Sentry.startTransaction({name: 'autoConfigure'});
     // wait for first device to appear on the network
     const firstDevice = await new Promise<Device>(resolve =>
-      this.#deviceManager.once('connected', resolve)
+      this.#deviceManager.once('connected', resolve),
     );
     const iface = getMatchingInterface(firstDevice.ip);
 

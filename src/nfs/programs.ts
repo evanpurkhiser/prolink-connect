@@ -95,7 +95,7 @@ export async function getExports(conn: RpcProgram, span?: Span) {
 export async function mountFilesystem(
   conn: RpcProgram,
   {filesystem}: Export,
-  span?: Span
+  span?: Span,
 ) {
   const tx = span?.startChild({op: 'mountFilesystem', data: {filesystem}});
 
@@ -122,7 +122,7 @@ export async function lookupFile(
   conn: RpcProgram,
   handle: Buffer,
   filename: string,
-  span?: Span
+  span?: Span,
 ) {
   const tx = span?.startChild({op: 'lookupFile', description: filename});
 
@@ -158,7 +158,7 @@ export async function lookupPath(
   conn: RpcProgram,
   rootHandle: Buffer,
   filepath: string,
-  span?: Span
+  span?: Span,
 ) {
   const tx = span?.startChild({op: 'lookupPath', description: filepath});
 
@@ -191,7 +191,7 @@ export async function fetchFile(
   conn: RpcProgram,
   file: FileInfo,
   onProgress?: (progress: FetchProgress) => void,
-  span?: Span
+  span?: Span,
 ) {
   const {handle, name, size} = file;
   const data = Buffer.alloc(size);

@@ -8,7 +8,7 @@ export const makeCueLoopEntry = (
   isLoop: boolean,
   offset: number,
   length: number,
-  button: false | HotcueButton
+  button: false | HotcueButton,
 ): null | CueAndLoop =>
   button !== false
     ? isLoop

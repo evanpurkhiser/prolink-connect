@@ -17,7 +17,7 @@ async function cli() {
   signale.success('Network online, preparing to connect');
 
   network.deviceManager.on('connected', d =>
-    signale.star('New device: %s [id: %s]', d.name, d.id)
+    signale.star('New device: %s [id: %s]', d.name, d.id),
   );
 
   signale.await('Autoconfiguring network.. waiting for devices');

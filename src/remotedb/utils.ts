@@ -24,7 +24,7 @@ export const makeRenderMessage = (
   descriptor: LookupDescriptor,
   offset: number,
   count: number,
-  total: number
+  total: number,
 ) =>
   new Message({
     type: MessageType.RenderMenu,
@@ -46,7 +46,7 @@ export async function* renderItems<T extends ItemType = ItemType>(
   conn: Connection,
   descriptor: LookupDescriptor,
   total: number,
-  span: Span
+  span: Span,
 ) {
   let itemsRead = 0;
 

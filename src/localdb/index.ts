@@ -140,7 +140,7 @@ class LocalDatabase {
   constructor(
     hostDevice: Device,
     deviceManager: DeviceManager,
-    statusEmitter: StatusEmitter
+    statusEmitter: StatusEmitter,
   ) {
     this.#hostDevice = hostDevice;
     this.#deviceManager = deviceManager;
@@ -269,7 +269,7 @@ class LocalDatabase {
     // guaranteed the existence of the database.
     const db = await lock.runExclusive(
       () =>
-        this.#dbs.find(db => db.id === id) ?? this.#hydrateDatabase(device, slot, media)
+        this.#dbs.find(db => db.id === id) ?? this.#hydrateDatabase(device, slot, media),
     );
 
     return db.orm;
@@ -285,7 +285,7 @@ class LocalDatabase {
         Promise.all([
           this.get(device.id, MediaSlot.USB),
           this.get(device.id, MediaSlot.SD),
-        ])
+        ]),
       );
 
     await Promise.all(loaders);

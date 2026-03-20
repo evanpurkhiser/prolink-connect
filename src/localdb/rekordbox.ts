@@ -121,7 +121,7 @@ export async function hydrateDatabase({pdbData, span, ...options}: Options) {
 export async function loadAnlz<T extends keyof AnlzResponse>(
   track: Track,
   type: T,
-  anlzResolver: AnlzResolver
+  anlzResolver: AnlzResolver,
 ): Promise<AnlzResponse[T]> {
   const path = `${track.analyzePath}.${type}`;
   const anlzData = await anlzResolver(path);
@@ -189,7 +189,7 @@ class RekordboxHydrator {
 
     const hydrateTx = tx.startChild({op: 'hydration'});
     await Promise.all(
-      db.tables.map((table: any) => this.hydrateFromTable(table, hydrateTx))
+      db.tables.map((table: any) => this.hydrateFromTable(table, hydrateTx)),
     );
     hydrateTx.finish();
 

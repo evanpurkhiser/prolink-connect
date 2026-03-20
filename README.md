@@ -62,7 +62,7 @@ async function main() {
 
   // Once online we can listen for appearing on the network
   network.deviceManager.on('connected', device =>
-    console.log('New device on network:', device)
+    console.log('New device on network:', device),
   );
 
   // To configure the online network to be "connected" we must need to specify

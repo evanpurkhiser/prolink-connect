@@ -70,7 +70,7 @@ export type Field = NumberField | StringField | BinaryField;
 type NumberFieldType = FieldType.UInt32 | FieldType.UInt16 | FieldType.UInt8;
 
 const numberNameMap = Object.fromEntries(
-  Object.entries(FieldType).map(e => [e[1], e[0]])
+  Object.entries(FieldType).map(e => [e[1], e[0]]),
 );
 
 const numberBufferInfo = {

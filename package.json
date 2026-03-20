@@ -2,18 +2,25 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "prolink-connect",
   "version": "0.11.0",
-  "main": "lib/index.js",
-  "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
   "keywords": [
-    "prolink-network",
     "CDJ",
-    "pioneer",
     "DJ",
-    "reverse-engineer",
     "cdj",
-    "djm"
+    "djm",
+    "pioneer",
+    "prolink-network",
+    "reverse-engineer"
   ],
   "license": "MIT",
+  "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
+  "bin": {
+    "prolink-connect": "./lib/cli.js"
+  },
+  "files": [
+    "lib/"
+  ],
+  "sideEffects": false,
+  "main": "lib/index.js",
   "scripts": {
     "watch": "webpack --watch",
     "build": "webpack",
@@ -23,16 +30,6 @@
     "preversion": "yarn lint; yarn test",
     "prepare": "ts-patch install -s"
   },
-  "files": [
-    "lib/"
-  ],
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "bin": {
-    "prolink-connect": "./lib/cli.js"
-  },
-  "sideEffects": false,
   "dependencies": {
     "@sentry/node": "^6.4.1",
     "@sentry/tracing": "^6.4.1",
@@ -65,7 +62,7 @@
     "jest-each": "^29.2.1",
     "kaitai-struct-loader": "^0.9.0",
     "loader-utils": "^2.0.0",
-    "prettier": "^3.4.2",
+    "oxfmt": "^0.41.0",
     "signale": "^1.4.0",
     "stream-buffers": "^3.0.3",
     "ts-jest": "^29.2.5",
@@ -79,6 +76,9 @@
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4",
     "webpack-node-externals": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "volta": {
     "node": "22.11.0",

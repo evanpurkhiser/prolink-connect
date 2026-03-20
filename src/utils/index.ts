@@ -24,7 +24,7 @@ export function getMatchingInterface(ipAddr: ip.Address4) {
   const flatList = Object.entries(networkInterfaces()).reduce(
     (acc, [name, info]) =>
       info !== undefined ? acc.concat(info.map(i => ({...i, name}))) : acc,
-    [] as Array<{name: string} & NetworkInterfaceInfo>
+    [] as Array<{name: string} & NetworkInterfaceInfo>,
   );
 
   let matchedIface: (NetworkInterfaceInfoIPv4 & {name: string}) | null = null;
@@ -57,7 +57,7 @@ export function bpmToSeconds(bpm: number, pitch: number) {
 }
 
 const slotNames = Object.fromEntries(
-  Object.entries(MediaSlot).map(e => [e[1], e[0].toLowerCase()])
+  Object.entries(MediaSlot).map(e => [e[1], e[0].toLowerCase()]),
 );
 
 /**
@@ -68,7 +68,7 @@ export function getSlotName(slot: MediaSlot) {
 }
 
 const trackTypeNames = Object.fromEntries(
-  Object.entries(TrackType).map(e => [e[1], e[0].toLowerCase()])
+  Object.entries(TrackType).map(e => [e[1], e[0].toLowerCase()]),
 );
 
 /**

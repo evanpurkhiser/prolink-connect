@@ -71,7 +71,7 @@ async function getMetadata(opts: TrackQueryOpts) {
     conn,
     lookupDescriptor,
     resp.data.itemsAvailable,
-    span
+    span,
   );
 
   // NOTE: We do a bit of any-ing here to help typescript understand we're
@@ -146,7 +146,7 @@ async function getGenericMetadata(opts: TrackQueryOpts) {
     conn,
     lookupDescriptor,
     resp.data.itemsAvailable,
-    span
+    span,
   );
 
   // NOTE: We do a bit of any-ing here to help typescript understand we're
@@ -353,7 +353,7 @@ async function getTrackInfo(opts: TrackQueryOpts) {
     conn,
     lookupDescriptor,
     resp.data.itemsAvailable,
-    span
+    span,
   );
 
   const infoItems: Pick<Items, TrackInfoItems> = {} as any;
@@ -405,7 +405,7 @@ async function getPlaylist(opts: PlaylistQueryOpts) {
     conn,
     lookupDescriptor,
     resp.data.itemsAvailable,
-    span
+    span,
   );
 
   const playlistItems: Array<Item<PlaylistItemTypes>> = [];
@@ -422,7 +422,7 @@ async function getPlaylist(opts: PlaylistQueryOpts) {
     .map(({id, name}) => ({isFolder: false, id, name, parentId}));
 
   const trackEntries = (playlistItems as Array<Item<ItemType.TrackTitle>>).filter(
-    item => item.type === ItemType.TrackTitle
+    item => item.type === ItemType.TrackTitle,
   );
 
   return {folders, playlists, trackEntries};

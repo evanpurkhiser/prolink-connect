@@ -26,7 +26,7 @@ export const STATUS_PORT = 50002;
  */
 export const ANNOUNCE_INTERVAL = 1500;
 
-// prettier-ignore
+// oxfmt-ignore
 /**
  * All UDP packets on the PRO DJ LINK network start with this magic header.
  */

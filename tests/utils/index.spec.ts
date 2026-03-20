@@ -11,6 +11,6 @@ describe('bpmToSeconds', () => {
     'computes [%d bpm at %d pitch] as %d second per beat',
     (bpm: number, pitch: number, secondsPerBeat: number) => {
       expect(bpmToSeconds(bpm, pitch)).toEqual(secondsPerBeat);
-    }
+    },
   );
 });

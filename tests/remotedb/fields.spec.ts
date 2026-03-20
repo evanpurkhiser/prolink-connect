@@ -69,7 +69,7 @@ describe('String', () => {
   afterEach(() => {
     expect(string.value).toBe('test');
     expect(string.data).toHaveLength(10);
-    // prettier-ignore
+    // oxfmt-ignore
     expect([...string.data]).toEqual([0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x00]);
     expect(string.buffer).toHaveLength(15);
     expect(string.buffer[0]).toBe(Field.FieldType.String);
@@ -81,7 +81,7 @@ describe('String', () => {
 
   it('decodes', () => {
     string = new Field.String(
-      Buffer.of(0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x00)
+      Buffer.of(0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x00),
     );
   });
 });
@@ -124,7 +124,7 @@ describe('readField', () => {
 
   it('reads a variable sized binary field', async () => {
     streamBuffer.put(
-      Buffer.of(Field.FieldType.Binary, 0x00, 0x00, 0x00, 0x02, 0x01, 0x02)
+      Buffer.of(Field.FieldType.Binary, 0x00, 0x00, 0x00, 0x02, 0x01, 0x02),
     );
     const data = await Field.readField(socket, Field.FieldType.Binary);
 
