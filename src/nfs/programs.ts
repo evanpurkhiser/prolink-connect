@@ -1,9 +1,9 @@
 import {Span} from '@sentry/tracing';
 
+import {FetchProgress} from '.';
 import {RpcConnection, RpcProgram} from './rpc';
 import {flattenLinkedList} from './utils';
 import {mount, nfs, portmap} from './xdr';
-import {FetchProgress} from '.';
 
 /**
  * How many bytes of a file should we read at once.

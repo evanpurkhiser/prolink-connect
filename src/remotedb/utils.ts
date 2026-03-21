@@ -1,10 +1,10 @@
 import {Span} from '@sentry/tracing';
 
-import {Items, ItemType} from './message/item';
-import {MessageType} from './message/types';
+import {Connection, LookupDescriptor} from '.';
 import {UInt32} from './fields';
 import {Message} from './message';
-import {Connection, LookupDescriptor} from '.';
+import {Items, ItemType} from './message/item';
+import {MessageType} from './message/types';
 
 /**
  * Specifies the number of items we should request at a time in menu render

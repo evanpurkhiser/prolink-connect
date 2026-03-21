@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@evanpurkhiser/eslint-config": "^0.25.0",
+    "@evanpurkhiser/oxc-config": "^0.4.0",
     "@types/jest": "^29.5.14",
     "@types/stream-buffers": "^3.0.7",
     "@types/webpack": "^5.28.5",

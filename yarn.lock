@@ -341,6 +341,13 @@
     globals "^15.12.0"
     typescript-eslint "^8.16.0"
 
+"@evanpurkhiser/oxc-config@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@evanpurkhiser/oxc-config/-/oxc-config-0.4.0.tgz#26166ad3558d343905ea2b3cc03942ca164070f3"
+  integrity sha512-taIsXcwyl97OaiIGbmEvTWZ/6KK0XlkHY4toedbIJXOm1yapvJIOWKhxDEysCC1Z9vNTI50w1KeqvcXmEoURCg==
+  dependencies:
+    eslint-plugin-simple-import-sort "^12.1.1"
+
 "@gerrit0/mini-shiki@^1.24.0":
   version "1.24.4"
   resolved "https://registry.yarnpkg.com/@gerrit0/mini-shiki/-/mini-shiki-1.24.4.tgz#e5328ca0dccc094460c03701d62158137a5a2eda"

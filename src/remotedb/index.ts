@@ -9,10 +9,10 @@ import {Socket} from 'net';
 import DeviceManager from 'src/devices';
 import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
 
-import {getMessageName, MessageType, Request, Response} from './message/types';
 import {REMOTEDB_SERVER_QUERY_PORT} from './constants';
 import {readField, UInt32} from './fields';
 import {Message} from './message';
+import {getMessageName, MessageType, Request, Response} from './message/types';
 import {HandlerArgs, HandlerReturn, queryHandlers} from './queries';
 
 type Await<T> = T extends PromiseLike<infer U> ? U : T;

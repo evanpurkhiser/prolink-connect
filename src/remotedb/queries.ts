@@ -2,12 +2,12 @@ import {Span} from '@sentry/tracing';
 
 import * as entities from 'src/entities';
 
-import {Item, Items, ItemType} from './message/item';
-import {Request, Response} from './message/types';
+import {Connection, LookupDescriptor, Query} from '.';
 import {Binary, UInt32} from './fields';
 import {Message} from './message';
+import {Item, Items, ItemType} from './message/item';
+import {Request, Response} from './message/types';
 import {fieldFromDescriptor, findColor, renderItems} from './utils';
-import {Connection, LookupDescriptor, Query} from '.';
 
 /**
  * This module contains logic for each type of query to understand what
