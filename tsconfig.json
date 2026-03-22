@@ -21,5 +21,5 @@
     "transpileOnly": true,
     "require": ["typescript-transform-paths/register"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }
