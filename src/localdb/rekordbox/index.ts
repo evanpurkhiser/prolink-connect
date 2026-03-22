@@ -52,7 +52,7 @@ export async function hydrateDatabase({pdbData, span, ...options}: HydrationOpti
  * Loads the ANLZ data of a Track entity from the analyzePath.
  */
 export async function loadAnlz<T extends keyof AnlzResponse>(
-  track: Track,
+  track: Pick<Track, 'analyzePath'>,
   type: T,
   anlzResolver: AnlzResolver
 ): Promise<AnlzResponse[T]> {

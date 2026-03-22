@@ -1,13 +1,13 @@
 /**
- * OneLibrary Database Adapter
- *
- * Provides an interface for reading the OneLibrary (exportLibrary.db) SQLite database
- * used by modern rekordbox versions and Pioneer DJ devices.
+ * Re-exports from onelibrary-connect
  */
 
-export {getEncryptionKey} from './encryption';
-export {openOneLibraryDb} from './connection';
-export {OneLibraryAdapter} from './adapter';
+export {
+  getEncryptionKey,
+  openOneLibraryDb,
+  OneLibraryAdapter,
+} from 'onelibrary-connect';
+
 export type {
   Category,
   DeviceProperty,
@@ -16,4 +16,4 @@ export type {
   MenuItem,
   MyTag,
   SortOption,
-} from './types';
+} from 'onelibrary-connect';

@@ -58,6 +58,7 @@
     "lodash": "^4.17.21",
     "lru_map": "^0.4.1",
     "metadata-connect": "file:../metadata-connect",
+    "onelibrary-connect": "file:../onelibrary-connect",
     "promise-readable": "^6.0.0",
     "promise-retry": "^2.0.1",
     "promise-socket": "^7.0.0",

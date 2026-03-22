@@ -10,7 +10,11 @@ const config = {
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest'],
+    'node_modules/onelibrary-connect/.+\\.js$': ['ts-jest', {useESM: false}],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!onelibrary-connect)',
+  ],
 };
 
 export default config;

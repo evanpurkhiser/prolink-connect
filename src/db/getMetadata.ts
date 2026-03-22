@@ -1,3 +1,4 @@
+import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
@@ -83,16 +84,19 @@ export async function viaLocal(
     return null;
   }
 
-  const track = adapter.findTrack(trackId);
+  const dbTrack = adapter.findTrack(trackId);
 
-  if (track === null) {
+  if (dbTrack === null) {
     return null;
   }
 
-  const anlz = await loadAnlz(track, 'DAT', anlzLoader({device, slot: trackSlot}));
+  const anlz = await loadAnlz(dbTrack, 'DAT', anlzLoader({device, slot: trackSlot}));
 
-  track.beatGrid = anlz.beatGrid;
-  track.cueAndLoops = anlz.cueAndLoops;
+  const track: Track = {
+    ...dbTrack,
+    beatGrid: anlz.beatGrid,
+    waveformHd: null,
+  };
 
   return track;
 }

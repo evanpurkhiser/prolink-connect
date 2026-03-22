@@ -28,14 +28,25 @@ export {loadAnlz} from './localdb/rekordbox';
 export {fetchFile} from './nfs';
 export type {AnlzResolver, AnlzResponse, AnlzResponse2EX, AnlzResponseDAT, AnlzResponseEXT} from './localdb/rekordbox';
 
-// Database adapters
+// Database adapters (re-exported from onelibrary-connect)
 export type {
   DatabaseAdapter,
   DatabasePreference,
   DatabaseType,
   PlaylistQueryResult,
-} from './localdb/database-adapter';
-export {OneLibraryAdapter} from './localdb/onelibrary';
+} from 'onelibrary-connect';
+export {OneLibraryAdapter} from 'onelibrary-connect';
+
+// OneLibrary schema types (re-exported from onelibrary-connect)
+export type {
+  Category,
+  DeviceProperty,
+  HistorySession,
+  HotCueBankList,
+  MenuItem,
+  MyTag,
+  SortOption,
+} from 'onelibrary-connect';
 
 // Logger interface for pluggable logging
 export {noopLogger} from './logger';

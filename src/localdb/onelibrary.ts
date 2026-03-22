@@ -1,15 +1,14 @@
 /**
  * OneLibrary Database Adapter
  *
- * Re-exports from the onelibrary/ folder for backward compatibility.
- * @see ./onelibrary/index.ts for the implementation
+ * Re-exports from onelibrary-connect for backward compatibility.
  */
 
 export {
   getEncryptionKey,
   openOneLibraryDb,
   OneLibraryAdapter,
-} from './onelibrary/index';
+} from 'onelibrary-connect';
 
 export type {
   Category,
@@ -19,4 +18,4 @@ export type {
   MenuItem,
   MyTag,
   SortOption,
-} from './onelibrary/index';
+} from 'onelibrary-connect';

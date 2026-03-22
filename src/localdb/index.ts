@@ -22,8 +22,12 @@ import {
 import {getSlotName} from 'src/utils';
 import * as Telemetry from 'src/utils/telemetry';
 
-import {DatabaseAdapter, DatabasePreference, DatabaseType} from './database-adapter';
-import {OneLibraryAdapter} from './onelibrary';
+import {
+  type DatabaseAdapter,
+  type DatabasePreference,
+  type DatabaseType,
+  OneLibraryAdapter,
+} from 'onelibrary-connect';
 import {MetadataORM} from './orm';
 import {hydrateDatabase, HydrationProgress} from './rekordbox';
 

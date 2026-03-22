@@ -1,139 +1,41 @@
-import {BeatGrid, CueAndLoop, WaveformHD} from 'src/types';
+import type {BeatGrid, WaveformHD} from 'src/types';
+import type {
+  Track as OneLibraryTrack,
+  CueAndLoop,
+} from 'onelibrary-connect';
 
 /**
- * Documentation type strictly for use with entities that have foreign key
- * attributes.
+ * Re-export entity types from onelibrary-connect.
+ * These types represent what is stored in the rekordbox database.
  */
-export enum EntityFK {
-  WithFKs,
-  WithRelations,
-}
-
-export interface Artwork {
-  id: number;
-  path?: string;
-}
-
-export interface Key {
-  id: number;
-  name: string;
-}
-
-export interface Label {
-  id: number;
-  name: string;
-}
-
-export interface Color {
-  id: number;
-  name: string;
-}
-
-export interface Genre {
-  id: number;
-  name: string;
-}
-
-export interface Album {
-  id: number;
-  name: string;
-}
-
-export interface Artist {
-  id: number;
-  name: string;
-}
-
-export interface Playlist {
-  id: number;
-  name: string;
-  isFolder: boolean;
-  parentId: number | null;
-}
-
-interface PlaylistEntryRelations {
-  track: Track;
-}
-
-interface PlaylistEntryFks {
-  playlistId: number;
-  trackId: number;
-}
-
-export type PlaylistEntry<withFKs extends EntityFK = EntityFK.WithRelations> = {
-  id: number;
-  sortIndex: number;
-} & (withFKs extends EntityFK.WithFKs ? PlaylistEntryFks : PlaylistEntryRelations);
-
-interface TrackRelations {
-  artwork: Artwork | null;
-  artist: Artist | null;
-  originalArtist: Artist | null;
-  remixer: Artist | null;
-  composer: Artist | null;
-  album: Album | null;
-  label: Label | null;
-  genre: Genre | null;
-  color: Color | null;
-  key: Key | null;
-}
-
-interface TrackFks {
-  artworkId?: number;
-  artistId?: number;
-  originalArtistId?: number;
-  remixerId?: number;
-  composerId?: number;
-  albumId?: number;
-  labelId?: number;
-  genreId?: number;
-  colorId?: number;
-  keyId?: number;
-}
+export {EntityFK} from 'onelibrary-connect';
+export type {
+  Album,
+  Artist,
+  Artwork,
+  Color,
+  Genre,
+  Key,
+  Label,
+  Playlist,
+  PlaylistEntry,
+} from 'onelibrary-connect';
 
 /**
- * Represents a track.
+ * Represents a track with both database fields and ANLZ analysis data.
  *
- * Note, fields that are not optional will be set for all database request
- * methods.
+ * Extends the onelibrary-connect Track type with ANLZ-specific fields
+ * that are populated from .DAT/.EXT analysis files on the CDJ.
  */
-export type Track<withFKs extends EntityFK = EntityFK.WithRelations> = {
-  id: number;
-  title: string;
-  duration: number;
-  bitrate?: number;
-  tempo: number;
-  rating: number;
-  comment: string;
-  filePath: string;
-  fileName: string;
-  trackNumber?: number;
-  discNumber?: number;
-  sampleRate?: number;
-  sampleDepth?: number;
-  playCount?: number;
-  year?: number;
-  mixName?: string;
-  autoloadHotcues?: boolean;
-  kuvoPublic?: boolean;
-  fileSize?: number;
-  analyzePath?: string;
-  releaseDate?: string;
-  analyzeDate?: Date;
-  dateAdded?: Date;
+export type Track<withFKs extends import('onelibrary-connect').EntityFK = import('onelibrary-connect').EntityFK.WithRelations> =
+  OneLibraryTrack<withFKs> & {
+    /**
+     * Embedded beat grid information (from ANLZ files)
+     */
+    beatGrid: BeatGrid | null;
 
-  /**
-   * Embedded beat grid information
-   */
-  beatGrid: BeatGrid | null;
-
-  /**
-   * Embedded cue and loop information
-   */
-  cueAndLoops: CueAndLoop[] | null;
-
-  /**
-   * Embedded HD Waveform information
-   */
-  waveformHd: WaveformHD | null;
-} & (withFKs extends EntityFK.WithFKs ? TrackFks : TrackRelations);
+    /**
+     * Embedded HD Waveform information (from ANLZ files)
+     */
+    waveformHd: WaveformHD | null;
+  };
