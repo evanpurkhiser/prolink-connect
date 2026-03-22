@@ -21,6 +21,5 @@
     "transpileOnly": true,
     "require": ["typescript-transform-paths/register"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["oxfmt.config.ts", "oxlint.config.ts", "webpack.config.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }
