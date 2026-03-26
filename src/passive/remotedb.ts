@@ -245,6 +245,58 @@ export class PassiveRemoteDatabase {
   }
 
   /**
+   * Query metadata for an unanalyzed track (loaded directly from USB without
+   * Rekordbox analysis). Uses GetGenericMetadata which reads ID3 tags from the
+   * audio file via the CDJ.
+   *
+   * @param deviceId - The CDJ device to query
+   * @param trackSlot - The media slot (USB or SD)
+   * @param trackType - Should be TrackType.Unanalyzed
+   * @param trackId - The track ID to look up
+   */
+  async getGenericTrackMetadata(
+    deviceId: DeviceID,
+    trackSlot: MediaSlot,
+    trackType: TrackType,
+    trackId: number
+  ) {
+    const conn = await this.get(deviceId);
+    if (conn === null) {
+      return null;
+    }
+
+    const queryDescriptor = {
+      trackSlot,
+      trackType,
+      menuTarget: MenuTarget.Main,
+    };
+
+    try {
+      const track = await conn.query({
+        queryDescriptor,
+        query: Query.GetGenericMetadata,
+        args: {trackId},
+      });
+
+      // Try to get file path for artwork extraction
+      try {
+        track.filePath = await conn.query({
+          queryDescriptor,
+          query: Query.GetTrackInfo,
+          args: {trackId},
+        });
+      } catch {
+        // GetTrackInfo may not be available for unanalyzed tracks
+      }
+
+      return track;
+    } catch (err) {
+      this.#connections.delete(deviceId);
+      throw err;
+    }
+  }
+
+  /**
    * Stop all connections
    */
   stop() {

@@ -44,26 +44,38 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
     menuTarget: MenuTarget.Main,
   };
 
+  const isUnanalyzed = trackType === TrackType.Unanalyzed || trackType === TrackType.AudioCD;
+
+  // Unanalyzed tracks use GetGenericMetadata (reads ID3 tags from the audio file)
   const track = await conn.query({
     queryDescriptor,
-    query: Query.GetMetadata,
+    query: isUnanalyzed ? Query.GetGenericMetadata : Query.GetMetadata,
     args: {trackId},
     span,
   });
 
-  track.filePath = await conn.query({
-    queryDescriptor,
-    query: Query.GetTrackInfo,
-    args: {trackId},
-    span,
-  });
+  // Try to get file path (may not be available for unanalyzed tracks)
+  try {
+    track.filePath = await conn.query({
+      queryDescriptor,
+      query: Query.GetTrackInfo,
+      args: {trackId},
+      span,
+    });
+  } catch (err) {
+    if (!isUnanalyzed) throw err;
+    // Expected for unanalyzed tracks — no file path available
+  }
 
-  track.beatGrid = await conn.query({
-    queryDescriptor,
-    query: Query.GetBeatGrid,
-    args: {trackId},
-    span,
-  });
+  // Beat grid is only available for analyzed tracks
+  if (!isUnanalyzed) {
+    track.beatGrid = await conn.query({
+      queryDescriptor,
+      query: Query.GetBeatGrid,
+      args: {trackId},
+      span,
+    });
+  }
 
   return track;
 }

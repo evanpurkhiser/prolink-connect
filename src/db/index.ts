@@ -61,10 +61,13 @@ class Database {
 
   #getTrackLookupStrategy = (device: Device, type: TrackType) => {
     const isUnanalyzed = type === TrackType.AudioCD || type === TrackType.Unanalyzed;
-    const requiresCdjRemote =
-      device.type === DeviceType.CDJ && isUnanalyzed && this.cdjSupportsRemotedb;
 
-    return device.type === DeviceType.Rekordbox || requiresCdjRemote
+    // Unanalyzed tracks on CDJs must use RemoteDB (no local rekordbox database)
+    if (device.type === DeviceType.CDJ && isUnanalyzed) {
+      return LookupStrategy.Remote;
+    }
+
+    return device.type === DeviceType.Rekordbox
       ? LookupStrategy.Remote
       : device.type === DeviceType.CDJ && type === TrackType.RB
         ? LookupStrategy.Local
