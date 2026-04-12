@@ -44,9 +44,13 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
     menuTarget: MenuTarget.Main,
   };
 
-  const isUnanalyzed = trackType === TrackType.Unanalyzed || trackType === TrackType.AudioCD;
+  const isUnanalyzed =
+    trackType === TrackType.Unanalyzed || trackType === TrackType.AudioCD;
+  const isStreaming = trackType === TrackType.Streaming;
+  const skipLocalFileLookups = isUnanalyzed || isStreaming;
 
-  // Unanalyzed tracks use GetGenericMetadata (reads ID3 tags from the audio file)
+  // Unanalyzed tracks use GetGenericMetadata (reads ID3 tags from the audio file).
+  // Streaming tracks (Beatport) use the regular GetMetadata query.
   const track = await conn.query({
     queryDescriptor,
     query: isUnanalyzed ? Query.GetGenericMetadata : Query.GetMetadata,
@@ -54,7 +58,7 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
     span,
   });
 
-  // Try to get file path (may not be available for unanalyzed tracks)
+  // Try to get file path (not available for unanalyzed or streaming tracks)
   try {
     track.filePath = await conn.query({
       queryDescriptor,
@@ -63,12 +67,13 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
       span,
     });
   } catch (err) {
-    if (!isUnanalyzed) throw err;
-    // Expected for unanalyzed tracks — no file path available
+    if (!skipLocalFileLookups) {
+      throw err;
+    }
   }
 
-  // Beat grid is only available for analyzed tracks
-  if (!isUnanalyzed) {
+  // Beat grid is only available for analyzed local tracks
+  if (!skipLocalFileLookups) {
     track.beatGrid = await conn.query({
       queryDescriptor,
       query: Query.GetBeatGrid,

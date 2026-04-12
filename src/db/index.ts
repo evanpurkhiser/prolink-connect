@@ -61,9 +61,11 @@ class Database {
 
   #getTrackLookupStrategy = (device: Device, type: TrackType) => {
     const isUnanalyzed = type === TrackType.AudioCD || type === TrackType.Unanalyzed;
+    const isStreaming = type === TrackType.Streaming;
 
-    // Unanalyzed tracks on CDJs must use RemoteDB (no local rekordbox database)
-    if (device.type === DeviceType.CDJ && isUnanalyzed) {
+    // Unanalyzed and streaming tracks on CDJs must use RemoteDB
+    // (streaming services like Beatport have no local database)
+    if (device.type === DeviceType.CDJ && (isUnanalyzed || isStreaming)) {
       return LookupStrategy.Remote;
     }
 
