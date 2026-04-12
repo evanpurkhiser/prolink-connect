@@ -82,16 +82,6 @@ class Database {
       : device.type === DeviceType.Rekordbox
         ? LookupStrategy.NoneAvailable
         : LookupStrategy.Local;
-
-  /**
-   * Reports weather or not the CDJs can be communicated to over the remote
-   * database protocol. This is important when trying to query for unanalyzed or
-   * compact disc tracks.
-   */
-  get cdjSupportsRemotedb() {
-    return this.#hostDevice.id > 0 && this.#hostDevice.id < 7;
-  }
-
   /**
    * Get the database type (oneLibrary or pdb) for a loaded device slot.
    * Returns null if the slot uses remote database or no database is loaded.

@@ -58,7 +58,8 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
     span,
   });
 
-  // Try to get file path (not available for unanalyzed or streaming tracks)
+  // Try to get file path — for streaming tracks this returns the Beatport track ID
+  // (e.g. "/26883657.m4a") which we use for Beatport API lookups
   try {
     track.filePath = await conn.query({
       queryDescriptor,
