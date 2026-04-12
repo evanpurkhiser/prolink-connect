@@ -178,11 +178,13 @@ export class QueryInterface {
     const handler = queryHandlers[query];
 
     const releaseLock = await this.#lock.acquire();
-    const response = await handler({conn, lookupDescriptor, span: tx, args: anyArgs});
-    releaseLock();
-    tx.finish();
-
-    return response as Await<HandlerReturn<T>>;
+    try {
+      const response = await handler({conn, lookupDescriptor, span: tx, args: anyArgs});
+      tx.finish();
+      return response as Await<HandlerReturn<T>>;
+    } finally {
+      releaseLock();
+    }
   }
 }
 
@@ -218,6 +220,13 @@ export default class RemoteDatabase {
     const dbPort = await getRemoteDBServerPort(ip);
 
     const socket = new PromiseSocket(new Socket());
+
+    // Set a connection timeout to prevent hanging forever
+    (socket.stream as Socket).setTimeout(10_000);
+    (socket.stream as Socket).once('timeout', () => {
+      (socket.stream as Socket).destroy(new Error(`RemoteDB connection to ${ip.address}:${dbPort} timed out`));
+    });
+
     await socket.connect(dbPort, ip.address);
 
     // Send required preamble to open communications with the device
@@ -245,6 +254,10 @@ export default class RemoteDatabase {
     if (resp.type !== MessageType.Success) {
       throw new Error(`Failed to introduce self to device ID: ${device.id}`);
     }
+
+    // Clear socket timeout after successful connection — the per-device mutex
+    // and application-level Promise.race timeouts handle query timeouts
+    (socket.stream as Socket).setTimeout(0);
 
     this.#connections.set(device.id, new Connection(device, socket));
     tx.finish();
@@ -295,17 +308,20 @@ export default class RemoteDatabase {
 
     const releaseLock = await lock.acquire();
 
-    let conn = this.#connections.get(deviceId);
-    if (conn === undefined) {
-      await this.connectToDevice(device);
+    try {
+      let conn = this.#connections.get(deviceId);
+      if (conn === undefined) {
+        await this.connectToDevice(device);
+      }
+
+      conn = this.#connections.get(deviceId)!;
+
+      // NOTE: We pass the same lock we use for this device to the query
+      // interface to ensure all query interfaces use the same lock.
+
+      return new QueryInterface(conn, lock, this.#hostDevice);
+    } finally {
+      releaseLock();
     }
-
-    conn = this.#connections.get(deviceId)!;
-    releaseLock();
-
-    // NOTE: We pass the same lock we use for this device to the query
-    // interface to ensure all query interfaces use the same lock.
-
-    return new QueryInterface(conn, lock, this.#hostDevice);
   }
 }
