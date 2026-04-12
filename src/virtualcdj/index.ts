@@ -330,6 +330,10 @@ export class Announcer {
    * Logger instance for diagnostic output
    */
   #logger: Logger;
+  /**
+   * Callback invoked when the full startup protocol completes
+   */
+  #onStartupComplete?: () => void;
 
   constructor(
     vcdj: Device,
@@ -345,6 +349,16 @@ export class Announcer {
     this.#iface = iface;
     this.#fullStartup = fullStartup;
     this.#logger = logger;
+  }
+
+  /**
+   * Returns a promise that resolves when the startup protocol completes.
+   * Resolves immediately if fullStartup is disabled.
+   */
+  get ready(): Promise<void> {
+    if (!this.#fullStartup) return Promise.resolve();
+    if (this.#currentStage === StartupStage.KeepAlive) return Promise.resolve();
+    return new Promise(resolve => { this.#onStartupComplete = resolve; });
   }
 
   start() {
@@ -448,6 +462,8 @@ export class Announcer {
       case StartupStage.KeepAlive:
         // Transition to keep-alive mode
         this.#startKeepAlive();
+        this.#onStartupComplete?.();
+        this.#onStartupComplete = undefined;
         return;
     }
 

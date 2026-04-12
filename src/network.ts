@@ -448,6 +448,14 @@ export class ProlinkNetwork {
   }
 
   /**
+   * Returns a promise that resolves when the full startup protocol completes.
+   * Resolves immediately if fullStartup is disabled or not connected.
+   */
+  get startupReady(): Promise<void> {
+    return this.#connection?.announcer.ready ?? Promise.resolve();
+  }
+
+  /**
    * Get (and initialize) the {@link MixstatusProcessor} service. This service can
    * be used to monitor the 'status' of devices on the network as a whole.
    */
