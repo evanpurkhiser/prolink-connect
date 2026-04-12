@@ -2,7 +2,7 @@ import DeviceManager from 'src/devices';
 import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import {DatabaseType} from 'src/localdb/database-adapter';
-import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
+import RemoteDatabase from 'src/remotedb';
 import {
   Device,
   DeviceType,
@@ -389,79 +389,6 @@ class Database {
     tx.finish();
 
     return contents;
-  }
-  /**
-   * Debug method: try multiple remotedb query types against a streaming track.
-   * Each query gets a fresh connection to avoid one failure corrupting the next.
-   */
-  async debugStreamingQueries(deviceId: number, trackSlot: MediaSlot, trackType: TrackType, trackId: number) {
-    const results: Record<string, any> = {};
-    const tx = Telemetry.startTransaction({name: 'debugStreamingQueries'});
-
-    const queryDescriptor = {
-      trackSlot,
-      trackType,
-      menuTarget: MenuTarget.Main,
-    };
-
-    const withTimeout = <T>(p: Promise<T>, ms: number, label: string): Promise<T> =>
-      Promise.race([
-        p,
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
-        ),
-      ]);
-
-    const forceReconnect = async () => {
-      const device = await this.#deviceManager.getDeviceEnsured(deviceId);
-      if (device) {
-        try { await this.#remoteDatabase.disconnectFromDevice(device); } catch {}
-      }
-    };
-
-    const queries: Array<{name: string; run: (conn: any) => Promise<any>}> = [
-      {
-        name: 'GetMetadata',
-        run: async (conn: any) => conn.query({queryDescriptor, query: Query.GetMetadata, args: {trackId}, span: tx}),
-      },
-      {
-        name: 'GetArtwork',
-        run: async (conn: any) => {
-          // Use trackId as artworkId since Beatport metadata returns artwork.id = trackId
-          const art = await conn.query({queryDescriptor, query: Query.GetArtwork, args: {artworkId: trackId}, span: tx});
-          // Return buffer length + first bytes instead of full binary
-          if (art && Buffer.isBuffer(art)) {
-            return {size: art.length, type: art.slice(0, 4).toString('hex'), isJpeg: art[0] === 0xff && art[1] === 0xd8, isPng: art[0] === 0x89 && art[1] === 0x50};
-          }
-          return art;
-        },
-      },
-    ];
-
-    for (const q of queries) {
-      try {
-        // Force fresh connection for each query
-        await forceReconnect();
-        console.log(`[DEBUG] Trying ${q.name}...`);
-        const conn = await withTimeout(this.#remoteDatabase.get(deviceId), 5000, `${q.name} connect`);
-        if (!conn) {
-          results[q.name] = 'NO_CONNECTION';
-          console.log(`[DEBUG] ${q.name}: no connection`);
-        } else {
-          const result = await withTimeout(q.run(conn), 10000, q.name);
-          results[q.name] = result;
-          console.log(`[DEBUG] ${q.name} result:`, JSON.stringify(result, null, 2));
-        }
-      } catch (e: any) {
-        results[q.name] = `ERROR: ${e.message}`;
-        console.log(`[DEBUG] ${q.name} failed:`, e.message);
-      }
-    }
-
-    // Clean up
-    await forceReconnect();
-    tx.finish();
-    return results;
   }
 }
 
