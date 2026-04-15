@@ -223,6 +223,16 @@ export interface Waveforms {
    * Raw bytes: 1200 columns × 6 bytes per column (3 frequency bands × 2 bytes each).
    */
   waveformColorPreview?: Uint8Array;
+
+  /**
+   * Standard waveform preview (400 entries). Available for streaming tracks.
+   */
+  waveformPreview?: WaveformPreview;
+
+  /**
+   * Full detailed waveform. Available for streaming tracks.
+   */
+  waveformDetailed?: WaveformDetailed;
 }
 
 /**

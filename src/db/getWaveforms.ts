@@ -2,7 +2,7 @@ import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {Device, DeviceID, MediaSlot, TrackType, Waveforms} from 'src/types';
+import {Device, DeviceID, MediaSlot, TrackType, Waveforms, WaveformDetailed, WaveformPreview} from 'src/types';
 import {TelemetrySpan as Span} from 'src/utils/telemetry';
 
 import {anlzLoader} from './utils';
@@ -51,7 +51,30 @@ export async function viaRemote(remote: RemoteDatabase, opts: Required<Options>)
     span,
   });
 
-  return {waveformHd} as Waveforms;
+  const isStreaming = trackType === TrackType.Streaming;
+
+  if (!isStreaming) {
+    return {waveformHd} as Waveforms;
+  }
+
+  // Streaming tracks (e.g. Beatport LINK) have no local ANLZ file but the CDJ
+  // serves waveform preview and detailed via remotedb.
+  const [waveformPreview, waveformDetailed] = await Promise.all([
+    conn.query({
+      queryDescriptor,
+      query: Query.GetWaveformPreview,
+      args: {trackId: track.id},
+      span,
+    }) as Promise<WaveformPreview>,
+    conn.query({
+      queryDescriptor,
+      query: Query.GetWaveformDetailed,
+      args: {trackId: track.id},
+      span,
+    }) as Promise<WaveformDetailed>,
+  ]);
+
+  return {waveformHd, waveformPreview, waveformDetailed} as Waveforms;
 }
 
 export async function viaLocal(
