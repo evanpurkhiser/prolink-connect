@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import '@sentry/tracing';
 
 import * as Sentry from '@sentry/node';

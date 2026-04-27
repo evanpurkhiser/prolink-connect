@@ -13,30 +13,54 @@
   ],
   "license": "MIT",
   "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
+  "type": "module",
   "bin": {
-    "prolink-connect": "./lib/cli.js"
+    "prolink-connect": "./lib/cli.mjs"
   },
   "files": [
     "lib/"
   ],
   "sideEffects": false,
-  "main": "lib/index.js",
+  "main": "./lib/index.cjs",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.cts",
+        "default": "./lib/index.cjs"
+      }
+    },
+    "./types": {
+      "import": {
+        "types": "./lib/types.d.mts",
+        "default": "./lib/types.mjs"
+      },
+      "require": {
+        "types": "./lib/types.d.cts",
+        "default": "./lib/types.cjs"
+      }
+    }
+  },
   "scripts": {
-    "watch": "webpack --watch",
-    "build": "webpack",
+    "watch": "tsdown --watch",
+    "build": "tsdown",
     "build-docs": "typedoc --out docs src/index.ts",
-    "test": "jest",
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
     "lint": "oxlint src/**/*.ts tests/**/*.ts",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "preversion": "yarn lint; yarn test",
-    "prepare": "ts-patch install -s"
+    "preversion": "yarn lint; yarn test"
   },
   "dependencies": {
     "@sentry/node": "^6.4.1",
     "@sentry/tracing": "^6.4.1",
     "@types/better-sqlite3": "^7.6.12",
-    "@types/lodash": "^4.17.13",
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "22.10.2",
     "@types/promise-retry": "^1.1.6",
     "@types/promise-timeout": "^1.3.3",
@@ -45,7 +69,7 @@
     "better-sqlite3": "^11.7.0",
     "ip-address": "^7.0.1",
     "js-xdr": "^1.3.0",
-    "lodash": "^4.17.20",
+    "lodash-es": "^4.18.1",
     "promise-readable": "^6.0.0",
     "promise-retry": "^2.0.1",
     "promise-socket": "^7.0.0",
@@ -57,8 +81,6 @@
     "@evanpurkhiser/oxc-config": "^0.5.0",
     "@types/jest": "^29.5.14",
     "@types/stream-buffers": "^3.0.7",
-    "@types/webpack": "^5.28.5",
-    "@types/webpack-node-externals": "^3.0.4",
     "jest": "^29.7.0",
     "jest-each": "^29.2.1",
     "oxfmt": "^0.41.0",
@@ -66,16 +88,11 @@
     "signale": "^1.4.0",
     "stream-buffers": "^3.0.3",
     "ts-jest": "^29.2.5",
-    "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
-    "ts-patch": "^3.3.0",
+    "tsdown": "^0.21.10",
     "typedoc": "^0.27.4",
     "typedoc-plugin-missing-exports": "^3.1.0",
-    "typescript": "^5.7.2",
-    "typescript-transform-paths": "^3.5.2",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^5.1.4",
-    "webpack-node-externals": "^3.0.0"
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=20.0.0"
