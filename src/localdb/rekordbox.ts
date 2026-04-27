@@ -1,6 +1,12 @@
 import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
-import {KaitaiStream} from 'kaitai-struct';
+import {
+  parseAnlz,
+  parsePdb,
+  RekordboxAnlz,
+  RekordboxPdb,
+  tableRows,
+} from 'rekordbox-parser';
 
 import {
   Album,
@@ -15,8 +21,6 @@ import {
   PlaylistEntry,
   Track,
 } from 'src/entities';
-import RekordboxAnlz from 'src/localdb/kaitai/rekordbox_anlz.ksy';
-import RekordboxPdb from 'src/localdb/kaitai/rekordbox_pdb.ksy';
 import {MetadataORM, Table} from 'src/localdb/orm';
 import {makeCueLoopEntry} from 'src/localdb/utils';
 import {BeatGrid, CueAndLoop, HotcueButton, WaveformHD} from 'src/types';
@@ -126,8 +130,7 @@ export async function loadAnlz<T extends keyof AnlzResponse>(
   const path = `${track.analyzePath}.${type}`;
   const anlzData = await anlzResolver(path);
 
-  const stream = new KaitaiStream(anlzData);
-  const anlz = new RekordboxAnlz(stream);
+  const anlz = parseAnlz(anlzData);
 
   const result = {} as AnlzResponse[T];
   const resultDat = result as AnlzResponseDAT;
@@ -183,8 +186,7 @@ class RekordboxHydrator {
       : Sentry.startTransaction({name: 'hydrateFromPdb'});
 
     const parseTx = tx.startChild({op: 'parsePdbData', data: {size: pdbData.length}});
-    const stream = new KaitaiStream(pdbData);
-    const db = new RekordboxPdb(stream);
+    const db = parsePdb(pdbData);
     parseTx.finish();
 
     const hydrateTx = tx.startChild({op: 'hydration'});
@@ -230,37 +232,6 @@ class RekordboxHydrator {
 
     tx.finish();
   }
-}
-
-/**
- * Utility generator that pages through a table and yields every present row.
- * This flattens the concept of rowGroups and refs.
- */
-function* tableRows(table: any) {
-  const {firstPage, lastPage} = table;
-
-  let pageRef = firstPage;
-  do {
-    const page = pageRef.body;
-
-    // Adjust our page ref for the next iteration. We do this early in our loop
-    // so we can break without having to remember to update for the next iter.
-    pageRef = page.nextPage;
-
-    // Ignore non-data pages. Not sure what these are for?
-    if (!page.isDataPage) {
-      continue;
-    }
-
-    const rows = page.rowGroups
-      .map((group: any) => group.rows)
-      .flat()
-      .filter((row: any) => row.present);
-
-    for (const row of rows) {
-      yield row.body;
-    }
-  } while (pageRef.index <= lastPage.index);
 }
 
 interface IdAndNameEntity {
