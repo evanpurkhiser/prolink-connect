@@ -4,7 +4,6 @@
     "module": "ESNext",
     "lib": ["ES2020"],
     "allowJs": true,
-    "downlevelIteration": true,
     "strict": true,
     "strictPropertyInitialization": true,
     "moduleResolution": "Bundler",
@@ -13,8 +12,11 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "skipLibCheck": true,
-    "baseUrl": "./",
-    "paths": {"src/*": ["src/*"]}
+    "types": ["node", "jest"],
+    "paths": {
+      "src/*": ["./src/*"],
+      "tests/*": ["./tests/*"]
+    }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

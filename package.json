@@ -87,12 +87,12 @@
     "oxlint": "^1.56.0",
     "signale": "^1.4.0",
     "stream-buffers": "^3.0.3",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.4.9",
     "ts-node": "^10.9.2",
     "tsdown": "^0.21.10",
     "typedoc": "^0.27.4",
     "typedoc-plugin-missing-exports": "^3.1.0",
-    "typescript": "^5.7.2"
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=20.0.0"
