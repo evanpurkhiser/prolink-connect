@@ -25,7 +25,7 @@ const makeState = (state?: Partial<CDJStatus.State>): CDJStatus.State => ({
   ...state,
 });
 
-const oc = <T>(o: T) => expect.objectContaining(o);
+const oc = (o: object) => expect.objectContaining(o);
 
 describe('mixstatus processor', () => {
   let currentNow = 0;
