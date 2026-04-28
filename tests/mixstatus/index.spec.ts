@@ -25,14 +25,14 @@ const makeState = (state?: Partial<CDJStatus.State>): CDJStatus.State => ({
   ...state,
 });
 
-const oc = expect.objectContaining;
+const oc = <T>(o: T) => expect.objectContaining(o);
 
 describe('mixstatus processor', () => {
   let currentNow = 0;
   const lastFedState = new Map<number, CDJStatus.State>();
 
-  jest.useFakeTimers();
-  global.Date.now = jest.fn(() => currentNow);
+  vi.useFakeTimers();
+  global.Date.now = vi.fn(() => currentNow);
 
   let processor: MixstatusProcessor;
 
@@ -50,8 +50,8 @@ describe('mixstatus processor', () => {
 
   const advanceByBeatCount = (beats: number) => {
     const ms = bpmToSeconds(MOCK_BPM, 0) * beats * 1000;
-    jest.advanceTimersByTime(ms);
-    jest.runAllTimers();
+    vi.advanceTimersByTime(ms);
+    vi.runAllTimers();
     currentNow += ms;
   };
 
@@ -62,7 +62,7 @@ describe('mixstatus processor', () => {
   });
 
   it('does not report first state if immediately not onair and playing', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
 
     feedState(5, {
@@ -73,7 +73,7 @@ describe('mixstatus processor', () => {
   });
 
   it('does not report first state if off-air and played as first track', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
 
     feedState(1, {
@@ -89,7 +89,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports an immediate on-air playing device as nowPlaying', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
 
     feedState(5, {
@@ -101,7 +101,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports tracks brought on-air when no others are playing', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
 
     feedState(1, {
@@ -116,7 +116,7 @@ describe('mixstatus processor', () => {
   });
 
   it('does not report off-air playing track after live track cues', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
 
     // Player 1 is playing
@@ -149,7 +149,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports the stopping of a single device', () => {
-    const stoppedHandler = jest.fn();
+    const stoppedHandler = vi.fn();
     processor.on('stopped', stoppedHandler);
 
     feedState(5, {
@@ -167,7 +167,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports the first device as playing when no others are', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
 
     // Send cued states for two players
@@ -191,7 +191,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports that a set has started when a player starts', () => {
-    const ssHandler = jest.fn();
+    const ssHandler = vi.fn();
     processor.on('setStarted', ssHandler);
 
     feedState(1, {
@@ -226,7 +226,7 @@ describe('mixstatus processor', () => {
   };
 
   it('does not report offair tracks when played', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
 
@@ -236,7 +236,7 @@ describe('mixstatus processor', () => {
   });
 
   it('does not report offair stopped tracks that come on air', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -253,7 +253,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports next device after the configured beats pass and both are live', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -273,7 +273,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports the next device early if the first is stopped', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -290,7 +290,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports the next device early if the first is paused', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -311,8 +311,8 @@ describe('mixstatus processor', () => {
   });
 
   it('reports the next device early if the first goes off air', () => {
-    const npHandler = jest.fn();
-    const stoppedHandler = jest.fn();
+    const npHandler = vi.fn();
+    const stoppedHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     processor.on('stopped', stoppedHandler);
 
@@ -340,7 +340,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports the device playing the longest if the playing track stops', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -365,7 +365,7 @@ describe('mixstatus processor', () => {
   });
 
   it('allow pause interrupts before the next device is reported live', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -389,7 +389,7 @@ describe('mixstatus processor', () => {
   });
 
   it('allow onair interrupts before the next device is reported live', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -413,7 +413,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports that a set has ended when all players stop', async () => {
-    const seHandler = jest.fn();
+    const seHandler = vi.fn();
     processor.on('setEnded', seHandler);
     setupTwoTracks();
 
@@ -424,14 +424,14 @@ describe('mixstatus processor', () => {
 
     // Set ending does not happen in beat intervals, so we don't use the
     // advanceByBeatCount helper
-    jest.advanceTimersByTime(30 * 1000);
+    vi.advanceTimersByTime(30 * 1000);
 
     await new Promise(r => new Promise(r));
     expect(seHandler).toHaveBeenCalled();
   });
 
   it('reports the next track on a previously played player', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -459,7 +459,7 @@ describe('mixstatus processor', () => {
   });
 
   it('reports subsequent tracks when first deck is taken off-air and cued', () => {
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -491,7 +491,7 @@ describe('mixstatus processor', () => {
   it('does not report after requiredPlayTime when MixstatusMode.WaitsForSilence', () => {
     processor.configure({mode: MixstatusMode.WaitsForSilence});
 
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -516,7 +516,7 @@ describe('mixstatus processor', () => {
   it('ignores isOnAir when useOnAirStatus is false', () => {
     processor.configure({useOnAirStatus: false});
 
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -534,7 +534,7 @@ describe('mixstatus processor', () => {
       useOnAirStatus: false,
     });
 
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -554,7 +554,7 @@ describe('mixstatus processor', () => {
   it('reports while using MixstatusMode.FollowsMaster', () => {
     processor.configure({mode: MixstatusMode.FollowsMaster});
 
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();
@@ -584,7 +584,7 @@ describe('mixstatus processor', () => {
       useOnAirStatus: false,
     });
 
-    const npHandler = jest.fn();
+    const npHandler = vi.fn();
     processor.on('nowPlaying', npHandler);
     setupTwoTracks();
     npHandler.mockReset();

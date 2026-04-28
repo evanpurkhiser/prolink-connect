@@ -7,13 +7,13 @@ import {VIRTUAL_CDJ_NAME} from 'src/constants';
 import DeviceManager from 'src/devices';
 import {deviceFromPacket} from 'src/devices/utils';
 
-jest.mock('src/devices/utils', () => ({
-  deviceFromPacket: jest.fn(),
+vi.mock('src/devices/utils', () => ({
+  deviceFromPacket: vi.fn(),
 }));
 
-const dfpMock = deviceFromPacket as jest.Mock<ReturnType<typeof deviceFromPacket>>;
+const dfpMock = vi.mocked(deviceFromPacket);
 
-jest.useFakeTimers();
+vi.useFakeTimers();
 
 describe('DeviceManager', () => {
   const mockSocket = new EventEmitter() as Socket;
@@ -21,13 +21,13 @@ describe('DeviceManager', () => {
   it('produces device lifecycle events', () => {
     const dm = new DeviceManager(mockSocket, {deviceTimeout: 100});
 
-    const announceFn = jest.fn();
+    const announceFn = vi.fn();
     dm.on('announced', announceFn);
 
-    const connectedFn = jest.fn();
+    const connectedFn = vi.fn();
     dm.on('connected', connectedFn);
 
-    const disconnectedFn = jest.fn();
+    const disconnectedFn = vi.fn();
     dm.on('disconnected', disconnectedFn);
 
     // Mocked message value
@@ -51,7 +51,7 @@ describe('DeviceManager', () => {
     connectedFn.mockReset();
 
     // Move forward 75ms, the device should not have timed out yet
-    jest.advanceTimersByTime(75);
+    vi.advanceTimersByTime(75);
 
     // Trigger device announcement
     mockSocket.emit('message', deadBeef);
@@ -61,10 +61,10 @@ describe('DeviceManager', () => {
 
     // Device is still kept alive, as it has not expired since its last
     // announcement
-    jest.advanceTimersByTime(75);
+    vi.advanceTimersByTime(75);
 
     // Device will now timeout
-    jest.advanceTimersByTime(25);
+    vi.advanceTimersByTime(25);
     expect(disconnectedFn).toHaveBeenCalledWith(deviceExample);
     expect(dm.devices.size).toBe(0);
 
@@ -80,18 +80,18 @@ describe('DeviceManager', () => {
     disconnectedFn.mockReset();
 
     // Device will not timeout with reconfigured timeout
-    jest.advanceTimersByTime(400);
+    vi.advanceTimersByTime(400);
     expect(disconnectedFn).not.toHaveBeenCalled();
 
     // Device will now timeout
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
     expect(disconnectedFn).toHaveBeenCalledWith(deviceExample);
   });
 
   it('does not announce invalid announce packets', () => {
     const dm = new DeviceManager(mockSocket, {deviceTimeout: 100});
 
-    const announceFn = jest.fn();
+    const announceFn = vi.fn();
     dm.on('announced', announceFn);
 
     dfpMock.mockReturnValue(null);
@@ -106,7 +106,7 @@ describe('DeviceManager', () => {
   it('does not announce or track virtual CDJ announcements', () => {
     const dm = new DeviceManager(mockSocket, {deviceTimeout: 100});
 
-    const announceFn = jest.fn();
+    const announceFn = vi.fn();
     dm.on('announced', announceFn);
 
     const deviceExample = mockDevice({name: VIRTUAL_CDJ_NAME});
@@ -126,7 +126,7 @@ describe('DeviceManager', () => {
     const deviceExample = mockDevice();
     const gotDevice = dm.getDeviceEnsured(1);
 
-    jest.advanceTimersByTime(75);
+    vi.advanceTimersByTime(75);
 
     dfpMock.mockReturnValue(deviceExample);
 
@@ -141,7 +141,7 @@ describe('DeviceManager', () => {
 
     const gotDevice = dm.getDeviceEnsured(1, 150);
 
-    jest.advanceTimersByTime(150);
+    vi.advanceTimersByTime(150);
     await expect(gotDevice).resolves.toBe(null);
   });
 

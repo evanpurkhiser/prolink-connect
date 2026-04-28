@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node';
 import {Span} from '@sentry/tracing';
 import {Mutex} from 'async-mutex';
 import * as ip from 'ip-address';
-import PromiseSocket from 'promise-socket';
+import {PromiseSocket} from 'promise-socket';
 
 import {Socket} from 'net';
 

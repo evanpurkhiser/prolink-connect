@@ -1,4 +1,4 @@
-import PromiseReadable from 'promise-readable';
+import {PromiseReadable} from 'promise-readable';
 import {ReadableStreamBuffer} from 'stream-buffers';
 
 import * as Field from 'src/remotedb/fields';
