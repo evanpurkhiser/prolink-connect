@@ -22,6 +22,7 @@ interface Options {
  * Get information about the media connected to the specified slot on the
  * device.
  */
+/* oxlint-disable no-useless-spread -- byte-protocol grouping */
 export const makeMediaSlotRequest = ({hostDevice, device, slot}: Options) =>
   Uint8Array.from([
     ...PROLINK_HEADER,
@@ -34,3 +35,4 @@ export const makeMediaSlotRequest = ({hostDevice, device, slot}: Options) =>
     ...[0x00, 0x00, 0x00, device.id],
     ...[0x00, 0x00, 0x00, slot],
   ]);
+/* oxlint-enable no-useless-spread */

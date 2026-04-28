@@ -16,7 +16,7 @@ export const extractColor = (val: number, mask: number): number =>
  * Utility to generate an filled with byte offsets for each segment
  */
 export const makeOffsetArray = (byteLength: number, segmentSize: number) =>
-  new Array(byteLength / segmentSize).fill(null).map((_, i) => i * segmentSize);
+  Array.from({length: byteLength / segmentSize}, (_, i) => i * segmentSize);
 
 /**
  * Convert raw waveform HD data into the structured WaveformHD type

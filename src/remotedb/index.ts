@@ -85,11 +85,13 @@ async function getRemoteDBServerPort(deviceIp: ip.Address4) {
   await conn.connect(REMOTEDB_SERVER_QUERY_PORT, deviceIp.address);
 
   // Magic request packet asking the device to report it's remoteDB port
+  /* oxlint-disable no-useless-spread -- byte-protocol grouping */
   const data = Buffer.from([
     ...[0x00, 0x00, 0x00, 0x0f],
     ...Buffer.from('RemoteDBServer', 'ascii'),
     0x00,
   ]);
+  /* oxlint-enable no-useless-spread */
 
   await conn.write(data);
   const resp = await conn.read();

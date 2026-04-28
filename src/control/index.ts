@@ -19,6 +19,7 @@ const STATE_MAP = {
 /**
  * Generates the packet used to control the playstate of CDJs
  */
+/* oxlint-disable no-useless-spread -- byte-protocol grouping */
 export const makePlaystatePacket = ({hostDevice, device, playState}: Options) =>
   Uint8Array.from([
     ...PROLINK_HEADER,
@@ -27,10 +28,9 @@ export const makePlaystatePacket = ({hostDevice, device, playState}: Options) =>
     ...[0x01, 0x00],
     ...[hostDevice.id],
     ...[0x00, 0x04],
-    ...new Array(4)
-      .fill(0x00)
-      .map((_, i) => (i === device.id ? STATE_MAP[playState] : 0)),
+    ...Array.from({length: 4}, (_, i) => (i === device.id ? STATE_MAP[playState] : 0)),
   ]);
+/* oxlint-enable no-useless-spread */
 
 export default class Control {
   #hostDevice: Device;

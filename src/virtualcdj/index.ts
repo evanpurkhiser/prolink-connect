@@ -102,6 +102,7 @@ export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
   //  - 0x34: 01 byte for the player type
   //  - 0x35: 01 byte final padding
 
+  /* oxlint-disable no-useless-spread -- byte-protocol grouping */
   const parts = [
     ...PROLINK_HEADER,
     ...[0x06, 0x00],
@@ -116,6 +117,7 @@ export function makeAnnouncePacket(deviceToAnnounce: Device): Uint8Array {
     ...[d.type],
     ...[0x00],
   ];
+  /* oxlint-enable no-useless-spread */
 
   return Uint8Array.from(parts);
 }
