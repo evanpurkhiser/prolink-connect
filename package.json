@@ -67,7 +67,7 @@
     "@types/signale": "^1.4.7",
     "async-mutex": "^0.3.0",
     "better-sqlite3": "^12.9.0",
-    "ip-address": "^7.0.1",
+    "ip-address": "^10.1.1",
     "js-xdr": "^1.3.0",
     "lodash-es": "^4.18.1",
     "promise-readable": "^8.0.1",
