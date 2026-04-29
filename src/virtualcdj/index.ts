@@ -1,7 +1,7 @@
 import * as ip from 'ip-address';
 
-import type {Socket} from 'dgram';
-import type {NetworkInterfaceInfoIPv4} from 'os';
+import type {Socket} from 'node:dgram';
+import type {NetworkInterfaceInfoIPv4} from 'node:os';
 
 import {
   ANNOUNCE_INTERVAL,

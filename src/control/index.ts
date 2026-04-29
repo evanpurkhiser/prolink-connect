@@ -1,4 +1,4 @@
-import type {Socket} from 'dgram';
+import type {Socket} from 'node:dgram';
 
 import {BEAT_PORT, PROLINK_HEADER} from 'src/constants';
 import type {Device} from 'src/types';

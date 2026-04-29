@@ -1,7 +1,7 @@
 import type StrictEventEmitter from 'strict-event-emitter-types';
 
-import type {Socket} from 'dgram';
-import {EventEmitter} from 'events';
+import type {Socket} from 'node:dgram';
+import {EventEmitter} from 'node:events';
 
 import {VIRTUAL_CDJ_NAME} from 'src/constants';
 import type {Device, DeviceID} from 'src/types';

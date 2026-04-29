@@ -1,8 +1,8 @@
 import {Mutex} from 'async-mutex';
 import type StrictEventEmitter from 'strict-event-emitter-types';
 
-import type {Socket} from 'dgram';
-import {EventEmitter} from 'events';
+import type {Socket} from 'node:dgram';
+import {EventEmitter} from 'node:events';
 
 import {STATUS_PORT} from 'src/constants';
 import type {CDJStatus, MediaSlotInfo} from 'src/types';

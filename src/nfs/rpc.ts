@@ -3,8 +3,8 @@ import promiseRetry from 'promise-retry';
 import {timeout, TimeoutError} from 'promise-timeout';
 import type {OperationOptions} from 'retry';
 
-import type {Socket} from 'dgram';
-import dgram from 'dgram';
+import type {Socket} from 'node:dgram';
+import dgram from 'node:dgram';
 
 import {udpClose, udpRead, udpSend} from 'src/utils/udp';
 

@@ -1,7 +1,7 @@
 import * as ip from 'ip-address';
 
-import type {NetworkInterfaceInfo, NetworkInterfaceInfoIPv4} from 'os';
-import {networkInterfaces} from 'os';
+import type {NetworkInterfaceInfo, NetworkInterfaceInfoIPv4} from 'node:os';
+import {networkInterfaces} from 'node:os';
 
 import type {Device} from 'src/types';
 import {MediaSlot, TrackType} from 'src/types';

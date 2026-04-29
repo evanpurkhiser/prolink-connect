@@ -1,6 +1,6 @@
 import type StrictEventEmitter from 'strict-event-emitter-types';
 
-import {EventEmitter} from 'events';
+import {EventEmitter} from 'node:events';
 
 import type {CDJStatus, DeviceID} from 'src/types';
 import {MixstatusMode} from 'src/types';

@@ -4,7 +4,7 @@ import {Mutex} from 'async-mutex';
 import type * as ip from 'ip-address';
 import {PromiseSocket} from 'promise-socket';
 
-import {Socket} from 'net';
+import {Socket} from 'node:net';
 
 import type DeviceManager from 'src/devices';
 import type {Device, DeviceID, MediaSlot, TrackType} from 'src/types';

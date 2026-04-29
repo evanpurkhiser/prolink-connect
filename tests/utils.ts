@@ -2,7 +2,7 @@
 
 import * as ip from 'ip-address';
 
-import {readFile} from 'fs/promises';
+import {readFile} from 'node:fs/promises';
 
 import type {Device} from 'src/types';
 import {DeviceType} from 'src/types';

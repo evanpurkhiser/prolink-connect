@@ -2,8 +2,8 @@ import * as Sentry from '@sentry/node';
 import {Mutex} from 'async-mutex';
 import type StrictEventEmitter from 'strict-event-emitter-types';
 
-import {createHash} from 'crypto';
-import {EventEmitter} from 'events';
+import {createHash} from 'node:crypto';
+import {EventEmitter} from 'node:events';
 
 import type DeviceManager from 'src/devices';
 import type {FetchProgress} from 'src/nfs';

@@ -1,10 +1,10 @@
 import * as Sentry from '@sentry/node';
 import {SpanStatus} from '@sentry/tracing';
 
-import {randomUUID} from 'crypto';
-import type {Socket} from 'dgram';
-import dgram from 'dgram';
-import type {NetworkInterfaceInfoIPv4} from 'os';
+import {randomUUID} from 'node:crypto';
+import type {Socket} from 'node:dgram';
+import dgram from 'node:dgram';
+import type {NetworkInterfaceInfoIPv4} from 'node:os';
 
 import {ANNOUNCE_PORT, BEAT_PORT, DEFAULT_VCDJ_ID, STATUS_PORT} from 'src/constants';
 import Control from 'src/control';

@@ -1,5 +1,5 @@
-import type {BindOptions, Socket} from 'dgram';
-import type {AddressInfo} from 'net';
+import type {BindOptions, Socket} from 'node:dgram';
+import type {AddressInfo} from 'node:net';
 
 /**
  * Async version of upd socket bind
