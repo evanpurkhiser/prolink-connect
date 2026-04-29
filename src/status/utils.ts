@@ -13,7 +13,7 @@ export function statusFromPacket(packet: Buffer) {
 
   // Rekordbox sends some short status packets that we can just ignore.
   if (packet.length < 0xc8) {
-    return undefined;
+    return;
   }
 
   // No track loaded: BPM = MAX_INT16
@@ -38,7 +38,7 @@ export function statusFromPacket(packet: Buffer) {
     isOnAir: (packet[0x89] & CDJStatus.StatusFlag.OnAir) !== 0,
     isSync: (packet[0x89] & CDJStatus.StatusFlag.Sync) !== 0,
     isMaster: (packet[0x89] & CDJStatus.StatusFlag.Master) !== 0,
-    isEmergencyMode: !!packet[0xba],
+    isEmergencyMode: Boolean(packet[0xba]),
     trackBPM,
     sliderPitch: calcPitch(packet.slice(0x8d, 0x8d + 3)),
     effectivePitch: calcPitch(packet.slice(0x99, 0x99 + 3)),
@@ -57,21 +57,21 @@ export function mediaSlotFromPacket(packet: Buffer) {
   }
 
   if (packet[0x0a] !== 0x06) {
-    return undefined;
+    return;
   }
 
   const name = packet
     .slice(0x2c, 0x0c + 40)
     .toString()
     // oxlint-disable-next-line no-control-regex -- strip C-string null terminators
-    .replace(/\u0000/g, '');
+    .replaceAll(/\u0000/g, '');
 
   const createdDate = new Date(
     packet
       .slice(0x6c, 0x6c + 24)
       .toString()
       // oxlint-disable-next-line no-control-regex -- strip C-string null terminators
-      .replace(/\u0000/g, ''),
+      .replaceAll(/\u0000/g, ''),
   );
 
   const deviceId = packet[0x27];
@@ -79,7 +79,7 @@ export function mediaSlotFromPacket(packet: Buffer) {
 
   const trackCount = packet.readUInt16BE(0xa6);
   const tracksType = packet[0xaa];
-  const hasSettings = !!packet[0xab];
+  const hasSettings = Boolean(packet[0xab]);
   const playlistCount = packet.readUInt16BE(0xae);
   const color = packet.readUInt8(0xa8);
   const totalBytes = packet.readBigUInt64BE(0xb0);
@@ -114,5 +114,5 @@ function calcPitch(pitch: Buffer) {
 
   const computed = ((value - relativeZero) / relativeZero) * 100;
 
-  return +computed.toFixed(2);
+  return Number(computed.toFixed(2));
 }

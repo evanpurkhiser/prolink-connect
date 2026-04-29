@@ -23,7 +23,7 @@ export const getVirtualCDJ = (iface: NetworkInterfaceInfoIPv4, id: DeviceID): De
   name: VIRTUAL_CDJ_NAME,
   type: DeviceType.CDJ,
   ip: new ip.Address4(iface.address),
-  macAddr: new Uint8Array(iface.mac.split(':').map(s => parseInt(s, 16))),
+  macAddr: new Uint8Array(iface.mac.split(':').map(s => Number.parseInt(s, 16))),
 });
 
 /**

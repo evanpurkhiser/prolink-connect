@@ -99,8 +99,8 @@ export class MetadataORM {
     trackRow.waveformHd = null;
 
     // Explicitly restore dates and booleans
-    trackRow.autoloadHotcues = !!trackRow.autoloadHotcues;
-    trackRow.kuvoPublic = !!trackRow.kuvoPublic;
+    trackRow.autoloadHotcues = Boolean(trackRow.autoloadHotcues);
+    trackRow.kuvoPublic = Boolean(trackRow.kuvoPublic);
 
     // Explicitly restore date objects
     trackRow.analyzeDate = new Date(trackRow.analyzeDate as any);

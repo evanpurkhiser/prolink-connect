@@ -112,8 +112,8 @@ const convertCueAndLoops = (args: Field[]): CueAndLoop[] => {
     .map(byteOffset => {
       const entry = data.slice(byteOffset, byteOffset + 0x24);
 
-      const isLoop = !!entry[0];
-      const isCue = !!entry[1];
+      const isLoop = Boolean(entry[0]);
+      const isCue = Boolean(entry[1]);
       const button = entry[2] === 0 ? false : (entry[2] as HotcueButton);
 
       const offsetInFrames = entry.readUInt32LE(0x0c);

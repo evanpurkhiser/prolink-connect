@@ -19,7 +19,7 @@ export function deviceFromPacket(packet: Buffer) {
     .slice(0x0c, 0x0c + 20)
     .toString()
     // oxlint-disable-next-line no-control-regex -- strip C-string null terminators
-    .replace(/\u0000/g, '');
+    .replaceAll(/\u0000/g, '');
 
   const device: Device = {
     name,

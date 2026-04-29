@@ -67,7 +67,7 @@ class StatusEmitter {
       return this.#emitter.emit('mediaSlot', mediaSlot);
     }
 
-    return undefined;
+    return;
   };
 
   /**

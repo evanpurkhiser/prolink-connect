@@ -131,7 +131,7 @@ export class RpcConnection {
             throw err;
           }
         }
-        return undefined;
+        return;
       });
 
     // Execute the transaction exclusively to avoid async call races
