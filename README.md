@@ -91,7 +91,7 @@ async function main() {
   //
   //  There are some cases where you may want your virtual device to announce
   //  itself with "real" device ID, but this library does not currently support
-  //  the scenarios that would requrie that (Becoming master and sending a master
+  //  the scenarios that would require that (Becoming master and sending a master
   //  tempo)
 
   // 1. AUTO CONFIGURATION

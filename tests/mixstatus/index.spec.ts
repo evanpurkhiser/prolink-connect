@@ -210,7 +210,7 @@ describe('mixstatus processor', () => {
   });
 
   /**
-   * Loads one track, then a second, then starts palying the second offair.
+   * Loads one track, then a second, then starts playing the second offair.
    */
   const setupTwoTracks = () => {
     feedState(1, {

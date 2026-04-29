@@ -125,7 +125,7 @@ class LocalDatabase {
   #emitter: Emitter = new EventEmitter();
   /**
    * Locks for each device slot: ${device.id}-${slot}. Used when making track
-   * requets.
+   * requests.
    */
   #slotLocks = new Map<string, Mutex>();
   /**

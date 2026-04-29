@@ -56,7 +56,7 @@ export enum MenuRequest {
 }
 
 /**
- * Request message types used to obtain specfiic track information
+ * Request message types used to obtain specific track information
  */
 export enum DataRequest {
   GetMetadata = 0x2002,

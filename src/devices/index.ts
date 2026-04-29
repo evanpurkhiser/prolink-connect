@@ -56,7 +56,7 @@ type Emitter = StrictEventEmitter<EventEmitter, DeviceEvents>;
 
 /**
  * The device manager is responsible for tracking devices that appear on the
- * prolink network, providing an API to react to devices livecycle events as
+ * prolink network, providing an API to react to devices lifecycle events as
  * they connect and disconnect form the network.
  */
 class DeviceManager {

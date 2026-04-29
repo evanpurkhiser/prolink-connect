@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-- Bumped many pacakges
+- Bumped many packages
 - Require Node 20 minimum version
-- Fixed a typo in `ItemType.OriginalArtist` (was mispelled as `OrigianlArtist`)
+- Fixed a typo in `ItemType.OriginalArtist` (was misspelled as `OrigianlArtist`)
 - Small comment correction for vCDJ ID on `autoconfigFromPeers`
 
 ## [v0.11.0] - 2022-10-24

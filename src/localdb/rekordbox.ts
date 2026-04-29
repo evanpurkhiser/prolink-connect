@@ -294,7 +294,7 @@ function createTrack(trackRow: any) {
     //
     //  3. A `EX2` file -- currently unknown
     //
-    // We noramlize this path by trimming the DAT extension off. Later we will
+    // We normalize this path by trimming the DAT extension off. Later we will
     // try and read whatever is available.
     analyzePath: analyzePath?.slice(0, -4),
 

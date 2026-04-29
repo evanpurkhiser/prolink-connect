@@ -41,7 +41,7 @@ const trackRelationTableMap: Record<string, string> = {
 };
 
 /**
- * Object Relation Mapper as an abstraction ontop of a local database
+ * Object Relation Mapper as an abstraction on top of a local database
  * connection.
  *
  * May be used to populate a metadata database and query objects.

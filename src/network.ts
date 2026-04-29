@@ -296,7 +296,7 @@ export class ProlinkNetwork {
 
   /**
    * Typescript discriminate helper. Refines the type of the network to one
-   * that reflects the connected status. Useful to avoid having to gaurd the
+   * that reflects the connected status. Useful to avoid having to guard the
    * service getters from nulls.
    */
   isConnected(): this is ConnectedProlinkNetwork {
