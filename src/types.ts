@@ -217,13 +217,13 @@ export interface Waveforms {
  */
 export enum HotcueButton {
   A = 1,
-  B,
-  C,
-  D,
-  E,
-  F,
-  G,
-  H,
+  B = 2,
+  C = 3,
+  D = 4,
+  E = 5,
+  F = 6,
+  G = 7,
+  H = 8,
 }
 
 /**
@@ -330,21 +330,21 @@ export enum NetworkState {
    * The network is offline when we don't have an open connection to the network
    * (no connection to the announcement and or status UDP socket is present).
    */
-  Offline,
+  Offline = 0,
   /**
    * The network is online when we have opened sockets to the network, but have
    * not yet started announcing ourselves as a virtual CDJ.
    */
-  Online,
+  Online = 1,
   /**
    * The network is connected once we have heard from another device on the network
    */
-  Connected,
+  Connected = 2,
   /**
    * The network may have failed to connect if we aren't able to open the
    * announcement and or status UDP socket.
    */
-  Failed,
+  Failed = 3,
 }
 
 /**
@@ -371,15 +371,15 @@ export enum MixstatusMode {
    *   consecutively (with allowedInterruptBeats honored for the incoming track)
    *   for the configured beatsUntilReported.
    */
-  SmartTiming,
+  SmartTiming = 0,
   /**
    * Tracks will not be reported after the beatsUntilReported AND will ONLY
    * be reported if the other track has gone into a non-playing play state, or
    * taken off air (when useOnAirStatus is enabled).
    */
-  WaitsForSilence,
+  WaitsForSilence = 1,
   /**
    * The track will simply be reported only after the player becomes master.
    */
-  FollowsMaster,
+  FollowsMaster = 2,
 }

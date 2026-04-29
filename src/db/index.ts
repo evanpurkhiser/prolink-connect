@@ -15,9 +15,9 @@ import * as GetPlaylist from './getPlaylist';
 import * as GetWaveforms from './getWaveforms';
 
 enum LookupStrategy {
-  Remote,
-  Local,
-  NoneAvailable,
+  Remote = 0,
+  Local = 1,
+  NoneAvailable = 2,
 }
 
 /**

@@ -63,15 +63,13 @@ export function mediaSlotFromPacket(packet: Buffer) {
   const name = packet
     .slice(0x2c, 0x0c + 40)
     .toString()
-    // oxlint-disable-next-line no-control-regex -- strip C-string null terminators
-    .replaceAll(/\u0000/g, '');
+    .replaceAll('\0', '');
 
   const createdDate = new Date(
     packet
       .slice(0x6c, 0x6c + 24)
       .toString()
-      // oxlint-disable-next-line no-control-regex -- strip C-string null terminators
-      .replaceAll(/\u0000/g, ''),
+      .replaceAll('\0', ''),
   );
 
   const deviceId = packet[0x27];

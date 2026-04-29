@@ -118,7 +118,7 @@ class DeviceManager {
 
     const device = await Promise.race([
       devicePromise,
-      new Promise<null>(r => setTimeout(() => r(null), timeout)),
+      new Promise<null>(resolve => setTimeout(() => resolve(null), timeout)),
     ]);
     this.off('connected', handler!);
 

@@ -64,10 +64,8 @@ class StatusEmitter {
     const mediaSlot = mediaSlotFromPacket(message);
 
     if (mediaSlot !== undefined) {
-      return this.#emitter.emit('mediaSlot', mediaSlot);
+      this.#emitter.emit('mediaSlot', mediaSlot);
     }
-
-    return;
   };
 
   /**

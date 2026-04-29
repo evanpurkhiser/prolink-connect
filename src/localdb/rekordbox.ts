@@ -228,7 +228,7 @@ class RekordboxHydrator {
       this.#onProgress({complete: ++totalSaved, table: tableName, total: totalItems});
 
       // Allow additional tasks to occur during hydration
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise(resolve => setTimeout(resolve, 0));
     }
 
     tx.finish();
@@ -241,7 +241,7 @@ interface IdAndNameEntity {
 }
 
 const ensureDate = (date: Date) =>
-  date instanceof Date && !isNaN(date.valueOf()) ? date : undefined;
+  date instanceof Date && !Number.isNaN(date.valueOf()) ? date : undefined;
 
 /**
  * Utility to create a hydrator that hydrates the provided entity with the id
@@ -296,7 +296,7 @@ function createTrack(trackRow: any) {
     //
     // We noramlize this path by trimming the DAT extension off. Later we will
     // try and read whatever is available.
-    analyzePath: analyzePath?.substring(0, analyzePath.length - 4),
+    analyzePath: analyzePath?.slice(0, -4),
 
     artworkId: trackRow.artworkId || null,
     artistId: trackRow.artistId || null,

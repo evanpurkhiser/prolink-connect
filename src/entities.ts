@@ -5,8 +5,8 @@ import type {BeatGrid, CueAndLoop, WaveformHD} from 'src/types';
  * attributes.
  */
 export enum EntityFK {
-  WithFKs,
-  WithRelations,
+  WithFKs = 0,
+  WithRelations = 1,
 }
 
 export interface Artwork {

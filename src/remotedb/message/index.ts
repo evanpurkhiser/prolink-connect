@@ -91,7 +91,7 @@ export class Message<T extends MessageType = MessageType> {
     const argList = await readField(stream, FieldType.Binary);
 
     // 06. Read all argument fields in
-    const args: Field[] = new Array(argCount.value);
+    const args: Field[] = Array.from({length: argCount.value});
 
     for (let i = 0; i < argCount.value; ++i) {
       // XXX: There is a small quirk in a few message response types that send

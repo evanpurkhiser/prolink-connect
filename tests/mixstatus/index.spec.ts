@@ -426,7 +426,7 @@ describe('mixstatus processor', () => {
     // advanceByBeatCount helper
     vi.advanceTimersByTime(30 * 1000);
 
-    await new Promise(r => new Promise(r));
+    await new Promise(resolve => new Promise(resolve));
     expect(seHandler).toHaveBeenCalled();
   });
 

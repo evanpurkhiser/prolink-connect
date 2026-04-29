@@ -3,12 +3,14 @@ import type {DeviceID, MediaSlot, TrackType} from 'src/types';
 /**
  * Status flag bitmasks
  */
+// oxlint-disable typescript/prefer-literal-enum-member -- bitshift is clearer for flag bits
 export enum StatusFlag {
   OnAir = 1 << 3,
   Sync = 1 << 4,
   Master = 1 << 5,
   Playing = 1 << 6,
 }
+// oxlint-enable typescript/prefer-literal-enum-member
 
 /**
  * Play state flags
