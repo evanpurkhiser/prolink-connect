@@ -1,7 +1,8 @@
-import {Span} from '@sentry/tracing';
+import type {Span} from '@sentry/tracing';
 
-import {FetchProgress} from '.';
-import {RpcConnection, RpcProgram} from './rpc';
+import type {FetchProgress} from '.';
+import type {RpcConnection} from './rpc';
+import {RpcProgram} from './rpc';
 import {flattenLinkedList} from './utils';
 import {mount, nfs, portmap} from './xdr';
 

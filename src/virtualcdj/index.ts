@@ -1,7 +1,7 @@
 import * as ip from 'ip-address';
 
-import {Socket} from 'dgram';
-import {NetworkInterfaceInfoIPv4} from 'os';
+import type {Socket} from 'dgram';
+import type {NetworkInterfaceInfoIPv4} from 'os';
 
 import {
   ANNOUNCE_INTERVAL,
@@ -10,8 +10,9 @@ import {
   VIRTUAL_CDJ_FIRMWARE,
   VIRTUAL_CDJ_NAME,
 } from 'src/constants';
-import DeviceManager from 'src/devices';
-import {Device, DeviceID, DeviceType} from 'src/types';
+import type DeviceManager from 'src/devices';
+import type {Device, DeviceID} from 'src/types';
+import {DeviceType} from 'src/types';
 import {buildName} from 'src/utils';
 
 /**

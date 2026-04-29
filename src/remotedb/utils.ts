@@ -1,9 +1,10 @@
-import {Span} from '@sentry/tracing';
+import type {Span} from '@sentry/tracing';
 
-import {Connection, LookupDescriptor} from '.';
+import type {Connection, LookupDescriptor} from '.';
 import {UInt32} from './fields';
 import {Message} from './message';
-import {Items, ItemType} from './message/item';
+import type {Items} from './message/item';
+import {ItemType} from './message/item';
 import {MessageType} from './message/types';
 
 /**

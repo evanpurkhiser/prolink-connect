@@ -1,11 +1,12 @@
-import {Span} from '@sentry/tracing';
+import type {Span} from '@sentry/tracing';
 
-import * as entities from 'src/entities';
+import type * as entities from 'src/entities';
 
-import {Connection, LookupDescriptor, Query} from '.';
+import type {Connection, LookupDescriptor, Query} from '.';
 import {Binary, UInt32} from './fields';
 import {Message} from './message';
-import {Item, Items, ItemType} from './message/item';
+import type {Item, Items} from './message/item';
+import {ItemType} from './message/item';
 import {Request, Response} from './message/types';
 import {fieldFromDescriptor, findColor, renderItems} from './utils';
 

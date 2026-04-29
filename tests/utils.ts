@@ -4,7 +4,8 @@ import * as ip from 'ip-address';
 
 import {readFile} from 'fs/promises';
 
-import {Device, DeviceType} from 'src/types';
+import type {Device} from 'src/types';
+import {DeviceType} from 'src/types';
 
 export function readMock(path: string) {
   return readFile(`${import.meta.dirname}/_data/${path}`);

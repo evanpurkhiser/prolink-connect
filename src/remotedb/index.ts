@@ -1,19 +1,21 @@
 import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/tracing';
+import type {Span} from '@sentry/tracing';
 import {Mutex} from 'async-mutex';
-import * as ip from 'ip-address';
+import type * as ip from 'ip-address';
 import {PromiseSocket} from 'promise-socket';
 
 import {Socket} from 'net';
 
-import DeviceManager from 'src/devices';
-import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
+import type DeviceManager from 'src/devices';
+import type {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
 
 import {REMOTEDB_SERVER_QUERY_PORT} from './constants';
 import {readField, UInt32} from './fields';
 import {Message} from './message';
-import {getMessageName, MessageType, Request, Response} from './message/types';
-import {HandlerArgs, HandlerReturn, queryHandlers} from './queries';
+import type {Response} from './message/types';
+import {getMessageName, MessageType, Request} from './message/types';
+import type {HandlerArgs, HandlerReturn} from './queries';
+import {queryHandlers} from './queries';
 
 type Await<T> = T extends PromiseLike<infer U> ? U : T;
 

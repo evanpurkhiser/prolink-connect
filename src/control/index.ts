@@ -1,7 +1,8 @@
-import {Socket} from 'dgram';
+import type {Socket} from 'dgram';
 
 import {BEAT_PORT, PROLINK_HEADER} from 'src/constants';
-import {CDJStatus, Device} from 'src/types';
+import type {Device} from 'src/types';
+import {CDJStatus} from 'src/types';
 import {buildName} from 'src/utils';
 import {udpSend} from 'src/utils/udp';
 

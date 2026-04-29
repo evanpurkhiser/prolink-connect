@@ -1,18 +1,12 @@
 import * as Sentry from '@sentry/node';
 import {SpanStatus} from '@sentry/tracing';
 
-import DeviceManager from 'src/devices';
-import {Track} from 'src/entities';
-import LocalDatabase from 'src/localdb';
-import RemoteDatabase from 'src/remotedb';
-import {
-  Device,
-  DeviceType,
-  MediaSlot,
-  PlaylistContents,
-  TrackType,
-  Waveforms,
-} from 'src/types';
+import type DeviceManager from 'src/devices';
+import type {Track} from 'src/entities';
+import type LocalDatabase from 'src/localdb';
+import type RemoteDatabase from 'src/remotedb';
+import type {Device, PlaylistContents, Waveforms} from 'src/types';
+import {DeviceType, MediaSlot, TrackType} from 'src/types';
 import {getSlotName, getTrackTypeName} from 'src/utils';
 
 import * as GetArtwork from './getArtwork';

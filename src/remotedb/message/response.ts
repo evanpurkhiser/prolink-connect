@@ -1,8 +1,8 @@
 import {makeCueLoopEntry} from 'src/localdb/utils';
-import {Field} from 'src/remotedb/fields';
+import type {Field} from 'src/remotedb/fields';
 import {fieldsToItem} from 'src/remotedb/message/item';
 import {Response} from 'src/remotedb/message/types';
-import {
+import type {
   BeatGrid,
   CueAndLoop,
   HotcueButton,

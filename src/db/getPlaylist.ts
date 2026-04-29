@@ -1,9 +1,11 @@
-import {Span} from '@sentry/tracing';
+import type {Span} from '@sentry/tracing';
 
-import {Playlist} from 'src/entities';
-import LocalDatabase from 'src/localdb';
-import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {DeviceID, MediaSlot, PlaylistContents, TrackType} from 'src/types';
+import type {Playlist} from 'src/entities';
+import type LocalDatabase from 'src/localdb';
+import type RemoteDatabase from 'src/remotedb';
+import {MenuTarget, Query} from 'src/remotedb';
+import type {DeviceID, PlaylistContents} from 'src/types';
+import {MediaSlot, TrackType} from 'src/types';
 
 export interface Options {
   /**

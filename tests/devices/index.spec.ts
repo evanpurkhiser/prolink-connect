@@ -1,6 +1,6 @@
 import {mockDevice} from 'tests/utils';
 
-import {Socket} from 'dgram';
+import type {Socket} from 'dgram';
 import {EventEmitter} from 'events';
 
 import {VIRTUAL_CDJ_NAME} from 'src/constants';

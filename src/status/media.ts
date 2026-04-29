@@ -1,5 +1,5 @@
 import {PROLINK_HEADER} from 'src/constants';
-import {Device, MediaSlot} from 'src/types';
+import type {Device, MediaSlot} from 'src/types';
 import {buildName} from 'src/utils';
 
 interface Options {

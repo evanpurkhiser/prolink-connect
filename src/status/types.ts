@@ -1,4 +1,4 @@
-import {DeviceID, MediaSlot, TrackType} from 'src/types';
+import type {DeviceID, MediaSlot, TrackType} from 'src/types';
 
 /**
  * Status flag bitmasks

@@ -1,9 +1,11 @@
-import {Span} from '@sentry/tracing';
+import type {Span} from '@sentry/tracing';
 
-import LocalDatabase from 'src/localdb';
+import type LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
-import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
+import type RemoteDatabase from 'src/remotedb';
+import {MenuTarget, Query} from 'src/remotedb';
+import type {Device, DeviceID, TrackType} from 'src/types';
+import {MediaSlot} from 'src/types';
 
 import {anlzLoader} from './utils';
 

@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import {Span} from '@sentry/tracing';
+import type {Span} from '@sentry/tracing';
 import {
   parseAnlz,
   parsePdb,
@@ -8,7 +8,7 @@ import {
   tableRows,
 } from 'rekordbox-parser';
 
-import {
+import type {
   Album,
   Artist,
   Artwork,
@@ -21,9 +21,10 @@ import {
   PlaylistEntry,
   Track,
 } from 'src/entities';
-import {MetadataORM, Table} from 'src/localdb/orm';
+import type {MetadataORM} from 'src/localdb/orm';
+import {Table} from 'src/localdb/orm';
 import {makeCueLoopEntry} from 'src/localdb/utils';
-import {BeatGrid, CueAndLoop, HotcueButton, WaveformHD} from 'src/types';
+import type {BeatGrid, CueAndLoop, HotcueButton, WaveformHD} from 'src/types';
 import {convertWaveformHDData} from 'src/utils/converters';
 
 // NOTE: Kaitai doesn't currently have a good typescript exporter, so we will

@@ -2,8 +2,9 @@ import * as Sentry from '@sentry/node';
 import {SpanStatus} from '@sentry/tracing';
 
 import {randomUUID} from 'crypto';
-import dgram, {Socket} from 'dgram';
-import {NetworkInterfaceInfoIPv4} from 'os';
+import type {Socket} from 'dgram';
+import dgram from 'dgram';
+import type {NetworkInterfaceInfoIPv4} from 'os';
 
 import {ANNOUNCE_PORT, BEAT_PORT, DEFAULT_VCDJ_ID, STATUS_PORT} from 'src/constants';
 import Control from 'src/control';
@@ -13,7 +14,8 @@ import LocalDatabase from 'src/localdb';
 import {MixstatusProcessor} from 'src/mixstatus';
 import RemoteDatabase from 'src/remotedb';
 import StatusEmitter from 'src/status';
-import {Device, NetworkState} from 'src/types';
+import type {Device} from 'src/types';
+import {NetworkState} from 'src/types';
 import {getMatchingInterface} from 'src/utils';
 import {udpBind, udpClose} from 'src/utils/udp';
 import {Announcer, getVirtualCDJ} from 'src/virtualcdj';

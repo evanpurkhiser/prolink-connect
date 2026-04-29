@@ -1,9 +1,10 @@
 import {Mutex} from 'async-mutex';
 import promiseRetry from 'promise-retry';
 import {timeout, TimeoutError} from 'promise-timeout';
-import {OperationOptions} from 'retry';
+import type {OperationOptions} from 'retry';
 
-import dgram, {Socket} from 'dgram';
+import type {Socket} from 'dgram';
+import dgram from 'dgram';
 
 import {udpClose, udpRead, udpSend} from 'src/utils/udp';
 

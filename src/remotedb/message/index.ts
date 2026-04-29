@@ -1,18 +1,13 @@
-import {Span, SpanStatus} from '@sentry/tracing';
-import {PromiseReadable} from 'promise-readable';
+import type {Span} from '@sentry/tracing';
+import {SpanStatus} from '@sentry/tracing';
+import type {PromiseReadable} from 'promise-readable';
 
 import {REMOTEDB_MAGIC} from 'src/remotedb/constants';
-import {
-  Binary,
-  Field,
-  FieldType,
-  readField,
-  UInt8,
-  UInt16,
-  UInt32,
-} from 'src/remotedb/fields';
+import type {Field} from 'src/remotedb/fields';
+import {Binary, FieldType, readField, UInt8, UInt16, UInt32} from 'src/remotedb/fields';
 import {responseTransform} from 'src/remotedb/message/response';
-import {getMessageName, MessageType, Response} from 'src/remotedb/message/types';
+import type {MessageType} from 'src/remotedb/message/types';
+import {getMessageName, Response} from 'src/remotedb/message/types';
 
 /**
  * Argument types are used in argument list fields. This is essentially

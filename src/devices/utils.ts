@@ -1,7 +1,7 @@
 import * as ip from 'ip-address';
 
 import {PROLINK_HEADER} from 'src/constants';
-import {Device} from 'src/types';
+import type {Device} from 'src/types';
 
 /**
  * Converts a announce packet to a device object.

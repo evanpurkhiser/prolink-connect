@@ -1,7 +1,7 @@
 import sqlite3 from 'better-sqlite3';
 import {camelCase, mapKeys, mapValues, partition, snakeCase} from 'lodash-es';
 
-import {EntityFK, Playlist, PlaylistEntry, Track} from 'src/entities';
+import type {EntityFK, Playlist, PlaylistEntry, Track} from 'src/entities';
 
 import {generateSchema} from './schema';
 

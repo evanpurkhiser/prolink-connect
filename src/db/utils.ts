@@ -1,5 +1,5 @@
 import {fetchFile} from 'src/nfs';
-import {Device, MediaSlot} from 'src/types';
+import type {Device, MediaSlot} from 'src/types';
 
 interface AnlzLoaderOpts {
   device: Device;

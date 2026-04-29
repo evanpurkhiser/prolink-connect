@@ -1,4 +1,4 @@
-import {PromiseReadable} from 'promise-readable';
+import type {PromiseReadable} from 'promise-readable';
 
 const NULL_CHAR = '\0';
 

@@ -1,8 +1,9 @@
-import StrictEventEmitter from 'strict-event-emitter-types';
+import type StrictEventEmitter from 'strict-event-emitter-types';
 
 import {EventEmitter} from 'events';
 
-import {CDJStatus, DeviceID, MixstatusMode} from 'src/types';
+import type {CDJStatus, DeviceID} from 'src/types';
+import {MixstatusMode} from 'src/types';
 import {bpmToSeconds} from 'src/utils';
 
 import {isPlaying, isStopping} from './utils';
