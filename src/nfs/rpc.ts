@@ -55,11 +55,31 @@ export class RpcConnection {
   socket: Socket;
   mutex: Mutex;
   xid = 1;
+  /**
+   * The port the remote portmap RPC service is reachable on. Real CDJs run
+   * portmap on the well-known port `111`. Rekordbox running on a desktop OS
+   * cannot bind 111 (the host's system rpcbind already owns it), so it stacks
+   * its embedded RPC services onto the standard NFS port `2049` instead.
+   * Discovered lazily by `makeProgramClient`.
+   */
+  portmapPort?: number;
+  /**
+   * Optional hook invoked after each RPC call attempt — both successful and
+   * failed (e.g. timeouts during portmap discovery). Used to capture wire
+   * bytes for the test fixtures that drive deterministic replay specs;
+   * never set in production.
+   */
+  wireTap?: (entry: {
+    port: number;
+    sent: Buffer;
+    received?: Buffer;
+    error?: string;
+  }) => void;
 
-  constructor(address: string, retryConfig?: RetryConfig) {
+  constructor(address: string, retryConfig?: RetryConfig, socket?: Socket) {
     this.address = address;
     this.retryConfig = retryConfig ?? {};
-    this.socket = dgram.createSocket('udp4');
+    this.socket = socket ?? dgram.createSocket('udp4');
     this.mutex = new Mutex();
   }
 
@@ -134,7 +154,19 @@ export class RpcConnection {
       });
 
     // Execute the transaction exclusively to avoid async call races
-    const resp = await this.mutex.runExclusive(executeWithRetry);
+    let resp: Buffer;
+    try {
+      resp = (await this.mutex.runExclusive(executeWithRetry)) as Buffer;
+    } catch (err) {
+      this.wireTap?.({
+        port,
+        sent: callData,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
+
+    this.wireTap?.({port, sent: callData, received: resp});
 
     // Decode the XDR response
     const packet = rpc.Packet.fromXDR(resp);

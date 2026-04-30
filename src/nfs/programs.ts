@@ -1,4 +1,5 @@
 import type {Span} from '@sentry/tracing';
+import {TimeoutError} from 'promise-timeout';
 
 import type {FetchProgress} from '.';
 import type {RpcConnection} from './rpc';
@@ -11,15 +12,66 @@ import {mount, nfs, portmap} from './xdr';
  */
 const READ_SIZE = 2048;
 
+/**
+ * Ports to try for portmap, in order. CDJs run it on 111. Rekordbox cannot
+ * bind 111 because the host OS's system rpcbind already owns it, and instead
+ * stacks its embedded RPC services on the standard NFS port 2049.
+ */
+const PORTMAP_PORT_CANDIDATES = [111, 2049];
+
 interface Program {
   id: number;
   version: number;
+}
+
+async function discoverPortmapPort(conn: RpcConnection) {
+  if (conn.portmapPort !== undefined) {
+    return conn.portmapPort;
+  }
+
+  // We can't simply pick the first port that answers, because on macOS the
+  // system rpcbind on port 111 will answer but does not know about Pioneer's
+  // RPC services. Instead, ask each candidate "what port is NFS on?" and pick
+  // the one that returns a non-zero answer.
+  const nfsProbe = new portmap.GetPort({
+    program: nfs.Program,
+    version: nfs.Version,
+    protocol: 17,
+    port: 0,
+  });
+
+  for (const port of PORTMAP_PORT_CANDIDATES) {
+    try {
+      const data = await conn.call({
+        port,
+        program: portmap.Program,
+        version: portmap.Version,
+        procedure: portmap.Procedure.getPort().value,
+        data: nfsProbe.toXDR(),
+      });
+      if (data.readInt32BE() !== 0) {
+        conn.portmapPort = port;
+        return port;
+      }
+    } catch (err) {
+      if (err instanceof TimeoutError) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw new Error(
+    `No portmap on ${conn.address} reports an NFS service; tried ports ${PORTMAP_PORT_CANDIDATES.join(', ')}`,
+  );
 }
 
 /**
  * Queries for the listening port of a RPC program
  */
 export async function makeProgramClient(conn: RpcConnection, program: Program) {
+  const portmapPort = await discoverPortmapPort(conn);
+
   const getPortData = new portmap.GetPort({
     program: program.id,
     version: program.version,
@@ -28,7 +80,7 @@ export async function makeProgramClient(conn: RpcConnection, program: Program) {
   });
 
   const data = await conn.call({
-    port: 111,
+    port: portmapPort,
     program: portmap.Program,
     version: portmap.Version,
     procedure: portmap.Procedure.getPort().value,
