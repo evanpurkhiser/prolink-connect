@@ -46,6 +46,16 @@
       }
     }
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.15.0"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.0.0"
+    }
+  },
   "scripts": {
     "watch": "tsdown --watch",
     "build": "tsdown",
@@ -94,15 +104,5 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  },
-  "volta": {
-    "node": "24.0.0",
-    "pnpm": "10.33.2"
-  },
-  "packageManager": "pnpm@10.33.2",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
   }
 }
