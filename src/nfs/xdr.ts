@@ -1,16 +1,19 @@
 import * as XDR from 'js-xdr';
-import {calculatePadding, slicePadding} from 'js-xdr/lib/util';
 
 /**
- * A xdr type to read the rest of the data in the buffer
+ * A xdr type to read the rest of the data in the buffer — all remaining bytes
+ * after the outer framing has been parsed. XDR structures are always 4-byte
+ * aligned, so the remaining size is always a multiple of 4 and reader.read()
+ * will not look for additional padding.
  */
 const OpaqueData = {
-  read(io: any) {
-    return io.slice().buffer();
+  read(reader: any) {
+    const remaining = reader._length - reader._index;
+    return reader.read(remaining);
   },
 
-  write(value: any, io: any) {
-    io.writeBufferPadded(value);
+  write(value: any, writer: any) {
+    writer.write(value, value.length);
   },
 
   isValid(value: any) {
@@ -19,24 +22,19 @@ const OpaqueData = {
 };
 
 /**
- * In the standard NFS protocol,strings are typically ASCII. For Pioneer
- * players, it is an UTF-16LE encoded string; This type handles conversion.
+ * In the standard NFS protocol, strings are typically ASCII. For Pioneer
+ * players, it is a UTF-16LE encoded string; This type handles conversion.
  */
 class StringUTF16LE {
-  read(io: any) {
-    const length = XDR.Int.read(io);
-    const padding = calculatePadding(length);
-    const result = io.slice(length);
-
-    slicePadding(io, padding);
-
-    return result.buffer().toString('utf16le');
+  read(reader: any) {
+    const length = XDR.Int.read(reader);
+    return reader.read(length).toString('utf16le');
   }
 
-  write(value: any, io: any) {
+  write(value: any, writer: any) {
     const data = Buffer.from(value, 'utf16le');
-    XDR.Int.write(data.length, io);
-    io.writeBufferPadded(data);
+    XDR.Int.write(data.length, writer);
+    writer.write(data, data.length);
   }
 
   isValid(value: any) {

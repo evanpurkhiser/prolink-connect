@@ -42,8 +42,8 @@ importers:
         specifier: ^10.1.1
         version: 10.1.1
       js-xdr:
-        specifier: ^1.3.0
-        version: 1.3.0
+        specifier: ^3.1.2
+        version: 3.1.2
       lodash-es:
         specifier: ^4.18.1
         version: 4.18.1
@@ -891,8 +891,8 @@ packages:
   is-arrayish@0.2.1:
     resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
 
-  js-xdr@1.3.0:
-    resolution: {integrity: sha512-fjLTm2uBtFvWsE3l2J14VjTuuB8vJfeTtYuNS7LiLHDWIX2kt0l1pqq9334F8kODUkKPMuULjEcbGbkFFwhx5g==}
+  js-xdr@3.1.2:
+    resolution: {integrity: sha512-jyAZSw6mD5AKKGNEv+HW2ce+MJNTgzkpvYCydt2wPIhWYfFKx2jcn2cwOmBG1APXNDlPL6tYCVxO/v+FOnXYzA==}
     deprecated: ⚠️ This package has moved to @stellar/js-xdr! 🚚
 
   jsesc@3.1.0:
@@ -993,13 +993,6 @@ packages:
 
   lodash-es@4.18.1:
     resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
-
-  lodash@4.18.1:
-    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
-
-  long@2.4.0:
-    resolution: {integrity: sha512-ijUtjmO/n2A5PaosNG9ZGDsQ3vxJg7ZW8vsY8Kp0f2yIZWhSJvjmegV7t+9RPQKxKrvj8yKGehhS+po14hPLGQ==}
-    engines: {node: '>=0.6'}
 
   lru_map@0.3.3:
     resolution: {integrity: sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ==}
@@ -2077,10 +2070,7 @@ snapshots:
 
   is-arrayish@0.2.1: {}
 
-  js-xdr@1.3.0:
-    dependencies:
-      lodash: 4.18.1
-      long: 2.4.0
+  js-xdr@3.1.2: {}
 
   jsesc@3.1.0: {}
 
@@ -2154,10 +2144,6 @@ snapshots:
       path-exists: 3.0.0
 
   lodash-es@4.18.1: {}
-
-  lodash@4.18.1: {}
-
-  long@2.4.0: {}
 
   lru_map@0.3.3: {}
 
