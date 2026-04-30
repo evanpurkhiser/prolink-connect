@@ -48,7 +48,8 @@
     "build": "tsdown",
     "build-docs": "typedoc --out docs src/index.ts",
     "test": "vitest run",
-    "lint": "oxlint src/ tests/",
+    "fake-cdj": "tsx scripts/fake-cdj.ts",
+    "lint": "oxlint src/ tests/ scripts/fake-cdj.ts",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "preversion": "pnpm lint; pnpm test"

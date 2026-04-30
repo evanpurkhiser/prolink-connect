@@ -10,7 +10,17 @@
 import * as ip from 'ip-address';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {Device, DeviceType, MediaSlot} from 'src/types';
+import {RpcConnection} from 'src/nfs/rpc';
+import {
+  fetchFile as fetchFileCall,
+  getExports,
+  lookupPath,
+  makeProgramClient,
+  mountFilesystem,
+} from 'src/nfs/programs';
+import {configureRetryStrategy, fetchFile, resetDeviceCache} from 'src/nfs/index';
+import type {Device} from 'src/types';
+import {DeviceType, MediaSlot} from 'src/types';
 
 vi.mock('@sentry/node', () => {
   const fakeSpan = {
@@ -46,20 +56,6 @@ vi.mock('src/nfs/programs', () => ({
   fetchFile: vi.fn(),
 }));
 
-import {RpcConnection} from 'src/nfs/rpc';
-import {
-  fetchFile as fetchFileCall,
-  getExports,
-  lookupPath,
-  makeProgramClient,
-  mountFilesystem,
-} from 'src/nfs/programs';
-
-import {
-  configureRetryStrategy,
-  fetchFile,
-  resetDeviceCache,
-} from 'src/nfs/index';
 
 const mockMakeProgramClient = vi.mocked(makeProgramClient);
 const mockGetExports = vi.mocked(getExports);

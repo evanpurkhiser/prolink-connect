@@ -7,7 +7,7 @@
  * Refresh the fixture with `pnpm exec tsx scripts/capture-nfs.ts` whenever
  * the wire format intentionally changes.
  */
-import {Socket} from 'node:dgram';
+import type {Socket} from 'node:dgram';
 import {beforeEach, describe, expect, it} from 'vitest';
 
 import {
@@ -21,7 +21,8 @@ import {
 import {RpcConnection} from 'src/nfs/rpc';
 import {mount, nfs} from 'src/nfs/xdr';
 
-import {FakeRpcSocket, loadWireTrace, WireRecord} from '../_helpers/nfs-replay';
+import {FakeRpcSocket, loadWireTrace} from '../_helpers/nfs-replay';
+import type {WireRecord} from '../_helpers/nfs-replay';
 
 const TARGET = '10.0.0.119';
 const FAST_RETRY = {transactionTimeout: 50, retries: 0};
