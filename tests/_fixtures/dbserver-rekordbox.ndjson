@@ -1,0 +1,4 @@
+{"phase":"dbserver-port-query","port":12523,"dir":"send","bytes":"AAAAD1JlbW90ZURCU2VydmVyAA=="}
+{"phase":"dbserver-port-query","port":12523,"dir":"recv","bytes":"//I="}
+{"phase":"dbserver-setup-greeting","port":65522,"dir":"send","bytes":"EQAAAAE="}
+{"phase":"dbserver-setup-greeting","port":65522,"dir":"recv","bytes":"EQAAAAE="}

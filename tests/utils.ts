@@ -8,7 +8,7 @@ import type {Device} from 'src/types';
 import {DeviceType} from 'src/types';
 
 export function readMock(path: string) {
-  return readFile(`${import.meta.dirname}/_data/${path}`);
+  return readFile(`${import.meta.dirname}/_fixtures/${path}`);
 }
 
 export function mockDevice(extra?: Partial<Device>): Device {
