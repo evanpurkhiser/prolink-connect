@@ -5,9 +5,6 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: alphatheta-connect
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,7 +18,26 @@ jobs:
           repository: chrisle/onelibrary-connect
           path: onelibrary-connect
       - uses: volta-cli/action@v4
-      - run: yarn install
-      - run: yarn lint
-      - run: yarn test
-      - run: yarn build
+        with:
+          package-json-path: alphatheta-connect/package.json
+
+      - name: Build metadata-connect
+        working-directory: metadata-connect
+        run: npm install && npm run build
+
+      - name: Build onelibrary-connect
+        working-directory: onelibrary-connect
+        run: npm install && npm run build
+
+      - name: Install alphatheta-connect
+        working-directory: alphatheta-connect
+        run: yarn install
+      - name: Lint
+        working-directory: alphatheta-connect
+        run: yarn lint
+      - name: Test
+        working-directory: alphatheta-connect
+        run: yarn test
+      - name: Build
+        working-directory: alphatheta-connect
+        run: yarn build

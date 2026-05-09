@@ -12,9 +12,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: alphatheta-connect
 
     steps:
       - name: Checkout
@@ -37,13 +34,24 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22.13.0'
+
+      - name: Build metadata-connect
+        working-directory: metadata-connect
+        run: npm install && npm run build
+
+      - name: Build onelibrary-connect
+        working-directory: onelibrary-connect
+        run: npm install && npm run build
 
       - name: Install dependencies
+        working-directory: alphatheta-connect
         run: npm ci
 
       - name: Run tests
+        working-directory: alphatheta-connect
         run: npm test
 
       - name: Build
+        working-directory: alphatheta-connect
         run: npm run build
