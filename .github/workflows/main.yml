@@ -29,15 +29,19 @@ jobs:
         working-directory: onelibrary-connect
         run: npm install && npm run build
 
+      # Use npm so file:../onelibrary-connect installs as a symlink. yarn
+      # copies the dep tree, which produces two copies of
+      # better-sqlite3-multiple-ciphers (one at the top level, one nested under
+      # onelibrary-connect) and breaks the native module self-register.
       - name: Install alphatheta-connect
         working-directory: alphatheta-connect
-        run: yarn install
+        run: npm ci
       - name: Lint
         working-directory: alphatheta-connect
-        run: yarn lint
+        run: npm run lint
       - name: Test
         working-directory: alphatheta-connect
-        run: yarn test
+        run: npm test
       - name: Build
         working-directory: alphatheta-connect
-        run: yarn build
+        run: npm run build
