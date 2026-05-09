@@ -26,14 +26,6 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Load NPM token from 1Password
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          NODE_AUTH_TOKEN: op://NPM/5f5d7gg4ptzjfhcllrygt734wi/npm_access_token
-
       - name: Install dependencies
         run: |
           if [ -f "yarn.lock" ]; then
@@ -163,6 +155,8 @@ jobs:
 
       - name: Publish to npm
         if: steps.bump.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
 
       - name: Verify npm publish
