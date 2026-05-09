@@ -600,4 +600,96 @@ describe('mixstatus processor', () => {
 
     expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
   });
+
+  // Regression: cue-juggling on the master deck (common for House/Techno DJs)
+  // previously caused duplicate History entries because the Cued state drops
+  // the deck from livePlayers and the next Playing transition re-emits.
+  it('FollowsMaster: does not re-emit nowPlaying when master deck cues then plays same track', () => {
+    processor.configure({
+      mode: MixstatusMode.FollowsMaster,
+      useOnAirStatus: false,
+    });
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+
+    feedState(1, {
+      trackId: 123,
+      isMaster: true,
+      playState: CDJStatus.PlayState.Playing,
+    });
+    expect(npHandler).toHaveBeenCalledTimes(1);
+
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+    feedState(1, {playState: CDJStatus.PlayState.Playing});
+
+    expect(npHandler).toHaveBeenCalledTimes(1);
+  });
+
+  it('FollowsMaster: does not re-emit when master deck transitions Loading then plays same track', () => {
+    processor.configure({
+      mode: MixstatusMode.FollowsMaster,
+      useOnAirStatus: false,
+    });
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+
+    feedState(1, {
+      trackId: 123,
+      isMaster: true,
+      playState: CDJStatus.PlayState.Playing,
+    });
+    expect(npHandler).toHaveBeenCalledTimes(1);
+
+    feedState(1, {playState: CDJStatus.PlayState.Loading});
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+    feedState(1, {playState: CDJStatus.PlayState.Playing});
+
+    expect(npHandler).toHaveBeenCalledTimes(1);
+  });
+
+  it('FollowsMaster: emits a new nowPlaying when a different track is loaded on the master deck', () => {
+    processor.configure({
+      mode: MixstatusMode.FollowsMaster,
+      useOnAirStatus: false,
+    });
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+
+    feedState(1, {
+      trackId: 123,
+      isMaster: true,
+      playState: CDJStatus.PlayState.Playing,
+    });
+    expect(npHandler).toHaveBeenCalledTimes(1);
+
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+    feedState(1, {trackId: 456, playState: CDJStatus.PlayState.Loading});
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+    feedState(1, {playState: CDJStatus.PlayState.Playing});
+
+    expect(npHandler).toHaveBeenCalledTimes(2);
+    expect(npHandler).toHaveBeenLastCalledWith(oc({deviceId: 1, trackId: 456}));
+  });
+
+  it('does not re-emit nowPlaying when a deck cues and replays the same track in SmartTiming mode', () => {
+    processor.configure({useOnAirStatus: false});
+
+    const npHandler = jest.fn();
+    processor.on('nowPlaying', npHandler);
+
+    feedState(1, {
+      trackId: 123,
+      playState: CDJStatus.PlayState.Playing,
+    });
+    expect(npHandler).toHaveBeenCalledTimes(1);
+
+    // Cue and resume the same track
+    feedState(1, {playState: CDJStatus.PlayState.Cued});
+    feedState(1, {playState: CDJStatus.PlayState.Playing});
+
+    expect(npHandler).toHaveBeenCalledTimes(1);
+  });
 });
