@@ -47,12 +47,10 @@ class Database {
   #remoteDatabase: RemoteDatabase;
 
   constructor(
-    hostDevice: Device,
     local: LocalDatabase,
     remote: RemoteDatabase,
     deviceManager: DeviceManager
   ) {
-    this.#hostDevice = hostDevice;
     this.#localDatabase = local;
     this.#remoteDatabase = remote;
     this.#deviceManager = deviceManager;
