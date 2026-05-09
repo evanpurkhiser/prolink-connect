@@ -5,8 +5,6 @@
  * @see ./rekordbox/index.ts for the implementation
  */
 
-export {hydrateDatabase, loadAnlz} from './rekordbox/index';
-
 export type {
   AnlzResolver,
   AnlzResponse,
@@ -16,3 +14,4 @@ export type {
   HydrationOptions,
   HydrationProgress,
 } from './rekordbox/index';
+export {hydrateDatabase, loadAnlz} from './rekordbox/index';

@@ -35,9 +35,12 @@ jest.mock('cap', () => {
 });
 
 import {networkInterfaces} from 'os';
+
 import {PcapAdapter} from 'src/passive/pcap-adapter';
 
-const networkInterfacesMock = networkInterfaces as jest.MockedFunction<typeof networkInterfaces>;
+const networkInterfacesMock = networkInterfaces as jest.MockedFunction<
+  typeof networkInterfaces
+>;
 
 // Access the mocked cap module
 // eslint-disable-next-line @typescript-eslint/no-require-imports

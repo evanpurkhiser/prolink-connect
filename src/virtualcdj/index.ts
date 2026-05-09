@@ -356,9 +356,15 @@ export class Announcer {
    * Resolves immediately if fullStartup is disabled.
    */
   get ready(): Promise<void> {
-    if (!this.#fullStartup) return Promise.resolve();
-    if (this.#currentStage === StartupStage.KeepAlive) return Promise.resolve();
-    return new Promise(resolve => { this.#onStartupComplete = resolve; });
+    if (!this.#fullStartup) {
+      return Promise.resolve();
+    }
+    if (this.#currentStage === StartupStage.KeepAlive) {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      this.#onStartupComplete = resolve;
+    });
   }
 
   start() {

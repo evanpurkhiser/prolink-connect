@@ -143,16 +143,8 @@ export function findAllAlphaThetaInterfaces(): AlphaThetaInterface[] {
 }
 
 /**
- * macOS implementation: Uses ioreg to find AlphaTheta USB devices,
- * then networksetup to map them to interface names.
- */
-function findAlphaThetaInterfaceMacOS(): AlphaThetaInterface | null {
-  const results = findAllAlphaThetaInterfacesMacOS();
-  return results.length > 0 ? results[0] : null;
-}
-
-/**
- * macOS implementation: Find ALL AlphaTheta USB interfaces.
+ * macOS implementation: Find ALL AlphaTheta USB interfaces using ioreg
+ * and networksetup to map them to interface names.
  */
 function findAllAlphaThetaInterfacesMacOS(): AlphaThetaInterface[] {
   try {
@@ -240,15 +232,7 @@ function findAllAlphaThetaInterfacesMacOS(): AlphaThetaInterface[] {
 }
 
 /**
- * Windows implementation: Uses PowerShell to find AlphaTheta USB network adapters.
- */
-function findAlphaThetaInterfaceWindows(): AlphaThetaInterface | null {
-  const results = findAllAlphaThetaInterfacesWindows();
-  return results.length > 0 ? results[0] : null;
-}
-
-/**
- * Windows implementation: Find ALL AlphaTheta USB interfaces.
+ * Windows implementation: Find ALL AlphaTheta USB network adapters via PowerShell.
  */
 function findAllAlphaThetaInterfacesWindows(): AlphaThetaInterface[] {
   try {
@@ -453,15 +437,6 @@ function getAlphaThetaArpEntries(): Map<string, Array<{ip: string; mac: string}>
   }
 
   return result;
-}
-
-/**
- * Find an AlphaTheta device connected via Ethernet by checking the ARP cache
- * for known MAC address prefixes.
- */
-function findAlphaThetaViaEthernet(): AlphaThetaInterface | null {
-  const results = findAllAlphaThetaViaEthernet();
-  return results.length > 0 ? results[0] : null;
 }
 
 /**

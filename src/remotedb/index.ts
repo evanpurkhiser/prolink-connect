@@ -224,7 +224,9 @@ export default class RemoteDatabase {
     // Set a connection timeout to prevent hanging forever
     (socket.stream as Socket).setTimeout(10_000);
     (socket.stream as Socket).once('timeout', () => {
-      (socket.stream as Socket).destroy(new Error(`RemoteDB connection to ${ip.address}:${dbPort} timed out`));
+      (socket.stream as Socket).destroy(
+        new Error(`RemoteDB connection to ${ip.address}:${dbPort} timed out`)
+      );
     });
 
     await socket.connect(dbPort, ip.address);

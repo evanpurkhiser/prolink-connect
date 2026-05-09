@@ -2,7 +2,15 @@ import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
 import RemoteDatabase, {MenuTarget, Query} from 'src/remotedb';
-import {Device, DeviceID, MediaSlot, TrackType, Waveforms, WaveformDetailed, WaveformPreview} from 'src/types';
+import {
+  Device,
+  DeviceID,
+  MediaSlot,
+  TrackType,
+  WaveformDetailed,
+  WaveformPreview,
+  Waveforms,
+} from 'src/types';
 import {TelemetrySpan as Span} from 'src/utils/telemetry';
 
 import {anlzLoader} from './utils';

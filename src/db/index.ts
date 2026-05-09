@@ -34,7 +34,6 @@ enum LookupStrategy {
  * network for information from their databases.
  */
 class Database {
-  #hostDevice: Device;
   #deviceManager: DeviceManager;
   /**
    * The local database service, used when querying media devices connected

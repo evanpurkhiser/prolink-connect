@@ -7,9 +7,9 @@
  */
 
 import {
-  makeWaveform3BandPreview,
-  makeWaveform3BandDetail,
   makeVocalConfig,
+  makeWaveform3BandDetail,
+  makeWaveform3BandPreview,
 } from 'src/localdb/rekordbox/anlz-parsers';
 
 describe('.2EX Parser Functions', () => {
@@ -57,13 +57,13 @@ describe('.2EX Parser Functions', () => {
 
       // Entry 1
       expect(result.data[0]).toBe(255); // low
-      expect(result.data[1]).toBe(0);   // mid
+      expect(result.data[1]).toBe(0); // mid
       expect(result.data[2]).toBe(128); // high
 
       // Entry 2
-      expect(result.data[3]).toBe(0);   // low
+      expect(result.data[3]).toBe(0); // low
       expect(result.data[4]).toBe(255); // mid
-      expect(result.data[5]).toBe(64);  // high
+      expect(result.data[5]).toBe(64); // high
 
       // Entry 3
       expect(result.data[6]).toBe(100);
@@ -79,7 +79,7 @@ describe('.2EX Parser Functions', () => {
       }
 
       const kaitaiSection = {
-        body: { lenEntries: numEntries, entries },
+        body: {lenEntries: numEntries, entries},
       };
 
       const result = makeWaveform3BandPreview(kaitaiSection);
@@ -118,7 +118,7 @@ describe('.2EX Parser Functions', () => {
     it('creates an independent copy of the data', () => {
       const entries = new Uint8Array([10, 20, 30]);
       const kaitaiSection = {
-        body: { lenEntries: 1, entries },
+        body: {lenEntries: 1, entries},
       };
 
       const result = makeWaveform3BandPreview(kaitaiSection);
@@ -180,7 +180,7 @@ describe('.2EX Parser Functions', () => {
       }
 
       const kaitaiSection = {
-        body: { lenEntries: numEntries, entries },
+        body: {lenEntries: numEntries, entries},
       };
 
       const result = makeWaveform3BandDetail(kaitaiSection);
@@ -204,7 +204,7 @@ describe('.2EX Parser Functions', () => {
     it('creates an independent copy of the data', () => {
       const entries = new Uint8Array([10, 20, 30]);
       const kaitaiSection = {
-        body: { lenEntries: 1, entries },
+        body: {lenEntries: 1, entries},
       };
 
       const result = makeWaveform3BandDetail(kaitaiSection);

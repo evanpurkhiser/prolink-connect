@@ -42,7 +42,9 @@ describe('parseWindowsPath', () => {
   });
 
   it('converts all backslashes to forward slashes', () => {
-    const result = parseWindowsPath('C:\\Users\\chris\\Music\\PioneerDJ\\Imported from Device\\Contents\\track.mp3');
+    const result = parseWindowsPath(
+      'C:\\Users\\chris\\Music\\PioneerDJ\\Imported from Device\\Contents\\track.mp3'
+    );
     expect(result).toEqual({
       mountPath: '/C/',
       nfsPath: 'Users/chris/Music/PioneerDJ/Imported from Device/Contents/track.mp3',
@@ -72,10 +74,7 @@ describe('resolveNfsPath', () => {
     });
 
     it('resolves Windows backslash path to NFS mount and path', () => {
-      const result = resolveNfsPath(
-        MediaSlot.RB,
-        'C:\\Users\\chris\\Music\\track.mp3'
-      );
+      const result = resolveNfsPath(MediaSlot.RB, 'C:\\Users\\chris\\Music\\track.mp3');
       expect(result).toEqual({
         mountPath: '/C/',
         nfsPath: 'Users/chris/Music/track.mp3',
@@ -83,10 +82,7 @@ describe('resolveNfsPath', () => {
     });
 
     it('resolves macOS absolute path', () => {
-      const result = resolveNfsPath(
-        MediaSlot.RB,
-        '/Users/chris/Music/track.mp3'
-      );
+      const result = resolveNfsPath(MediaSlot.RB, '/Users/chris/Music/track.mp3');
       expect(result).toEqual({
         mountPath: '/',
         nfsPath: 'Users/chris/Music/track.mp3',
@@ -96,10 +92,7 @@ describe('resolveNfsPath', () => {
 
   describe('USB slot', () => {
     it('uses /C/ mount for USB slot', () => {
-      const result = resolveNfsPath(
-        MediaSlot.USB,
-        'PIONEER/USBANLZ/track.mp3'
-      );
+      const result = resolveNfsPath(MediaSlot.USB, 'PIONEER/USBANLZ/track.mp3');
       expect(result).toEqual({
         mountPath: '/C/',
         nfsPath: 'PIONEER/USBANLZ/track.mp3',
@@ -109,10 +102,7 @@ describe('resolveNfsPath', () => {
 
   describe('SD slot', () => {
     it('uses /B/ mount for SD slot', () => {
-      const result = resolveNfsPath(
-        MediaSlot.SD,
-        'PIONEER/USBANLZ/track.mp3'
-      );
+      const result = resolveNfsPath(MediaSlot.SD, 'PIONEER/USBANLZ/track.mp3');
       expect(result).toEqual({
         mountPath: '/B/',
         nfsPath: 'PIONEER/USBANLZ/track.mp3',
