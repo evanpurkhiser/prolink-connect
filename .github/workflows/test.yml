@@ -12,10 +12,27 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: alphatheta-connect
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: alphatheta-connect
+
+      - name: Checkout metadata-connect
+        uses: actions/checkout@v4
+        with:
+          repository: chrisle/metadata-connect
+          path: metadata-connect
+
+      - name: Checkout onelibrary-connect
+        uses: actions/checkout@v4
+        with:
+          repository: chrisle/onelibrary-connect
+          path: onelibrary-connect
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
