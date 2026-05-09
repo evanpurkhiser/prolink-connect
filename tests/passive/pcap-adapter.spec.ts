@@ -4,35 +4,41 @@ import {type NetworkInterfaceInfoIPv4} from 'os';
 // We test it indirectly through PcapAdapter.start(), but we can also test the
 // resolution logic by mocking os.networkInterfaces and the cap module.
 
-// Mock os and cap before importing
+// Mock os and cap before importing.
+// `cap` is in optionalDependencies (requires libpcap-dev on Linux / Npcap on
+// Windows) and may not be installed in CI, so mock it as a virtual module.
 jest.mock('os');
-jest.mock('cap', () => {
-  // Return a mock that tracks open() calls so we can verify the device name
-  const mockCap = {
-    open: jest.fn(),
-    on: jest.fn(),
-    close: jest.fn(),
-    setMinBytes: jest.fn(),
-  };
-  return {
-    Cap: Object.assign(
-      jest.fn(() => mockCap),
-      {
-        deviceList: jest.fn(),
-        __mockInstance: mockCap,
-      }
-    ),
-    decoders: {
-      PROTOCOL: {
-        ETHERNET: {IPV4: 0x0800},
-        IP: {UDP: 17},
+jest.mock(
+  'cap',
+  () => {
+    // Return a mock that tracks open() calls so we can verify the device name
+    const mockCap = {
+      open: jest.fn(),
+      on: jest.fn(),
+      close: jest.fn(),
+      setMinBytes: jest.fn(),
+    };
+    return {
+      Cap: Object.assign(
+        jest.fn(() => mockCap),
+        {
+          deviceList: jest.fn(),
+          __mockInstance: mockCap,
+        }
+      ),
+      decoders: {
+        PROTOCOL: {
+          ETHERNET: {IPV4: 0x0800},
+          IP: {UDP: 17},
+        },
+        Ethernet: jest.fn(),
+        IPV4: jest.fn(),
+        UDP: jest.fn(),
       },
-      Ethernet: jest.fn(),
-      IPV4: jest.fn(),
-      UDP: jest.fn(),
-    },
-  };
-});
+    };
+  },
+  {virtual: true}
+);
 
 import {networkInterfaces} from 'os';
 
