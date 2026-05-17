@@ -233,7 +233,9 @@ export class PassiveLocalDatabase {
     tx: Telemetry.TelemetrySpan
   ): Promise<Buffer> => {
     const attemptOrder =
-      process.platform === 'win32' ? [basePath, `.${basePath}`] : [`.${basePath}`, basePath];
+      process.platform === 'win32'
+        ? [basePath, `.${basePath}`]
+        : [`.${basePath}`, basePath];
 
     try {
       return await fetchFile({
@@ -241,15 +243,17 @@ export class PassiveLocalDatabase {
         slot,
         path: attemptOrder[0],
         span: tx,
-        onProgress: progress => this.#emitter.emit('fetchProgress', {device, slot, progress}),
+        onProgress: progress =>
+          this.#emitter.emit('fetchProgress', {device, slot, progress}),
       });
     } catch {
-      return await fetchFile({
+      return fetchFile({
         device,
         slot,
         path: attemptOrder[1],
         span: tx,
-        onProgress: progress => this.#emitter.emit('fetchProgress', {device, slot, progress}),
+        onProgress: progress =>
+          this.#emitter.emit('fetchProgress', {device, slot, progress}),
       });
     }
   };
@@ -268,7 +272,10 @@ export class PassiveLocalDatabase {
       const dbData = await this.#fetchFileWithFallback(device, slot, oneLibraryPath, tx);
 
       const tempDir = os.tmpdir();
-      const tempFile = path.join(tempDir, `prolink-onelibrary-${device.id}-${slot}-${Date.now()}.db`);
+      const tempFile = path.join(
+        tempDir,
+        `prolink-onelibrary-${device.id}-${slot}-${Date.now()}.db`
+      );
       fs.writeFileSync(tempFile, dbData);
 
       const adapter = new OneLibraryAdapter(tempFile);
@@ -297,7 +304,8 @@ export class PassiveLocalDatabase {
       orm,
       pdbData,
       span: tx,
-      onProgress: progress => this.#emitter.emit('hydrationProgress', {device, slot, progress}),
+      onProgress: progress =>
+        this.#emitter.emit('hydrationProgress', {device, slot, progress}),
     });
 
     return orm;
@@ -319,7 +327,9 @@ export class PassiveLocalDatabase {
     } else if (this.#preference === 'oneLibrary') {
       const oneLibraryResult = await this.#tryLoadOneLibrary(device, slot, tx);
       if (!oneLibraryResult) {
-        throw new Error('OneLibrary database not found and preference is set to oneLibrary only');
+        throw new Error(
+          'OneLibrary database not found and preference is set to oneLibrary only'
+        );
       }
       adapter = oneLibraryResult.adapter;
       tempFile = oneLibraryResult.tempFile;
@@ -395,7 +405,11 @@ export class PassiveLocalDatabase {
       this.#slotLocks.get(lockKey) ??
       this.#slotLocks.set(lockKey, new Mutex()).get(lockKey)!;
 
-    if (device.type !== DeviceType.CDJ || device.id < MIN_CDJ_DEVICE_ID || device.id > MAX_CDJ_DEVICE_ID) {
+    if (
+      device.type !== DeviceType.CDJ ||
+      device.id < MIN_CDJ_DEVICE_ID ||
+      device.id > MAX_CDJ_DEVICE_ID
+    ) {
       return null;
     }
 
@@ -432,7 +446,11 @@ export class PassiveLocalDatabase {
       this.#slotLocks.get(lockKey) ??
       this.#slotLocks.set(lockKey, new Mutex()).get(lockKey)!;
 
-    if (device.type !== DeviceType.CDJ || device.id < MIN_CDJ_DEVICE_ID || device.id > MAX_CDJ_DEVICE_ID) {
+    if (
+      device.type !== DeviceType.CDJ ||
+      device.id < MIN_CDJ_DEVICE_ID ||
+      device.id > MAX_CDJ_DEVICE_ID
+    ) {
       return null;
     }
 
@@ -485,7 +503,10 @@ export class PassiveLocalDatabase {
   async preload() {
     const allDevices = [...this.#deviceManager.devices.values()];
     const cdjDevices = allDevices.filter(
-      device => device.type === DeviceType.CDJ && device.id >= MIN_CDJ_DEVICE_ID && device.id <= MAX_CDJ_DEVICE_ID
+      device =>
+        device.type === DeviceType.CDJ &&
+        device.id >= MIN_CDJ_DEVICE_ID &&
+        device.id <= MAX_CDJ_DEVICE_ID
     );
 
     if (cdjDevices.length === 0) {

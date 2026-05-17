@@ -1,8 +1,8 @@
-import {type NetworkInterfaceInfo, type NetworkInterfaceInfoIPv4} from 'os';
+import {type NetworkInterfaceInfoIPv4} from 'os';
 
 import {
-  findAlphaThetaInterface,
   findAllAlphaThetaInterfaces,
+  findAlphaThetaInterface,
   getArpCacheForInterface,
 } from 'src/passive/alphatheta';
 
@@ -14,7 +14,9 @@ import {execSync} from 'child_process';
 import {networkInterfaces} from 'os';
 
 const execSyncMock = execSync as jest.MockedFunction<typeof execSync>;
-const networkInterfacesMock = networkInterfaces as jest.MockedFunction<typeof networkInterfaces>;
+const networkInterfacesMock = networkInterfaces as jest.MockedFunction<
+  typeof networkInterfaces
+>;
 
 // Helper to create mock NetworkInterfaceInfo
 function mockNetworkInterfaceInfo(

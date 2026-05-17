@@ -34,7 +34,6 @@ enum LookupStrategy {
  * network for information from their databases.
  */
 class Database {
-  #hostDevice: Device;
   #deviceManager: DeviceManager;
   /**
    * The local database service, used when querying media devices connected
@@ -48,12 +47,10 @@ class Database {
   #remoteDatabase: RemoteDatabase;
 
   constructor(
-    hostDevice: Device,
     local: LocalDatabase,
     remote: RemoteDatabase,
     deviceManager: DeviceManager
   ) {
-    this.#hostDevice = hostDevice;
     this.#localDatabase = local;
     this.#remoteDatabase = remote;
     this.#deviceManager = deviceManager;

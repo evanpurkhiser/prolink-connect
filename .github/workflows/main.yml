@@ -7,8 +7,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: volta-cli/action@v4
-      - run: yarn install
-      - run: yarn lint
-      - run: yarn test
-      - run: yarn build
+        with:
+          path: alphatheta-connect
+      - uses: actions/checkout@v4
+        with:
+          repository: chrisle/metadata-connect
+          path: metadata-connect
+      - uses: actions/checkout@v4
+        with:
+          repository: chrisle/onelibrary-connect
+          path: onelibrary-connect
+      # Set Node globally (not via volta) so the sibling onelibrary-connect
+      # build runs on the same version as alphatheta-connect's tests.
+      # volta only activates inside a directory whose package.json pins it,
+      # so onelibrary-connect/`npm install` was building better-sqlite3 against
+      # the runner's default Node and the resulting binary couldn't load under
+      # the pinned Node when alphatheta-connect's tests ran.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+
+      - name: Build metadata-connect
+        working-directory: metadata-connect
+        run: npm install && npm run build
+
+      - name: Build onelibrary-connect
+        working-directory: onelibrary-connect
+        run: npm install && npm run build
+
+      # Use npm so file:../onelibrary-connect installs as a symlink. yarn
+      # copies the dep tree, which produces two copies of
+      # better-sqlite3-multiple-ciphers (one at the top level, one nested under
+      # onelibrary-connect) and breaks the native module self-register.
+      - name: Install alphatheta-connect
+        working-directory: alphatheta-connect
+        run: npm ci
+      - name: Lint
+        working-directory: alphatheta-connect
+        run: npm run lint
+      - name: Test
+        working-directory: alphatheta-connect
+        run: npm test
+      - name: Build
+        working-directory: alphatheta-connect
+        run: npm run build

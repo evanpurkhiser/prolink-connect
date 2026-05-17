@@ -303,7 +303,7 @@ export class ProlinkNetwork {
     );
 
     // Create unified database
-    const database = new Database(vcdj, localdb, remotedb, this.#deviceManager);
+    const database = new Database(localdb, remotedb, this.#deviceManager);
 
     // Create controller service
     const control = new Control(this.#beatSocket, vcdj);

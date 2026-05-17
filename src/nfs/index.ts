@@ -49,9 +49,13 @@ export type NfsMediaSlot = MediaSlot.USB | MediaSlot.SD | MediaSlot.RB;
  *
  * @internal Exported for testing
  */
-export function parseWindowsPath(filePath: string): {mountPath: string; nfsPath: string} | null {
+export function parseWindowsPath(
+  filePath: string
+): {mountPath: string; nfsPath: string} | null {
   const match = filePath.match(/^([A-Za-z]):[/\\](.*)$/);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
   return {
     mountPath: `/${match[1].toUpperCase()}/`,
     nfsPath: match[2].replace(/\\/g, '/'),
@@ -76,7 +80,9 @@ export function resolveNfsPath(
   if (slot === MediaSlot.RB) {
     // Windows: C:\Users\chris\Music\track.mp3 → mount /C/, path Users/...
     const parsed = parseWindowsPath(filePath);
-    if (parsed) return parsed;
+    if (parsed) {
+      return parsed;
+    }
 
     // macOS: /Users/chris/Music/track.mp3 → mount /, path Users/...
     if (filePath.startsWith('/')) {
@@ -140,15 +146,23 @@ async function getClients(device: Device) {
   const conn = new RpcConnection(address, retryConfig);
   const portmapPort = getPortmapPort(device);
 
-  const mountClient = await makeProgramClient(conn, {
-    id: mount.Program,
-    version: mount.Version,
-  }, portmapPort);
+  const mountClient = await makeProgramClient(
+    conn,
+    {
+      id: mount.Program,
+      version: mount.Version,
+    },
+    portmapPort
+  );
 
-  const nfsClient = await makeProgramClient(conn, {
-    id: nfs.Program,
-    version: nfs.Version,
-  }, portmapPort);
+  const nfsClient = await makeProgramClient(
+    conn,
+    {
+      id: nfs.Program,
+      version: nfs.Version,
+    },
+    portmapPort
+  );
 
   const set = {conn, mountClient, nfsClient};
   clientsCache.set(address, set);
@@ -178,7 +192,12 @@ const rootHandleCache = new Map<string, Map<string, Buffer>>();
  *       verify this). It is up to the caller to clear the cache and get the
  *       new root handle in that case.
  */
-async function getRootHandle({device, mountPath, mountClient, span}: GetRootHandleOptions) {
+async function getRootHandle({
+  device,
+  mountPath,
+  mountClient,
+  span,
+}: GetRootHandleOptions) {
   const tx = span?.startChild({op: 'getRootHandle'});
 
   const {address} = device.ip;

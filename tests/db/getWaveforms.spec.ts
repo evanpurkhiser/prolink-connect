@@ -16,9 +16,15 @@ const mockWaveformDetailed = [{height: 8, whiteness: 0.2}];
 function makeConn() {
   return {
     query: jest.fn((opts: any) => {
-      if (opts.query === 0x2c04) return Promise.resolve(mockWaveformHd);      // GetWaveformHD
-      if (opts.query === 0x2004) return Promise.resolve(mockWaveformPreview); // GetWaveformPreview
-      if (opts.query === 0x2904) return Promise.resolve(mockWaveformDetailed); // GetWaveformDetailed
+      if (opts.query === 0x2c04) {
+        return Promise.resolve(mockWaveformHd);
+      } // GetWaveformHD
+      if (opts.query === 0x2004) {
+        return Promise.resolve(mockWaveformPreview);
+      } // GetWaveformPreview
+      if (opts.query === 0x2904) {
+        return Promise.resolve(mockWaveformDetailed);
+      } // GetWaveformDetailed
       return Promise.resolve(null);
     }),
   };
@@ -96,9 +102,13 @@ describe('getWaveforms.viaRemote', () => {
       const conn = {
         query: jest.fn((opts: any) => {
           order.push(opts.query);
-          return Promise.resolve(opts.query === 0x2c04 ? mockWaveformHd
-            : opts.query === 0x2004 ? mockWaveformPreview
-            : mockWaveformDetailed);
+          return Promise.resolve(
+            opts.query === 0x2c04
+              ? mockWaveformHd
+              : opts.query === 0x2004
+                ? mockWaveformPreview
+                : mockWaveformDetailed
+          );
         }),
       };
 

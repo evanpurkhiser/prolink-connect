@@ -1,4 +1,10 @@
 import {Mutex} from 'async-mutex';
+import {
+  type DatabaseAdapter,
+  type DatabasePreference,
+  type DatabaseType,
+  OneLibraryAdapter,
+} from 'onelibrary-connect';
 import StrictEventEmitter from 'strict-event-emitter-types';
 
 import {createHash} from 'crypto';
@@ -7,8 +13,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import DeviceManager from 'src/devices';
 import {MAX_CDJ_DEVICE_ID, MIN_CDJ_DEVICE_ID} from 'src/constants';
+import DeviceManager from 'src/devices';
 import {fetchFile, FetchProgress} from 'src/nfs';
 import StatusEmitter from 'src/status';
 import {
@@ -22,12 +28,6 @@ import {
 import {getSlotName} from 'src/utils';
 import * as Telemetry from 'src/utils/telemetry';
 
-import {
-  type DatabaseAdapter,
-  type DatabasePreference,
-  type DatabaseType,
-  OneLibraryAdapter,
-} from 'onelibrary-connect';
 import {MetadataORM} from './orm';
 import {hydrateDatabase, HydrationProgress} from './rekordbox';
 
@@ -225,7 +225,9 @@ class LocalDatabase {
     tx: Telemetry.TelemetrySpan
   ): Promise<Buffer> => {
     const attemptOrder =
-      process.platform === 'win32' ? [basePath, `.${basePath}`] : [`.${basePath}`, basePath];
+      process.platform === 'win32'
+        ? [basePath, `.${basePath}`]
+        : [`.${basePath}`, basePath];
 
     try {
       return await fetchFile({
@@ -233,15 +235,17 @@ class LocalDatabase {
         slot,
         path: attemptOrder[0],
         span: tx,
-        onProgress: progress => this.#emitter.emit('fetchProgress', {device, slot, progress}),
+        onProgress: progress =>
+          this.#emitter.emit('fetchProgress', {device, slot, progress}),
       });
     } catch {
-      return await fetchFile({
+      return fetchFile({
         device,
         slot,
         path: attemptOrder[1],
         span: tx,
-        onProgress: progress => this.#emitter.emit('fetchProgress', {device, slot, progress}),
+        onProgress: progress =>
+          this.#emitter.emit('fetchProgress', {device, slot, progress}),
       });
     }
   };
@@ -262,7 +266,10 @@ class LocalDatabase {
 
       // Write to temp file (OneLibrary requires file path for SQLCipher)
       const tempDir = os.tmpdir();
-      const tempFile = path.join(tempDir, `prolink-onelibrary-${device.id}-${slot}-${Date.now()}.db`);
+      const tempFile = path.join(
+        tempDir,
+        `prolink-onelibrary-${device.id}-${slot}-${Date.now()}.db`
+      );
       fs.writeFileSync(tempFile, dbData);
 
       const adapter = new OneLibraryAdapter(tempFile);
@@ -292,7 +299,8 @@ class LocalDatabase {
       orm,
       pdbData,
       span: tx,
-      onProgress: progress => this.#emitter.emit('hydrationProgress', {device, slot, progress}),
+      onProgress: progress =>
+        this.#emitter.emit('hydrationProgress', {device, slot, progress}),
     });
 
     return orm;
@@ -323,7 +331,9 @@ class LocalDatabase {
       // OneLibrary only
       const oneLibraryResult = await this.#tryLoadOneLibrary(device, slot, tx);
       if (!oneLibraryResult) {
-        throw new Error('OneLibrary database not found and preference is set to oneLibrary only');
+        throw new Error(
+          'OneLibrary database not found and preference is set to oneLibrary only'
+        );
       }
       adapter = oneLibraryResult.adapter;
       tempFile = oneLibraryResult.tempFile;
@@ -371,7 +381,11 @@ class LocalDatabase {
       return null;
     }
 
-    if (device.type !== DeviceType.CDJ || device.id < MIN_CDJ_DEVICE_ID || device.id > MAX_CDJ_DEVICE_ID) {
+    if (
+      device.type !== DeviceType.CDJ ||
+      device.id < MIN_CDJ_DEVICE_ID ||
+      device.id > MAX_CDJ_DEVICE_ID
+    ) {
       return null;
     }
 
@@ -423,7 +437,10 @@ class LocalDatabase {
   async preload() {
     const allDevices = [...this.#deviceManager.devices.values()];
     const cdjDevices = allDevices.filter(
-      device => device.type === DeviceType.CDJ && device.id >= MIN_CDJ_DEVICE_ID && device.id <= MAX_CDJ_DEVICE_ID
+      device =>
+        device.type === DeviceType.CDJ &&
+        device.id >= MIN_CDJ_DEVICE_ID &&
+        device.id <= MAX_CDJ_DEVICE_ID
     );
 
     if (cdjDevices.length === 0) {

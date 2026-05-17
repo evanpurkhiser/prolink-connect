@@ -10,7 +10,10 @@ const config = {
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest'],
-    'node_modules/onelibrary-connect/.+\\.js$': ['ts-jest', {useESM: false}],
+    // Match onelibrary-connect whether it's under node_modules or resolved as
+    // a sibling dir (npm `file:` deps install as symlinks; Jest sees the
+    // realpath, which has no node_modules prefix in CI).
+    '[/\\\\]onelibrary-connect[/\\\\].+\\.js$': ['ts-jest', {useESM: false}],
   },
   transformIgnorePatterns: [
     'node_modules/(?!onelibrary-connect)',

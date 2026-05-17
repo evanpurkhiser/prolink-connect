@@ -12,17 +12,12 @@
  */
 
 import {
-  makeWaveform3BandPreview,
-  makeWaveform3BandDetail,
   makeVocalConfig,
+  makeWaveform3BandDetail,
+  makeWaveform3BandPreview,
 } from 'src/localdb/rekordbox/anlz-parsers';
-import {
-  create2EXFile,
-  createPWV6Section,
-  createPWV7Section,
-  createPWVCSection,
-  SectionTags,
-} from './fixtures/anlz-fixtures';
+
+import {create2EXFile, SectionTags} from './fixtures/anlz-fixtures';
 
 // ============================================================================
 // Helper: Manual binary section parser
@@ -62,7 +57,7 @@ function parseAnlzSections(buffer: Buffer): ParsedSection[] {
 
       sections.push({
         fourcc,
-        body: { lenEntries, entries },
+        body: {lenEntries, entries},
       });
     } else if (fourcc === SectionTags.WAVE_HD) {
       // PWV7: len_entry_bytes(4) + len_entries(4) + unknown(4) + entries (same as PWV5)
@@ -74,7 +69,7 @@ function parseAnlzSections(buffer: Buffer): ParsedSection[] {
 
       sections.push({
         fourcc,
-        body: { lenEntries, entries },
+        body: {lenEntries, entries},
       });
     } else if (fourcc === SectionTags.VOCAL_CONFIG) {
       // PWVC: unknown(2) + threshold_low(2) + threshold_mid(2) + threshold_high(2)
@@ -84,7 +79,7 @@ function parseAnlzSections(buffer: Buffer): ParsedSection[] {
 
       sections.push({
         fourcc,
-        body: { thresholdLow, thresholdMid, thresholdHigh },
+        body: {thresholdLow, thresholdMid, thresholdHigh},
       });
     }
 
@@ -102,7 +97,7 @@ function parseAnlzSections(buffer: Buffer): ParsedSection[] {
 function convertPWV6ToBands(
   data: Uint8Array,
   numEntries: number
-): { low: number[]; mid: number[]; high: number[] } {
+): {low: number[]; mid: number[]; high: number[]} {
   const low = new Array<number>(numEntries);
   const mid = new Array<number>(numEntries);
   const high = new Array<number>(numEntries);
@@ -114,7 +109,7 @@ function convertPWV6ToBands(
     high[i] = data[offset + 2] / 255;
   }
 
-  return { low, mid, high };
+  return {low, mid, high};
 }
 
 describe('.2EX Integration Tests', () => {
@@ -125,11 +120,13 @@ describe('.2EX Integration Tests', () => {
     it('parses PWV6 from binary fixture end-to-end', () => {
       const inputData = new Uint8Array([255, 0, 128, 0, 255, 64, 100, 100, 100]);
       const file = create2EXFile({
-        pwv6: { numEntries: 3, data: inputData },
+        pwv6: {numEntries: 3, data: inputData},
       });
 
       const sections = parseAnlzSections(file);
-      const pwv6Section = sections.find(s => s.fourcc === SectionTags.WAVE_COLOR_3CHANNEL);
+      const pwv6Section = sections.find(
+        s => s.fourcc === SectionTags.WAVE_COLOR_3CHANNEL
+      );
       expect(pwv6Section).toBeDefined();
 
       const result = makeWaveform3BandPreview(pwv6Section!);
@@ -140,7 +137,7 @@ describe('.2EX Integration Tests', () => {
     it('parses PWV7 from binary fixture end-to-end', () => {
       const inputData = new Uint8Array([10, 20, 30, 40, 50, 60]);
       const file = create2EXFile({
-        pwv7: { numEntries: 2, data: inputData },
+        pwv7: {numEntries: 2, data: inputData},
       });
 
       const sections = parseAnlzSections(file);
@@ -154,7 +151,7 @@ describe('.2EX Integration Tests', () => {
 
     it('parses PWVC from binary fixture end-to-end', () => {
       const file = create2EXFile({
-        pwvc: { thresholdLow: 256, thresholdMid: 1024, thresholdHigh: 4096 },
+        pwvc: {thresholdLow: 256, thresholdMid: 1024, thresholdHigh: 4096},
       });
 
       const sections = parseAnlzSections(file);
@@ -172,9 +169,9 @@ describe('.2EX Integration Tests', () => {
       const pwv7Data = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80, 90]);
 
       const file = create2EXFile({
-        pwv6: { numEntries: 2, data: pwv6Data },
-        pwv7: { numEntries: 3, data: pwv7Data },
-        pwvc: { thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90 },
+        pwv6: {numEntries: 2, data: pwv6Data},
+        pwv7: {numEntries: 3, data: pwv7Data},
+        pwvc: {thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90},
       });
 
       const sections = parseAnlzSections(file);
@@ -210,7 +207,7 @@ describe('.2EX Integration Tests', () => {
   describe('partial .2EX files', () => {
     it('parses file with only PWV6', () => {
       const file = create2EXFile({
-        pwv6: { numEntries: 100 },
+        pwv6: {numEntries: 100},
       });
 
       const sections = parseAnlzSections(file);
@@ -223,7 +220,7 @@ describe('.2EX Integration Tests', () => {
 
     it('parses file with only PWVC', () => {
       const file = create2EXFile({
-        pwvc: { thresholdLow: 5, thresholdMid: 25, thresholdHigh: 75 },
+        pwvc: {thresholdLow: 5, thresholdMid: 25, thresholdHigh: 75},
       });
 
       const sections = parseAnlzSections(file);
@@ -236,8 +233,8 @@ describe('.2EX Integration Tests', () => {
 
     it('parses file with PWV6 and PWVC but no PWV7', () => {
       const file = create2EXFile({
-        pwv6: { numEntries: 50 },
-        pwvc: { thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90 },
+        pwv6: {numEntries: 50},
+        pwvc: {thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90},
       });
 
       const sections = parseAnlzSections(file);
@@ -265,7 +262,7 @@ describe('.2EX Integration Tests', () => {
         data[i] = i % 256;
       }
 
-      const file = create2EXFile({ pwv6: { numEntries, data } });
+      const file = create2EXFile({pwv6: {numEntries, data}});
       const sections = parseAnlzSections(file);
       const result = makeWaveform3BandPreview(sections[0]);
 
@@ -281,12 +278,12 @@ describe('.2EX Integration Tests', () => {
       for (let i = 0; i < numEntries; i++) {
         const progress = i / numEntries;
         const amplitude = Math.sin(progress * Math.PI); // bell curve
-        data[i * 3] = Math.floor(amplitude * 200);       // low
-        data[i * 3 + 1] = Math.floor(amplitude * 150);   // mid
-        data[i * 3 + 2] = Math.floor(amplitude * 100);   // high
+        data[i * 3] = Math.floor(amplitude * 200); // low
+        data[i * 3 + 1] = Math.floor(amplitude * 150); // mid
+        data[i * 3 + 2] = Math.floor(amplitude * 100); // high
       }
 
-      const file = create2EXFile({ pwv6: { numEntries, data } });
+      const file = create2EXFile({pwv6: {numEntries, data}});
       const sections = parseAnlzSections(file);
       const result = makeWaveform3BandPreview(sections[0]);
 
@@ -306,7 +303,7 @@ describe('.2EX Integration Tests', () => {
       }
 
       const file = create2EXFile({
-        pwv7: { numEntries, data },
+        pwv7: {numEntries, data},
       });
       const sections = parseAnlzSections(file);
       const result = makeWaveform3BandDetail(sections[0]);
@@ -330,12 +327,12 @@ describe('.2EX Integration Tests', () => {
       const data = new Uint8Array([255, 0, 128, 0, 255, 64]);
       const bands = convertPWV6ToBands(data, 2);
 
-      expect(bands.low[0]).toBeCloseTo(1.0);      // 255/255
-      expect(bands.mid[0]).toBeCloseTo(0.0);       // 0/255
+      expect(bands.low[0]).toBeCloseTo(1.0); // 255/255
+      expect(bands.mid[0]).toBeCloseTo(0.0); // 0/255
       expect(bands.high[0]).toBeCloseTo(128 / 255); // ~0.502
 
-      expect(bands.low[1]).toBeCloseTo(0.0);       // 0/255
-      expect(bands.mid[1]).toBeCloseTo(1.0);       // 255/255
+      expect(bands.low[1]).toBeCloseTo(0.0); // 0/255
+      expect(bands.mid[1]).toBeCloseTo(1.0); // 255/255
       expect(bands.high[1]).toBeCloseTo(64 / 255); // ~0.251
     });
 
@@ -402,12 +399,18 @@ describe('.2EX Integration Tests', () => {
     it('full pipeline: binary fixture → parse → convert to bands', () => {
       // Known input: 3 entries with specific band values
       const inputData = new Uint8Array([
-        255, 128, 0,     // Entry 0: loud low, medium mid, silent high
-        0, 0, 255,       // Entry 1: silent low/mid, loud high
-        128, 128, 128,   // Entry 2: equal bands
+        255,
+        128,
+        0, // Entry 0: loud low, medium mid, silent high
+        0,
+        0,
+        255, // Entry 1: silent low/mid, loud high
+        128,
+        128,
+        128, // Entry 2: equal bands
       ]);
 
-      const file = create2EXFile({ pwv6: { numEntries: 3, data: inputData } });
+      const file = create2EXFile({pwv6: {numEntries: 3, data: inputData}});
       const sections = parseAnlzSections(file);
       const preview = makeWaveform3BandPreview(sections[0]);
       const bands = convertPWV6ToBands(preview.data, preview.numEntries);
@@ -435,7 +438,7 @@ describe('.2EX Integration Tests', () => {
   describe('AnalysisDataPayload shape', () => {
     it('waveform3BandPreview converts to expected payload shape', () => {
       const inputData = new Uint8Array([200, 100, 50, 100, 200, 150]);
-      const file = create2EXFile({ pwv6: { numEntries: 2, data: inputData } });
+      const file = create2EXFile({pwv6: {numEntries: 2, data: inputData}});
       const sections = parseAnlzSections(file);
       const preview = makeWaveform3BandPreview(sections[0]);
       const bands = convertPWV6ToBands(preview.data, preview.numEntries);
@@ -457,7 +460,7 @@ describe('.2EX Integration Tests', () => {
 
     it('vocalConfig converts to expected payload shape', () => {
       const file = create2EXFile({
-        pwvc: { thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90 },
+        pwvc: {thresholdLow: 10, thresholdMid: 50, thresholdHigh: 90},
       });
       const sections = parseAnlzSections(file);
       const vocal = makeVocalConfig(sections[0]);
@@ -480,8 +483,12 @@ describe('.2EX Integration Tests', () => {
     it('null is a valid value when .2EX file is missing', () => {
       // Simulating what happens when .2EX load fails (.catch(() => null))
       const twoxResult = null as {
-        waveform3BandPreview: { numEntries: number; data: Uint8Array } | null;
-        vocalConfig: { thresholdLow: number; thresholdMid: number; thresholdHigh: number } | null;
+        waveform3BandPreview: {numEntries: number; data: Uint8Array} | null;
+        vocalConfig: {
+          thresholdLow: number;
+          thresholdMid: number;
+          thresholdHigh: number;
+        } | null;
       } | null;
       const waveform3BandPreview = twoxResult?.waveform3BandPreview ?? null;
       const vocalConfig = twoxResult?.vocalConfig ?? null;

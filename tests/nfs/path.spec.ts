@@ -1,5 +1,5 @@
-import {MediaSlot} from 'src/types';
 import {parseWindowsPath, resolveNfsPath} from 'src/nfs';
+import {MediaSlot} from 'src/types';
 
 describe('parseWindowsPath', () => {
   it('parses a Windows path with backslashes', () => {
@@ -73,10 +73,7 @@ describe('resolveNfsPath', () => {
   });
 
   it('extracts mount path from Windows file path for RB slot', () => {
-    const result = resolveNfsPath(
-      MediaSlot.RB,
-      'C:\\Users\\chris\\Music\\track.mp3'
-    );
+    const result = resolveNfsPath(MediaSlot.RB, 'C:\\Users\\chris\\Music\\track.mp3');
     expect(result).toEqual({
       mountPath: '/C/',
       nfsPath: 'Users/chris/Music/track.mp3',
@@ -84,10 +81,7 @@ describe('resolveNfsPath', () => {
   });
 
   it('handles RB slot with forward-slash Windows path', () => {
-    const result = resolveNfsPath(
-      MediaSlot.RB,
-      'D:/Music/rekordbox/track.wav'
-    );
+    const result = resolveNfsPath(MediaSlot.RB, 'D:/Music/rekordbox/track.wav');
     expect(result).toEqual({
       mountPath: '/D/',
       nfsPath: 'Music/rekordbox/track.wav',
@@ -95,10 +89,7 @@ describe('resolveNfsPath', () => {
   });
 
   it('extracts mount path from macOS file path for RB slot', () => {
-    const result = resolveNfsPath(
-      MediaSlot.RB,
-      '/Users/chris/Music/track.mp3'
-    );
+    const result = resolveNfsPath(MediaSlot.RB, '/Users/chris/Music/track.mp3');
     expect(result).toEqual({
       mountPath: '/',
       nfsPath: 'Users/chris/Music/track.mp3',

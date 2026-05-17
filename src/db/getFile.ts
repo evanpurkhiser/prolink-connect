@@ -1,6 +1,6 @@
 import {Track} from 'src/entities';
-import {type Logger, noopLogger} from 'src/logger';
 import LocalDatabase from 'src/localdb';
+import {type Logger, noopLogger} from 'src/logger';
 import {fetchFile} from 'src/nfs';
 import RemoteDatabase from 'src/remotedb';
 import {Device, DeviceID, MediaSlot, TrackType} from 'src/types';
@@ -68,11 +68,7 @@ export function viaRemote(
   // });
 }
 
-export async function viaLocal(
-  local: LocalDatabase,
-  device: Device,
-  opts: Options
-) {
+export async function viaLocal(local: LocalDatabase, device: Device, opts: Options) {
   const {deviceId, trackSlot, track} = opts;
   const logger = opts.logger ?? noopLogger;
 

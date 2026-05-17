@@ -1,7 +1,18 @@
 import {Track} from 'src/entities';
 import LocalDatabase from 'src/localdb';
 import {loadAnlz} from 'src/localdb/rekordbox';
-import {Device, DeviceID, ExtendedCue, MediaSlot, SongStructure, TrackType, VocalConfig, Waveform3BandDetail, Waveform3BandPreview, WaveformHD} from 'src/types';
+import {
+  Device,
+  DeviceID,
+  ExtendedCue,
+  MediaSlot,
+  SongStructure,
+  TrackType,
+  VocalConfig,
+  Waveform3BandDetail,
+  Waveform3BandPreview,
+  WaveformHD,
+} from 'src/types';
 import {TelemetrySpan as Span} from 'src/utils/telemetry';
 
 import {anlzLoader} from './utils';

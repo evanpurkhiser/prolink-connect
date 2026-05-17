@@ -45,7 +45,9 @@ export async function viaFileExtraction(
 
   const extension = track.filePath.split('.').pop()?.toLowerCase() ?? '';
   if (!isArtworkExtractionSupported(extension)) {
-    logger.debug(`[artwork-nfs] Skipping: unsupported extension ".${extension}" (${track.filePath})`);
+    logger.debug(
+      `[artwork-nfs] Skipping: unsupported extension ".${extension}" (${track.filePath})`
+    );
     return null;
   }
 

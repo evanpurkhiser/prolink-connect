@@ -12,8 +12,8 @@ import {PassiveStatusEmitter} from './status';
 
 export {
   AlphaThetaInterface,
-  findAlphaThetaInterface,
   findAllAlphaThetaInterfaces,
+  findAlphaThetaInterface,
   getArpCacheForInterface,
 } from './alphatheta';
 export {PassiveDeviceManager} from './devices';

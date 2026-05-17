@@ -123,6 +123,14 @@ export class MixstatusProcessor {
    */
   #livePlayers = new Set<DeviceID>();
   /**
+   * Records the last trackId emitted as 'nowPlaying' for each device. Used to
+   * suppress duplicate emissions when a deck is briefly cued/loaded and then
+   * resumed on the same track (a common pattern for House/Techno DJs who
+   * cue-juggle mid-track). The entry is replaced when a different trackId is
+   * emitted on the same deck, so subsequent track loads still emit normally.
+   */
+  #lastEmittedTrackId = new Map<DeviceID, number>();
+  /**
    * Incidates if we're currentiny in an active DJ set
    */
   #isSetActive = false;
@@ -175,6 +183,15 @@ export class MixstatusProcessor {
       return;
     }
 
+    // Suppress duplicate nowPlaying for the same track on the same deck. This
+    // can happen when a DJ cues mid-track and resumes (Cued/Loading/Ended are
+    // all stoppingStates that drop the deck from livePlayers, so the next play
+    // of the same trackId would otherwise re-emit). When a different track is
+    // loaded, the trackId differs and the new emission proceeds normally.
+    if (this.#lastEmittedTrackId.get(deviceId) === state.trackId) {
+      return;
+    }
+
     if (!this.#isSetActive) {
       this.#isSetActive = true;
       this.#emitter.emit('setStarted');
@@ -185,6 +202,7 @@ export class MixstatusProcessor {
     }
 
     this.#livePlayers.add(deviceId);
+    this.#lastEmittedTrackId.set(deviceId, state.trackId);
 
     this.#emitter.emit('nowPlaying', state);
   };
