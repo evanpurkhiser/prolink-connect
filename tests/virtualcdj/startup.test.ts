@@ -106,7 +106,9 @@ describe('Full Startup Protocol', () => {
         on: jest.fn(),
         off: jest.fn(),
       } as any as Socket;
-      const mockDeviceManager = {devices: new Map()} as any as DeviceManager;
+      const mockDeviceManager = {
+        devices: new Map([[2, getVirtualCDJ(mockIface, 2)]]),
+      } as any as DeviceManager;
 
       const announcer = new Announcer(
         device,
@@ -271,8 +273,10 @@ describe('Full Startup Protocol', () => {
         off: jest.fn(),
       } as any as Socket;
 
-      // No devices in use - should use highest available
-      const mockDeviceManager = {devices: new Map()} as any as DeviceManager;
+      // A discovered peer gives the announcer a unicast target
+      const mockDeviceManager = {
+        devices: new Map([[2, getVirtualCDJ(mockIface, 2)]]),
+      } as any as DeviceManager;
 
       const announcer = new Announcer(
         device,
@@ -382,7 +386,9 @@ describe('Full Startup Protocol', () => {
         on: jest.fn(),
         off: jest.fn(),
       } as any as Socket;
-      const mockDeviceManager = {devices: new Map()} as any as DeviceManager;
+      const mockDeviceManager = {
+        devices: new Map([[2, getVirtualCDJ(mockIface, 2)]]),
+      } as any as DeviceManager;
 
       const announcer = new Announcer(
         device,
@@ -406,7 +412,9 @@ describe('Full Startup Protocol', () => {
         on: jest.fn(),
         off: jest.fn(),
       } as any as Socket;
-      const mockDeviceManager = {devices: new Map()} as any as DeviceManager;
+      const mockDeviceManager = {
+        devices: new Map([[2, getVirtualCDJ(mockIface, 2)]]),
+      } as any as DeviceManager;
 
       const announcer = new Announcer(
         device,

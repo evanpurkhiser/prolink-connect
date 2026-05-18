@@ -66,6 +66,20 @@ export interface NetworkConfig {
    */
   fullStartup?: boolean;
   /**
+   * Send announcer packets to Pioneer Stagehand devices.
+   *
+   * Stagehand is excluded from announcer packets by default because it has
+   * been observed to crash when it receives them. Enabling this also turns on
+   * the cold-start subnet broadcast, which would otherwise reach Stagehand the
+   * same way.
+   *
+   * Enable this only for diagnostic work (e.g. reproducing that crash), never
+   * in production.
+   *
+   * @default false
+   */
+  announceToStagehand?: boolean;
+  /**
    * Database format preference for loading rekordbox databases.
    *
    * - 'auto': Try OneLibrary first (rekordbox 7.x+), fall back to PDB (rekordbox 6.x)
@@ -141,6 +155,10 @@ export async function bringOnline(config?: NetworkConfig) {
     await udpBind(announceSocket, ANNOUNCE_PORT, '0.0.0.0');
     await udpBind(beatSocket, BEAT_PORT, '0.0.0.0');
     await udpBind(statusSocket, STATUS_PORT, '0.0.0.0');
+
+    // Enable broadcast so the announcer can reach the whole subnet before any
+    // devices have been discovered.
+    announceSocket.setBroadcast(true);
   } catch (err) {
     Telemetry.captureException(err);
     tx.setStatus(SpanStatus.Unavailable);
@@ -289,6 +307,7 @@ export class ProlinkNetwork {
       this.deviceManager,
       this.#config.iface,
       this.#config.fullStartup ?? false,
+      this.#config.announceToStagehand ?? false,
       this.#logger
     );
     announcer.start();

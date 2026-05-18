@@ -14,7 +14,7 @@ import {
 import DeviceManager from 'src/devices';
 import {type Logger, noopLogger} from 'src/logger';
 import {Device, DeviceID, DeviceType} from 'src/types';
-import {buildName} from 'src/utils';
+import {buildName, getBroadcastAddress} from 'src/utils';
 
 /**
  * Constructs a virtual CDJ Device.
@@ -311,6 +311,11 @@ export class Announcer {
    */
   #fullStartup: boolean;
   /**
+   * Whether to send announcer packets to Pioneer Stagehand devices, which are
+   * normally excluded because they crash on our packets
+   */
+  #announceToStagehand: boolean;
+  /**
    * Current startup stage (only used when fullStartup is enabled)
    */
   #currentStage: StartupStage = StartupStage.InitialAnnounce;
@@ -341,6 +346,7 @@ export class Announcer {
     deviceManager: DeviceManager,
     iface: NetworkInterfaceInfoIPv4,
     fullStartup = false,
+    announceToStagehand = false,
     logger: Logger = noopLogger
   ) {
     this.#vcdj = vcdj;
@@ -348,6 +354,7 @@ export class Announcer {
     this.#deviceManager = deviceManager;
     this.#iface = iface;
     this.#fullStartup = fullStartup;
+    this.#announceToStagehand = announceToStagehand;
     this.#logger = logger;
   }
 
@@ -445,6 +452,33 @@ export class Announcer {
   }
 
   /**
+   * Sends a packet by unicast to every discovered device.
+   *
+   * Pioneer Stagehand is excluded by default (it crashes on our packets)
+   * unless announceToStagehand is enabled.
+   *
+   * When nothing has been discovered yet, falls back to a subnet broadcast —
+   * but only when announceToStagehand is enabled, because a broadcast reaches
+   * every host including Stagehand. In normal operation the virtual CDJ is
+   * found via unicast replies to peers' own announce broadcasts, so skipping
+   * this cold-start broadcast costs nothing.
+   */
+  #sendPacket(packet: Uint8Array) {
+    const devices = [...this.#deviceManager.devices.values()].filter(
+      d => this.#announceToStagehand || !d.name.toLowerCase().includes('stagehand')
+    );
+    devices.forEach(device =>
+      this.#announceSocket.send(packet, ANNOUNCE_PORT, device.ip.address)
+    );
+
+    // Cold-start discovery broadcast — gated; see the method doc above.
+    if (devices.length === 0 && this.#announceToStagehand) {
+      const broadcastAddr = getBroadcastAddress(this.#iface);
+      this.#announceSocket.send(packet, ANNOUNCE_PORT, broadcastAddr);
+    }
+  }
+
+  /**
    * Send packets for the current startup stage and progress to next stage.
    */
   #sendStagePackets() {
@@ -473,19 +507,7 @@ export class Announcer {
         return;
     }
 
-    // Send to all devices except Stagehand which crashes on our packets
-    const devices = [...this.#deviceManager.devices.values()].filter(
-      d => !d.name.toLowerCase().includes('stagehand')
-    );
-    devices.forEach(device =>
-      this.#announceSocket.send(packet, ANNOUNCE_PORT, device.ip.address)
-    );
-
-    // Also broadcast to network if no CDJs found yet
-    if (devices.length === 0) {
-      const broadcastAddr = this.#vcdj.ip.endAddress().address;
-      this.#announceSocket.send(packet, ANNOUNCE_PORT, broadcastAddr);
-    }
+    this.#sendPacket(packet);
 
     // Progress to next packet or stage
     if (this.#stageCounter >= 3) {
@@ -543,19 +565,7 @@ export class Announcer {
         ? makeStage06Packet(this.#vcdj, peerCount)
         : makeAnnouncePacket(this.#vcdj);
 
-      // Send to all devices except Stagehand which crashes on our packets
-      const devices = [...this.#deviceManager.devices.values()].filter(
-        d => !d.name.toLowerCase().includes('stagehand')
-      );
-      devices.forEach(device =>
-        this.#announceSocket.send(packet, ANNOUNCE_PORT, device.ip.address)
-      );
-
-      // Also broadcast if no CDJs found
-      if (devices.length === 0) {
-        const broadcastAddr = this.#vcdj.ip.endAddress().address;
-        this.#announceSocket.send(packet, ANNOUNCE_PORT, broadcastAddr);
-      }
+      this.#sendPacket(packet);
     };
 
     // Send first keep-alive immediately

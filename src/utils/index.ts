@@ -49,6 +49,18 @@ export function getMatchingInterface(ipAddr: ip.Address4) {
 }
 
 /**
+ * Computes the IPv4 subnet broadcast address for a network interface.
+ *
+ * Builds the address from the interface CIDR so the broadcast covers the whole
+ * subnet (e.g. x.x.x.255 for a /24). Falls back to the bare interface address
+ * when no CIDR is available, which only reaches the host itself but avoids
+ * throwing.
+ */
+export function getBroadcastAddress(iface: NetworkInterfaceInfoIPv4): string {
+  return new ip.Address4(iface.cidr ?? iface.address).endAddress().address;
+}
+
+/**
  * Given a BPM and pitch value, compute how many seconds per beat
  */
 export function bpmToSeconds(bpm: number, pitch: number) {
