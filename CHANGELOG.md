@@ -1,5 +1,271 @@
 # Changelog
 
+## v0.19.0
+
+- ci: check out metadata-connect and onelibrary-connect siblings so publish workflow can install
+- ci: switch publish workflow to OIDC trusted publishing
+- feat: add an opt-in to announce to Stagehand
+- fix(ci): publish workflow uses Node 22 so yarn install no longer aborts on engine mismatch
+- fix(ci): publish no longer fails when several connect repos release together
+- ci: pin Node globally so onelibrary-connect's native build matches the test runtime
+- ci: switch build workflow from yarn to npm so SQLite native binaries dedupe
+- test: skip pcap-adapter test setup failure when cap is not installed
+- fix(db): drop dangling hostDevice constructor parameter from Database
+- test: stop CI test runs from crashing on onelibrary-connect ESM imports
+- style: fix lint errors blocking CI
+- ci: build sibling repos before installing so file deps resolve in CI
+- chore: bump volta node pin to 22.13.0 so yarn install passes vite engine check
+- ci: check out sibling repos so CI install no longer fails on missing file deps
+- fix(mixstatus): stop double-counting same track when DJ cue-juggles mid-set
+- feat(db): fetch waveform preview and detailed for streaming tracks
+- chore: regenerate lockfiles after dependency install
+- chore: update lockfiles
+- fix(db): restore GetTrackInfo query for streaming tracks to capture Beatport file path
+- feat(virtualcdj): expose ready promise that resolves when startup protocol completes
+- fix(remotedb): prevent deadlocks and silent hangs on streaming track queries
+- refactor: remove debugStreamingQueries now that getMetadata handles streaming
+- fix: tolerate missing file path in passive remotedb getTrackMetadata
+- feat: support metadata lookup for streaming tracks (Beatport)
+- feat: support metadata lookup for unanalyzed tracks from USB
+- chore: update lockfile
+- chore: update lockfiles for onelibrary-connect dependency
+- refactor: consume onelibrary-connect for OneLibrary database access
+- test: add pcap-adapter Windows interface resolution tests
+- fix: resolve Windows interface names for pcap
+- chore: regenerate lockfiles for metadata-connect 1.1.4
+- chore: add npm publish verification step
+- chore: regenerate lockfile for v0.18.0
+- Bump to v0.18.0 with streaming service detection
+- Fix PWV6 and PWV7 parsing that failed on all real .2EX files
+- Streaming tracks no longer crash when remotedb fields are missing
+- chore: update lockfiles
+- fix: correct function signature in getFile module
+- refactor: replace console logging with pluggable logger
+- chore: update package-lock.json for 0.17.1
+- chore: bump version to 0.17.1
+- fix: Correct PWVC vocal config byte layout to match real .2EX files
+- Add example for 3-band waveform and vocal detection from .2EX files
+- Add example for looking up vocal detection config from local rekordbox
+- Add example for looking up vocal detection config from USB
+- Add tests for requesting vocal detection configuration
+- docs: update README and bump package-lock
+- chore: bump version to 0.17.0
+- test: add .2EX parser and integration tests
+- feat: add .2EX file parsing for 3-band waveforms and vocal detection
+- feat: NFS access for rekordbox slot and stability fixes
+- fix: use correct NFS portmap port for rekordbox
+- fix: correct media slot name parsing and add waveform color preview
+- fix: correct media slot name parsing offset
+- fix: resolve security vulnerabilities in dependencies
+- chore: update lockfiles
+- chore: update package and yarn lock files
+- refactor: split rekordbox adapter into focused modules
+- refactor: split OneLibrary adapter into focused modules
+- feat: add full metadata extraction with partial file reads
+- chore: rename package from prolink-connect to alphatheta-connect
+- fix: add contents write permission for git push
+- fix: handle yarn.lock and improve changelog generation
+- ci: auto-version bump and publish on push to main
+- rename package from prolink-connect to alphatheta-connect
+- docs: add Pro DJ Link protocol documentation
+- refactor: add database adapter abstraction for OneLibrary support
+- chore: remove NowPlaying-specific debug logging
+- docs: update README with new features and add passive mode guide
+- feat: add findAllAlphaThetaInterfaces() to detect multiple Pro DJ Link networks
+- feat: support all-in-one DJ controllers (XDJ-XZ, XDJ-RX) in passive mode
+- chore: bump version to 0.15.0
+- chore: move cap to optionalDependencies for passive mode
+- chore: code formatting and OneLibrary schema types
+- feat: add comprehensive LocalDB and OneLibrary test suite
+- chore: add jest mock for .ksy parser files
+- feat: add passive mode for pcap-based Pro DJ Link monitoring
+- refactor: rename getArtworkFromFile to getArtwork as the default method
+- feat: add artwork extraction from audio files via NFS
+- chore: bump version to 0.14.0
+- fix: resolve lint errors in localdb and telemetry
+- chore: fix prettier formatting in telemetry
+- chore: remove debug logging from status emitter
+- feat: optimize database hydration with SQLite transactions
+- fix: NFS buffer handling for reliable database streaming
+- fix: improve network handling
+- Stop tracking build artifacts to prevent non-deterministic diffs
+- fix: correct 1Password secret path for npm token
+- Add CI workflows and release script for automated npm publishing
+- fix: correct TypeScript type union order in field declarations
+- temp: disable Sentry to fix Electron asar bundling issues
+- fix: correct TypeScript type union order in field declarations
+- Update build artifacts and lock files
+- Replace js-xdr internal imports with local implementations
+- feat(telemetry): allow Sentry DSN to be configured via environment variable
+- chore: bump all dependencies to latest versions
+- chore: update dependencies to latest versions
+- feat: make virtual CDJ name configurable
+- chore: add coverage to gitignore
+- test: improve code coverage with additional unit tests
+- fix: resolve lint errors and fix tests for upstream compatibility
+- feat: implement optional full DJ Link startup protocol
+- feat: implement 6-channel on-air support for CDJ-3000 + DJM-V10
+- feat: implement extended ANLZ features (PCO2, PSSI, waveforms)
+- feat: add absolute position packet support for CDJ-3000+
+- Rebuild lib output
+- fix: add lru_map dependency for Sentry v6 compatibility
+- build: update compiled output
+- feat: enable socket reuse for Rekordbox coexistence
+- docs: add project instructions
+- feat: Add opt-in telemetry and fix npm install from git
+- Closing the announce sockets shouldn't depend on attachment to the device.
+- Add parameter to allow getFile to read 8k chunks.
+- Rename getArtwork to reflect it gets thumbnails.
+- Update to be closer to what it was originally.
+- Get file POC.
+- Launch CLI via VSC.
+- Update CDJ name
+- Identify as Now Playing in ProLink network
+- Update the build
+- Update for CDJ3000
+- bump version
+- Add compiled lib. bump version.
+- Upgrade sqlite3
+- add iconv-lite
+- Ignore node modules
+- Bump typedoc
+- Remove png logo
+- Switch readme to use SVG logo
+- Add SVG logo
+- Bump better-sqlite3
+- Bump node types
+- Bump prettier
+- Bump build deps
+- Update changelog
+- Lower minimum node to 20
+- Bump workflows
+- Update typedoc
+- Small bumps
+- Bump ts-patch
+- Bump webpack things
+- Correct comment on autoconfigFromPeers
+- Bump types / ts-node
+- Remove eslint plugin jest
+- Bump prettier
+- Bump eslint to v9
+- Bump node types
+- Upgrade jest
+- Bump typescript-transform-paths
+- Bump typescript
+- Bump sqlite3
+- Fix typos
+- Switch prettier to mjs file
+- Move jest config to module file type
+- Bump node / yarn
+- Typo in GenericMetadataItems
+- Fix typo in ItemType.OriginalArtist (was OrigianlArtist)
+- Typos
+- Consistent .eslintrc
+- Bump pretiter / eslint
+- Consistent publish action
+- Prefer interface over type
+- Bump to node 18 LTS
+- Move kaitai-struct-loader to devdeps
+- Fix engine version constraint
+- Match node / volta across all repos
+- Update gha volta-cli -> v4
+- Update gha checkout -> v3
+- Add typedoc-plugin-missing-exports
+- v0.11.0
+- Formatting
+- Bump @types/node
+- Require node 16
+- Replace UUID with crypto UUID
+- Bump webpack
+- Upgrade typescript
+- Bump typescript
+- Move around some type dependencies
+- Move signale to dev dependency
+- Bump better-sqlite3
+- Fix problmatic type in remotedb/fields
+- Bump node / yarn
+- Bump eslint / prettier
+- Bump jest
+- Fix {@link ...} typedocs
+- Fix tests
+- EvanPurkhiser -> evanpurkhiser
+- Include the import in the README.md (#15)
+- Fix typo (#16)
+- Bump prettier
+- Bump jest
+- Bump to node 16
+- Ignore docs folder
+- Fix docs build
+- Bump ws from 7.4.5 to 7.4.6 (#8)
+- v0.10.0
+- Add missing transient dependency for kaitai struct loader
+- Formatting fixup
+- Changelog formatting fixup
+- Switch to using player 7 as the CDJ
+- Bump packages
+- v0.9.0
+- Add changelog entry for getPlaylist
+- Minor typo fix in changelog
+- Fix wording on local db error
+- Add db.getPlaylist
+- Fix limit calculation bug in renderItems
+- Bump eslint config
+- v0.8.1
+- Bump packages
+- v0.8.0
+- Fix type exports
+- Update outdated packages
+- Bump to latest packages
+- Add db.getWaveforms
+- Fix tests
+- Restructure hydrateAnlz to not mutate Track objects
+- Add isEmergencyMode
+- Bump some packages
+- v0.7.2
+- Fix types bundle to not include extra stuff
+- v0.7.1
+- Correctly export mixstatus mode
+- v0.7.0
+- Fix link in changelog
+- Export MixstatusMode
+- v0.6.0
+- Implement master following in mixstatus
+- Bump ini from 1.3.5 to 1.3.8 (#5)
+- Bump highlight.js from 10.4.0 to 10.4.1 (#4)
+- v0.5.0
+- Changelog spelling
+- Upgrade to latest webpack
+- Update kaitai struct definitions
+- Announce directly to devices, fixing connections once again
+- Correctly remove udpBind error handlers after connecting
+- Another minor change log wording fix
+- Minor changelog formatting fix
+- Check lint and test on version
+- v0.4.0
+- Update changelog format
+- Update changelog
+- Fix disconnecting
+- Correctly rebind the announce socket during discovery
+- Disable waveform hydration for now
+- v0.4.0-test.0
+- Bind the announce port to the interface discovered / configured
+- Bump packages
+- Updated changelog
+- Add waveform HD lookup to metadat query
+- Bump node-notifier from 8.0.0 to 8.0.1
+- v0.3.0
+- Allow mixstatus to be configured with various options
+- Missed a few import sorts
+- Sort imports
+- v0.2.0
+- Bump changelog
+- fix: Don't hard error on failed artwork lookup
+- fix: Don't hard error on failed artwork lookup
+- Allow analyzeDate and dateAdded to be null
+- Ensure basic id/name always has string for name
+- Fix trackTypeNames mapping
+
+
 All notable changes to alphatheta-connect (formerly prolink-connect) will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
