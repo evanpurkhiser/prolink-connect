@@ -6,6 +6,14 @@
   "contributors": [
     "Chris Le <chris@triodemusic.com>"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrisle/alphatheta-connect.git"
+  },
+  "homepage": "https://github.com/chrisle/alphatheta-connect",
+  "bugs": {
+    "url": "https://github.com/chrisle/alphatheta-connect/issues"
+  },
   "keywords": [
     "alphatheta",
     "prolink",
