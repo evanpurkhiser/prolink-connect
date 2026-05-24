@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.19.1
+
+- ci: upgrade npm before publishing so OIDC trusted publishing works
+
+
 ## v0.19.0
 
 - ci: check out metadata-connect and onelibrary-connect siblings so publish workflow can install
