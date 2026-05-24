@@ -40,6 +40,9 @@ jobs:
           node-version: '22.13.0'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+
       - name: Build metadata-connect
         working-directory: metadata-connect
         run: npm install && npm run build
