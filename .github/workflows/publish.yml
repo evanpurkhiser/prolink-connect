@@ -15,11 +15,24 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'chore: release v')"
 
     steps:
-      - name: Checkout
+      - name: Checkout alphatheta-connect
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          path: alphatheta-connect
+
+      - name: Checkout metadata-connect
+        uses: actions/checkout@v4
+        with:
+          repository: chrisle/metadata-connect
+          path: metadata-connect
+
+      - name: Checkout onelibrary-connect
+        uses: actions/checkout@v4
+        with:
+          repository: chrisle/onelibrary-connect
+          path: onelibrary-connect
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,7 +40,16 @@ jobs:
           node-version: '22.13.0'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Build metadata-connect
+        working-directory: metadata-connect
+        run: npm install && npm run build
+
+      - name: Build onelibrary-connect
+        working-directory: onelibrary-connect
+        run: npm install && npm run build
+
       - name: Install dependencies
+        working-directory: alphatheta-connect
         run: |
           if [ -f "yarn.lock" ]; then
             npm install -g yarn
@@ -39,13 +61,16 @@ jobs:
           fi
 
       - name: Run tests
+        working-directory: alphatheta-connect
         run: npm test
 
       - name: Build
+        working-directory: alphatheta-connect
         run: npm run build
 
       - name: Determine version bump type
         id: bump
+        working-directory: alphatheta-connect
         run: |
           # Get last tag or use initial commit
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
@@ -80,6 +105,7 @@ jobs:
       - name: Bump version
         if: steps.bump.outputs.skip != 'true'
         id: version
+        working-directory: alphatheta-connect
         run: |
           BUMP_TYPE="${{ steps.bump.outputs.type }}"
           OLD_VERSION=$(node -p "require('./package.json').version")
@@ -93,6 +119,7 @@ jobs:
 
       - name: Generate changelog entry
         if: steps.bump.outputs.skip != 'true'
+        working-directory: alphatheta-connect
         run: |
           NEW_VERSION="${{ steps.version.outputs.new }}"
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
@@ -143,6 +170,7 @@ jobs:
 
       - name: Commit and tag
         if: steps.bump.outputs.skip != 'true'
+        working-directory: alphatheta-connect
         run: |
           NEW_VERSION="${{ steps.version.outputs.new }}"
 
@@ -156,10 +184,12 @@ jobs:
 
       - name: Publish to npm
         if: steps.bump.outputs.skip != 'true'
+        working-directory: alphatheta-connect
         run: npm publish --provenance --access public
 
       - name: Verify npm publish
         if: steps.bump.outputs.skip != 'true'
+        working-directory: alphatheta-connect
         run: |
           PACKAGE_NAME=$(node -p "require('./package.json').name")
           EXPECTED_VERSION="${{ steps.version.outputs.new }}"
