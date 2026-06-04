@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.21.0
+
+- feat: add Pioneer Stagehand connection mode support and direct remote control capabilities (v0.20.0)
+
+
 ## v0.20.0
 
 - feat: add Stagehand connection mode with remote transport control and mixer preference writes
