@@ -1,4 +1,3 @@
-import {TelemetrySpan as Span, SpanStatus} from 'src/utils/telemetry';
 import {PromiseReadable} from 'promise-readable';
 
 import {REMOTEDB_MAGIC} from 'src/remotedb/constants';
@@ -13,6 +12,7 @@ import {
 } from 'src/remotedb/fields';
 import {responseTransform} from 'src/remotedb/message/response';
 import {getMessageName, MessageType, Response} from 'src/remotedb/message/types';
+import {SpanStatus, TelemetrySpan as Span} from 'src/utils/telemetry';
 
 /**
  * Argument types are used in argument list fields. This is essentially

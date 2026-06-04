@@ -1,9 +1,13 @@
 # Changelog
 
+## v0.20.0
+
+- feat: add Stagehand connection mode with remote transport control and mixer preference writes
+- docs: add comprehensive Stagehand connection mode integration guide
+
 ## v0.19.2
 
 - chore: drop transient peer:true flags from lock files
-
 
 ## v0.19.1
 

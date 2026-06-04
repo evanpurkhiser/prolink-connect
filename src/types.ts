@@ -8,6 +8,7 @@ export * as CDJStatus from 'src/status/types';
  * Re-export various types for the types only compile target
  */
 
+export type {TrackAnalysis} from './db/getTrackAnalysis';
 export type {
   Album,
   Artist,
@@ -19,7 +20,6 @@ export type {
   Playlist,
   Track,
 } from './entities';
-export type {TrackAnalysis} from './db/getTrackAnalysis';
 export type {HydrationProgress} from './localdb/rekordbox';
 export type {MixstatusConfig, MixstatusProcessor} from './mixstatus';
 // Note: ProlinkNetwork is exported as a class from ./network, not re-exported here as type-only
@@ -34,6 +34,7 @@ export enum DeviceType {
   CDJ = 0x01,
   Mixer = 0x03,
   Rekordbox = 0x04,
+  Stagehand = 0x05,
 }
 
 /**
@@ -238,8 +239,8 @@ export interface Waveforms {
 /**
  * Re-export cue types from onelibrary-connect
  */
-export {CueColor, HotcueButton} from 'onelibrary-connect';
 export type {CueAndLoop, CuePoint, Hotcue, Hotloop, Loop} from 'onelibrary-connect';
+export {CueColor, HotcueButton} from 'onelibrary-connect';
 
 /**
  * Extended cue with color and comment support (PCO2 tag from rekordbox).

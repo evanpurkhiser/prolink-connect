@@ -9,7 +9,12 @@ import {CDJStatus, MediaSlotInfo} from 'src/types';
 import {udpSend} from 'src/utils/udp';
 
 import {makeMediaSlotRequest} from './media';
-import {mediaSlotFromPacket, onAirFromPacket, statusFromPacket} from './utils';
+import {
+  mediaSlotFromPacket,
+  mixerStateFromPacket,
+  onAirFromPacket,
+  statusFromPacket,
+} from './utils';
 
 interface StatusEvents {
   /**
@@ -24,6 +29,10 @@ interface StatusEvents {
    * Fired when the mixer broadcasts on-air channel status
    */
   onAir: (status: CDJStatus.OnAirStatus) => void;
+  /**
+   * Fired when the Stagehand-connected mixer reports fader/EQ/control positions
+   */
+  mixerState: (state: CDJStatus.MixerState) => void;
 }
 
 type Emitter = StrictEventEmitter<EventEmitter, StatusEvents>;
@@ -58,6 +67,14 @@ class StatusEmitter {
   once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   #handleStatus = (message: Buffer) => {
+    // Stagehand mixer state (type 0x39)
+    if (message.length >= 11 && message[10] === 0x39) {
+      const mixerState = mixerStateFromPacket(message);
+      if (mixerState !== undefined) {
+        return this.#emitter.emit('mixerState', mixerState);
+      }
+    }
+
     const status = statusFromPacket(message);
 
     if (status !== undefined) {

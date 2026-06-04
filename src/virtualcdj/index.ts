@@ -589,3 +589,5 @@ export class Announcer {
     }
   }
 }
+
+export * from './stagehand';

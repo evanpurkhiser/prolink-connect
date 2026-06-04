@@ -5,7 +5,7 @@ import {EventEmitter} from 'events';
 
 import {CDJStatus} from 'src/types';
 
-import {positionFromPacket} from './utils';
+import {positionFromPacket, vuFromPacket} from './utils';
 
 interface PositionEvents {
   /**
@@ -13,6 +13,10 @@ interface PositionEvents {
    * These packets are sent approximately every 30ms while a track is loaded.
    */
   position: (position: CDJStatus.PositionState) => void;
+  /**
+   * Fired when real-time VU levels are received from the mixer under Stagehand connection.
+   */
+  vu: (vu: CDJStatus.VUState) => void;
 }
 
 type Emitter = StrictEventEmitter<EventEmitter, PositionEvents>;
@@ -42,6 +46,15 @@ class PositionEmitter {
   once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   #handlePosition = (message: Buffer) => {
+    // Stagehand VU meter (type 0x58)
+    if (message.length >= 11 && message[10] === 0x58) {
+      const vu = vuFromPacket(message);
+      if (vu !== undefined) {
+        this.#emitter.emit('vu', vu);
+        return;
+      }
+    }
+
     const position = positionFromPacket(message);
 
     if (position !== undefined) {

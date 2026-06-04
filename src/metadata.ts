@@ -1,8 +1,9 @@
-import {extractMetadata, isExtensionSupported} from 'metadata-connect';
 import type {ExtractedMetadata, FileReader} from 'metadata-connect';
+import {extractMetadata, isExtensionSupported} from 'metadata-connect';
+
+import {createNfsFileReader} from './artwork/reader';
 import {getFileInfo, NfsMediaSlot} from './nfs';
 import {Device} from './types';
-import {createNfsFileReader} from './artwork/reader';
 
 export type {ExtractedMetadata} from 'metadata-connect';
 

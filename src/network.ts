@@ -6,9 +6,9 @@ import {ANNOUNCE_PORT, BEAT_PORT, DEFAULT_VCDJ_ID, STATUS_PORT} from 'src/consta
 import Control from 'src/control';
 import Database from 'src/db';
 import DeviceManager from 'src/devices';
-import {type Logger, noopLogger} from 'src/logger';
 import LocalDatabase from 'src/localdb';
 import {DatabasePreference} from 'src/localdb/database-adapter';
+import {type Logger, noopLogger} from 'src/logger';
 import {MixstatusProcessor} from 'src/mixstatus';
 import RemoteDatabase from 'src/remotedb';
 import StatusEmitter from 'src/status';
@@ -18,7 +18,13 @@ import {getMatchingInterface} from 'src/utils';
 import * as Telemetry from 'src/utils/telemetry';
 import {SpanStatus} from 'src/utils/telemetry';
 import {udpBind, udpClose} from 'src/utils/udp';
-import {Announcer, getVirtualCDJ} from 'src/virtualcdj';
+import {
+  Announcer,
+  generateStagehandDeviceId,
+  getVirtualCDJ,
+  getVirtualStagehand,
+  StagehandAnnouncer,
+} from 'src/virtualcdj';
 
 const connectErrorHelp =
   'Network must be configured. Try using `autoconfigFromPeers` or `configure`';
@@ -29,7 +35,7 @@ export interface NetworkConfig {
    */
   iface: NetworkInterfaceInfoIPv4;
   /**
-   * The ID of the virtual CDJ to pose as.
+   * The ID of the virtual CDJ or Stagehand device to pose as.
    *
    * IMPORTANT:
    *
@@ -46,13 +52,13 @@ export interface NetworkConfig {
    * band of the networks remote database protocol, and is not limited by this
    * restriction.
    */
-  vcdjId: number;
+  vcdjId?: number;
   /**
-   * The name to announce the virtual CDJ as on the network.
+   * The name to announce the virtual CDJ or Stagehand device as on the network.
    *
    * This name will appear in device lists on other Pro DJ Link equipment.
    *
-   * @default 'ProLink-Connect'
+   * @default 'ProLink-Connect' (or 'Stagehand' when connectMethod is 'stagehand')
    */
   vcdjName?: string;
   /**
@@ -94,10 +100,18 @@ export interface NetworkConfig {
    * If not provided, logging is silently discarded.
    */
   logger?: Logger;
+  /**
+   * Connection method to use.
+   * - 'active': Actively join as a Virtual CDJ player.
+   * - 'stagehand': Actively join posing as a Pioneer Stagehand iOS app device.
+   *
+   * @default 'active'
+   */
+  connectMethod?: 'active' | 'stagehand';
 }
 
 interface ConnectionService {
-  announcer: Announcer;
+  announcer: Announcer | StagehandAnnouncer;
   control: Control;
   remotedb: RemoteDatabase;
   localdb: LocalDatabase;
@@ -186,6 +200,20 @@ export async function bringOnline(config?: NetworkConfig) {
   return network;
 }
 
+/**
+ * Brings the Prolink network online using the Pioneer Stagehand connection method.
+ *
+ * This connects to the network as a non-player Stagehand device using its abbreviated handshake.
+ */
+export async function bringOnlineStagehand(
+  config?: Omit<NetworkConfig, 'connectMethod'>
+) {
+  return bringOnline({
+    ...config,
+    connectMethod: 'stagehand',
+  } as NetworkConfig);
+}
+
 export class ProlinkNetwork {
   #state: NetworkState = NetworkState.Online;
 
@@ -271,7 +299,11 @@ export class ProlinkNetwork {
       throw new Error('Unable to determine network interface');
     }
 
-    this.#config = {...this.#config, vcdjId: DEFAULT_VCDJ_ID, iface};
+    const defaultId =
+      this.#config?.connectMethod === 'stagehand'
+        ? generateStagehandDeviceId()
+        : DEFAULT_VCDJ_ID;
+    this.#config = {...this.#config, vcdjId: defaultId, iface};
     tx.finish();
   }
 
@@ -288,28 +320,46 @@ export class ProlinkNetwork {
 
     const tx = Telemetry.startTransaction({name: 'connect'});
 
-    // Create VCDJ for the interface's broadcast address
-    const vcdj = getVirtualCDJ(
-      this.#config.iface,
-      this.#config.vcdjId,
-      this.#config.vcdjName
-    );
+    const connectMethod = this.#config.connectMethod ?? 'active';
 
-    // Update device manager to filter out our VCDJ name
-    if (this.#config.vcdjName !== undefined) {
-      this.#deviceManager.reconfigure({vcdjName: this.#config.vcdjName});
+    const vcdjId =
+      this.#config.vcdjId ??
+      (connectMethod === 'stagehand' ? generateStagehandDeviceId() : DEFAULT_VCDJ_ID);
+    const vcdjName =
+      this.#config.vcdjName ?? (connectMethod === 'stagehand' ? 'Stagehand' : undefined);
+
+    // Create VCDJ or Stagehand device
+    const vcdj =
+      connectMethod === 'stagehand'
+        ? getVirtualStagehand(this.#config.iface, vcdjId, vcdjName)
+        : getVirtualCDJ(this.#config.iface, vcdjId, vcdjName);
+
+    // Update device manager to filter out our device name
+    if (vcdjName !== undefined) {
+      this.#deviceManager.reconfigure({vcdjName});
     }
 
     // Start announcing
-    const announcer = new Announcer(
-      vcdj,
-      this.#announceSocket,
-      this.deviceManager,
-      this.#config.iface,
-      this.#config.fullStartup ?? false,
-      this.#config.announceToStagehand ?? false,
-      this.#logger
-    );
+    let announcer: Announcer | StagehandAnnouncer;
+    if (connectMethod === 'stagehand') {
+      announcer = new StagehandAnnouncer(
+        vcdj,
+        this.#announceSocket,
+        this.deviceManager,
+        this.#config.iface,
+        this.#logger
+      );
+    } else {
+      announcer = new Announcer(
+        vcdj,
+        this.#announceSocket,
+        this.deviceManager,
+        this.#config.iface,
+        this.#config.fullStartup ?? false,
+        this.#config.announceToStagehand ?? false,
+        this.#logger
+      );
+    }
     announcer.start();
 
     // Create remote and local databases

@@ -55,10 +55,7 @@ function createAnlzHeader(fileLength: number): Buffer {
 /**
  * Create a section header
  */
-function createSectionHeader(
-  fourcc: number,
-  bodyLength: number
-): Buffer {
+function createSectionHeader(fourcc: number, bodyLength: number): Buffer {
   const header = Buffer.alloc(12);
   writeUInt32BE(header, fourcc, 0); // Section tag
   writeUInt32BE(header, 12, 4); // Header length (always 12)
@@ -70,24 +67,27 @@ function createSectionHeader(
  * Create a PWV6 (wave_color_3band_preview) section.
  * Layout matches PWV4 (wave_color_preview): len_entry_bytes + len_entries + entries.
  */
-export function createPWV6Section(options: {
-  numEntries?: number;
-  data?: Uint8Array;
-} = {}): Buffer {
+export function createPWV6Section(
+  options: {
+    numEntries?: number;
+    data?: Uint8Array;
+  } = {}
+): Buffer {
   const numEntries = options.numEntries ?? 100;
   const entryBytes = 3;
   const dataLength = numEntries * entryBytes;
 
-  const data =
-    options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
+  const data = options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
 
   // Body: len_entry_bytes(4) + len_entries(4) + entries
   const bodyLength = 4 + 4 + dataLength;
   const body = Buffer.alloc(bodyLength);
 
   let offset = 0;
-  writeUInt32BE(body, entryBytes, offset); offset += 4; // len_entry_bytes
-  writeUInt32BE(body, numEntries, offset); offset += 4; // len_entries
+  writeUInt32BE(body, entryBytes, offset);
+  offset += 4; // len_entry_bytes
+  writeUInt32BE(body, numEntries, offset);
+  offset += 4; // len_entries
   Buffer.from(data).copy(body, offset); // entries
 
   const header = createSectionHeader(SectionTags.WAVE_COLOR_3CHANNEL, bodyLength);
@@ -98,25 +98,29 @@ export function createPWV6Section(options: {
  * Create a PWV7 (wave_color_3band_detail) section.
  * Layout matches PWV5 (wave_color_scroll): len_entry_bytes + len_entries + unknown + entries.
  */
-export function createPWV7Section(options: {
-  numEntries?: number;
-  data?: Uint8Array;
-} = {}): Buffer {
+export function createPWV7Section(
+  options: {
+    numEntries?: number;
+    data?: Uint8Array;
+  } = {}
+): Buffer {
   const numEntries = options.numEntries ?? 1000;
   const entryBytes = 3;
   const dataLength = numEntries * entryBytes;
 
-  const data =
-    options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
+  const data = options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
 
   // Body: len_entry_bytes(4) + len_entries(4) + unknown(4) + entries
   const bodyLength = 4 + 4 + 4 + dataLength;
   const body = Buffer.alloc(bodyLength);
 
   let offset = 0;
-  writeUInt32BE(body, entryBytes, offset); offset += 4; // len_entry_bytes
-  writeUInt32BE(body, numEntries, offset); offset += 4; // len_entries
-  writeUInt32BE(body, 0x960000, offset); offset += 4; // unknown constant
+  writeUInt32BE(body, entryBytes, offset);
+  offset += 4; // len_entry_bytes
+  writeUInt32BE(body, numEntries, offset);
+  offset += 4; // len_entries
+  writeUInt32BE(body, 0x960000, offset);
+  offset += 4; // unknown constant
   Buffer.from(data).copy(body, offset); // entries
 
   const header = createSectionHeader(SectionTags.WAVE_HD, bodyLength);
@@ -126,11 +130,13 @@ export function createPWV7Section(options: {
 /**
  * Create a PWVC (vocal_config) section
  */
-export function createPWVCSection(options: {
-  thresholdLow?: number;
-  thresholdMid?: number;
-  thresholdHigh?: number;
-} = {}): Buffer {
+export function createPWVCSection(
+  options: {
+    thresholdLow?: number;
+    thresholdMid?: number;
+    thresholdHigh?: number;
+  } = {}
+): Buffer {
   const thresholdLow = options.thresholdLow ?? 80;
   const thresholdMid = options.thresholdMid ?? 100;
   const thresholdHigh = options.thresholdHigh ?? 100;
@@ -140,9 +146,12 @@ export function createPWVCSection(options: {
   const body = Buffer.alloc(bodyLength);
 
   let offset = 0;
-  writeUInt16BE(body, 0, offset); offset += 2; // unknown, always 0
-  writeUInt16BE(body, thresholdLow, offset); offset += 2; // threshold_low
-  writeUInt16BE(body, thresholdMid, offset); offset += 2; // threshold_mid
+  writeUInt16BE(body, 0, offset);
+  offset += 2; // unknown, always 0
+  writeUInt16BE(body, thresholdLow, offset);
+  offset += 2; // threshold_low
+  writeUInt16BE(body, thresholdMid, offset);
+  offset += 2; // threshold_mid
   writeUInt16BE(body, thresholdHigh, offset); // threshold_high
 
   const header = createSectionHeader(SectionTags.VOCAL_CONFIG, bodyLength);
@@ -152,25 +161,29 @@ export function createPWVCSection(options: {
 /**
  * Create a PWV5 (wave_color_scroll) section for HD waveform testing
  */
-export function createPWV5Section(options: {
-  numEntries?: number;
-  data?: Uint8Array;
-} = {}): Buffer {
+export function createPWV5Section(
+  options: {
+    numEntries?: number;
+    data?: Uint8Array;
+  } = {}
+): Buffer {
   const numEntries = options.numEntries ?? 1000;
   const entryBytes = 2;
   const dataLength = numEntries * entryBytes;
 
-  const data =
-    options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
+  const data = options.data ?? new Uint8Array(dataLength).fill(0).map((_, i) => i % 256);
 
   // Body: len_entry_bytes(4) + len_entries(4) + unknown(4) + entries
   const bodyLength = 4 + 4 + 4 + dataLength;
   const body = Buffer.alloc(bodyLength);
 
   let offset = 0;
-  writeUInt32BE(body, entryBytes, offset); offset += 4;
-  writeUInt32BE(body, numEntries, offset); offset += 4;
-  writeUInt32BE(body, 0x960000, offset); offset += 4; // unknown constant
+  writeUInt32BE(body, entryBytes, offset);
+  offset += 4;
+  writeUInt32BE(body, numEntries, offset);
+  offset += 4;
+  writeUInt32BE(body, 0x960000, offset);
+  offset += 4; // unknown constant
   Buffer.from(data).copy(body, offset);
 
   const header = createSectionHeader(SectionTags.WAVE_COLOR_SCROLL, bodyLength);
@@ -190,11 +203,13 @@ export function createAnlzFile(sections: Buffer[]): Buffer {
 /**
  * Create a .2EX file with PWV6, PWV7, and PWVC sections
  */
-export function create2EXFile(options: {
-  pwv6?: Parameters<typeof createPWV6Section>[0];
-  pwv7?: Parameters<typeof createPWV7Section>[0];
-  pwvc?: Parameters<typeof createPWVCSection>[0];
-} = {}): Buffer {
+export function create2EXFile(
+  options: {
+    pwv6?: Parameters<typeof createPWV6Section>[0];
+    pwv7?: Parameters<typeof createPWV7Section>[0];
+    pwvc?: Parameters<typeof createPWVCSection>[0];
+  } = {}
+): Buffer {
   const sections: Buffer[] = [];
 
   if (options.pwv6 !== undefined || Object.keys(options).length === 0) {
@@ -213,9 +228,11 @@ export function create2EXFile(options: {
 /**
  * Create a .EXT file with PWV5 section
  */
-export function createEXTFile(options: {
-  pwv5?: Parameters<typeof createPWV5Section>[0];
-} = {}): Buffer {
+export function createEXTFile(
+  options: {
+    pwv5?: Parameters<typeof createPWV5Section>[0];
+  } = {}
+): Buffer {
   const sections: Buffer[] = [];
   sections.push(createPWV5Section(options.pwv5 ?? {}));
   return createAnlzFile(sections);

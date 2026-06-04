@@ -32,6 +32,12 @@ Alternative implementations of the Prolink protocol: [Java](https://github.com/D
   where traditional virtual CDJ connection isn't possible.
   See [ALL_IN_ONE_UNITS.md](docs/ALL_IN_ONE_UNITS.md) for details.
 
+- **Pioneer Stagehand Connection Mode** *(new)* - Actively join the Pro DJ Link
+  network as a virtual Stagehand iPad device. Access rich, high-frequency telemetry
+  events (mixer faders, EQ values, high-frequency VU level samples) and direct remote
+  control over CDJs (play, pause, seek, track skip, preference writes like On-Air).
+  See [STAGEHAND.md](docs/STAGEHAND.md) for details.
+
 - **OneLibrary Support** *(new)* - Full support for rekordbox 7.x's new OneLibrary
   format (exportLibrary.db) with SQLCipher encryption, including tracks, playlists,
   cues, hot cue banks, myTags, and history.
