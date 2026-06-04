@@ -61,10 +61,29 @@ class StatusEmitter {
     statusSocket.on('message', this.#handleStatus);
   }
 
-  // Bind public event emitter interface
-  on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
-  off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
-  once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
+  // Bind public event emitter interface. Use explicit generic signatures keyed
+  // on StatusEvents rather than `Emitter['on']`: extracting the indexed `on`
+  // type out of strict-event-emitter-types degrades to its unique-symbol
+  // compatibility overload under newer TypeScript, so consumers calling
+  // `.on('status', …)` would fail to typecheck. The runtime is unchanged.
+  on = this.#emitter.addListener.bind(this.#emitter) as <
+    E extends keyof StatusEvents,
+  >(
+    event: E,
+    listener: StatusEvents[E],
+  ) => void;
+  off = this.#emitter.removeListener.bind(this.#emitter) as <
+    E extends keyof StatusEvents,
+  >(
+    event: E,
+    listener: StatusEvents[E],
+  ) => void;
+  once = this.#emitter.once.bind(this.#emitter) as <
+    E extends keyof StatusEvents,
+  >(
+    event: E,
+    listener: StatusEvents[E],
+  ) => void;
 
   #handleStatus = (message: Buffer) => {
     // Stagehand mixer state (type 0x39)

@@ -20,6 +20,13 @@ interface StatusEvents {
    * Fired when the mixer broadcasts on-air channel status
    */
   onAir: (status: CDJStatus.OnAirStatus) => void;
+  /**
+   * Fired when the Stagehand-connected mixer reports fader/EQ/control positions.
+   * Part of the shared status event API (matching the active StatusEmitter) so
+   * the two are interchangeable to consumers; passive capture does not currently
+   * produce this event.
+   */
+  mixerState: (state: CDJStatus.MixerState) => void;
 }
 
 type Emitter = StrictEventEmitter<EventEmitter, StatusEvents>;
@@ -43,10 +50,29 @@ export class PassiveStatusEmitter {
     adapter.on('status', this.#handleStatus as any);
   }
 
-  // Bind public event emitter interface
-  on: Emitter['on'] = this.#emitter.addListener.bind(this.#emitter);
-  off: Emitter['off'] = this.#emitter.removeListener.bind(this.#emitter);
-  once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
+  // Bind public event emitter interface. Use explicit generic signatures keyed
+  // on StatusEvents rather than `Emitter['on']`: extracting the indexed `on`
+  // type out of strict-event-emitter-types degrades to its unique-symbol
+  // compatibility overload under newer TypeScript, so consumers calling
+  // `.on('status', …)` would fail to typecheck. The runtime is unchanged.
+  on = this.#emitter.addListener.bind(this.#emitter) as <
+    E extends keyof StatusEvents,
+  >(
+    event: E,
+    listener: StatusEvents[E],
+  ) => void;
+  off = this.#emitter.removeListener.bind(this.#emitter) as <
+    E extends keyof StatusEvents,
+  >(
+    event: E,
+    listener: StatusEvents[E],
+  ) => void;
+  once = this.#emitter.once.bind(this.#emitter) as <
+    E extends keyof StatusEvents,
+  >(
+    event: E,
+    listener: StatusEvents[E],
+  ) => void;
 
   /**
    * Stop listening to the pcap adapter.
