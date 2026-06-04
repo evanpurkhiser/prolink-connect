@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.21.1
+
+- fix: keep StatusEmitter event typing strict for consumers
+
+
 ## v0.21.0
 
 - feat: add Pioneer Stagehand connection mode support and direct remote control capabilities (v0.20.0)
