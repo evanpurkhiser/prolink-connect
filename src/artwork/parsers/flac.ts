@@ -1,4 +1,5 @@
 import {ExtractedArtwork, FileReader, PictureType} from '../types';
+
 import {normalizeMimeType} from './utils';
 
 const enum MetadataBlockType {
@@ -7,7 +8,9 @@ const enum MetadataBlockType {
 }
 
 function parsePictureBlock(data: Buffer): ExtractedArtwork | null {
-  if (data.length < 32) return null;
+  if (data.length < 32) {
+    return null;
+  }
 
   let offset = 0;
 
@@ -17,7 +20,9 @@ function parsePictureBlock(data: Buffer): ExtractedArtwork | null {
   const mimeLength = data.readUInt32BE(offset);
   offset += 4;
 
-  if (offset + mimeLength > data.length) return null;
+  if (offset + mimeLength > data.length) {
+    return null;
+  }
 
   const mimeType = data.toString('utf8', offset, offset + mimeLength);
   offset += mimeLength;
@@ -25,7 +30,9 @@ function parsePictureBlock(data: Buffer): ExtractedArtwork | null {
   const descLength = data.readUInt32BE(offset);
   offset += 4 + descLength;
 
-  if (offset + 16 > data.length) return null;
+  if (offset + 16 > data.length) {
+    return null;
+  }
 
   const width = data.readUInt32BE(offset);
   offset += 4;
@@ -36,10 +43,14 @@ function parsePictureBlock(data: Buffer): ExtractedArtwork | null {
   const imageLength = data.readUInt32BE(offset);
   offset += 4;
 
-  if (offset + imageLength > data.length) return null;
+  if (offset + imageLength > data.length) {
+    return null;
+  }
 
   const imageData = data.subarray(offset, offset + imageLength);
-  if (imageData.length === 0) return null;
+  if (imageData.length === 0) {
+    return null;
+  }
 
   return {
     data: imageData,
@@ -50,9 +61,13 @@ function parsePictureBlock(data: Buffer): ExtractedArtwork | null {
   };
 }
 
-export async function extractFromFlac(reader: FileReader): Promise<ExtractedArtwork | null> {
+export async function extractFromFlac(
+  reader: FileReader
+): Promise<ExtractedArtwork | null> {
   const signature = await reader.read(0, 4);
-  if (signature.toString('ascii') !== 'fLaC') return null;
+  if (signature.toString('ascii') !== 'fLaC') {
+    return null;
+  }
 
   let offset = 4;
   let isLastBlock = false;
@@ -62,21 +77,28 @@ export async function extractFromFlac(reader: FileReader): Promise<ExtractedArtw
 
   while (!isLastBlock && offset < reader.size) {
     const blockHeader = await reader.read(offset, 4);
-    if (blockHeader.length < 4) break;
+    if (blockHeader.length < 4) {
+      break;
+    }
 
     isLastBlock = (blockHeader[0] & 0x80) !== 0;
     const blockType = blockHeader[0] & 0x7f;
     const blockLength = (blockHeader[1] << 16) | (blockHeader[2] << 8) | blockHeader[3];
 
-    if (blockLength <= 0 || offset + 4 + blockLength > reader.size) break;
+    if (blockLength <= 0 || offset + 4 + blockLength > reader.size) {
+      break;
+    }
 
     if (blockType === MetadataBlockType.PICTURE) {
       const pictureData = await reader.read(offset + 4, blockLength);
       const artwork = parsePictureBlock(pictureData);
 
       if (artwork) {
-        if (artwork.pictureType === PictureType.FrontCover) frontCover = artwork;
-        else if (!anyArtwork) anyArtwork = artwork;
+        if (artwork.pictureType === PictureType.FrontCover) {
+          frontCover = artwork;
+        } else if (!anyArtwork) {
+          anyArtwork = artwork;
+        }
       }
     }
 

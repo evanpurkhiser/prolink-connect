@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.20.0
+
+- feat: add Stagehand connection mode with remote transport control and mixer preference writes
+- docs: add comprehensive Stagehand connection mode integration guide
+
 ## v0.19.1
 
 - ci: upgrade npm before publishing so OIDC trusted publishing works

@@ -9,12 +9,12 @@
  */
 
 import Database from 'better-sqlite3-multiple-ciphers';
+
 import * as fs from 'fs';
 import * as path from 'path';
 
 // Known key value from getEncryptionKey() - tested in onelibrary.spec.ts
-const ONELIBRARY_KEY =
-  'r8gddnr4k847830ar6cqzbkk0el6qytmb3trbbx805jm74vez64i5o8fnrqryqls';
+const ONELIBRARY_KEY = 'r8gddnr4k847830ar6cqzbkk0el6qytmb3trbbx805jm74vez64i5o8fnrqryqls';
 
 const FIXTURE_DIR = path.dirname(__filename);
 const DB_PATH = path.join(FIXTURE_DIR, 'test-onelibrary.db');

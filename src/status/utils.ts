@@ -218,3 +218,94 @@ export function onAirFromPacket(packet: Buffer): CDJStatus.OnAirStatus | undefin
 
   return undefined;
 }
+
+/**
+ * Parse unicast mixer state packet from DJM-A9 (packet type 0x39 on port 50002).
+ */
+export function mixerStateFromPacket(packet: Buffer): CDJStatus.MixerState | undefined {
+  if (packet.indexOf(PROLINK_HEADER) !== 0) {
+    return undefined;
+  }
+
+  // Verify packet type 0x39
+  if (packet[10] !== 0x39) {
+    return undefined;
+  }
+
+  if (packet.length < 266) {
+    return undefined;
+  }
+
+  const deviceName = packet.slice(11, 30).toString().replace(/\0/g, '').trim();
+
+  const crossfader = packet[180];
+
+  const channels: Record<number, CDJStatus.ChannelState> = {};
+  for (let ch = 1; ch <= 4; ch++) {
+    const offset = 36 + (ch - 1) * 24;
+
+    let crossfaderAssign: 'thru' | 'A' | 'B' = 'thru';
+    const assignVal = packet[offset + 12];
+    if (assignVal === 0x01) {
+      crossfaderAssign = 'A';
+    } else if (assignVal === 0x02) {
+      crossfaderAssign = 'B';
+    }
+
+    channels[ch] = {
+      trim: packet[offset + 1],
+      eqHi: packet[offset + 3],
+      eqMid: packet[offset + 4],
+      eqLow: packet[offset + 6],
+      colorFx: packet[offset + 7],
+      fader: packet[offset + 11],
+      crossfaderAssign,
+    };
+  }
+
+  return {
+    deviceId: 33, // Mixers are typically device 33 on ProDJLink
+    deviceName,
+    channels,
+    crossfader,
+  };
+}
+
+/**
+ * Parse unicast VU meter packet from DJM-A9 (packet type 0x58 on port 50001).
+ * Contains 15 sample-tuples (16-bit BE left/right levels) per channel.
+ */
+export function vuFromPacket(packet: Buffer): CDJStatus.VUState | undefined {
+  if (packet.indexOf(PROLINK_HEADER) !== 0) {
+    return undefined;
+  }
+
+  // Verify packet type 0x58
+  if (packet[10] !== 0x58) {
+    return undefined;
+  }
+
+  if (packet.length < 584) {
+    return undefined;
+  }
+
+  const channels: Record<number, CDJStatus.VUFrame[]> = {};
+
+  for (let ch = 1; ch <= 4; ch++) {
+    const chOffset = 44 + (ch - 1) * 60; // 15 frames * 4 bytes per frame = 60 bytes
+    const frames: CDJStatus.VUFrame[] = [];
+    for (let i = 0; i < 15; i++) {
+      const frameOffset = chOffset + i * 4;
+      frames.push({
+        left: packet.readUInt16BE(frameOffset),
+        right: packet.readUInt16BE(frameOffset + 2),
+      });
+    }
+    channels[ch] = frames;
+  }
+
+  return {
+    deviceId: 33, // Mixers are typically device 33 on ProDJLink
+    channels,
+  };
+}

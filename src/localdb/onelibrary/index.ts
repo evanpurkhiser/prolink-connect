@@ -2,12 +2,6 @@
  * Re-exports from onelibrary-connect
  */
 
-export {
-  getEncryptionKey,
-  openOneLibraryDb,
-  OneLibraryAdapter,
-} from 'onelibrary-connect';
-
 export type {
   Category,
   DeviceProperty,
@@ -17,3 +11,4 @@ export type {
   MyTag,
   SortOption,
 } from 'onelibrary-connect';
+export {getEncryptionKey, OneLibraryAdapter, openOneLibraryDb} from 'onelibrary-connect';

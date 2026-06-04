@@ -1,6 +1,5 @@
-import * as Telemetry from 'src/utils/telemetry';
-
 import {Field, NumberField, StringField} from 'src/remotedb/fields';
+import * as Telemetry from 'src/utils/telemetry';
 
 /**
  * Item types associated to the MenuItem message type.

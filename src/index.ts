@@ -7,26 +7,32 @@ export {default as PositionEmitter} from './status/position';
 export * from './passive';
 
 // Artwork extraction
+export type {FileReader as ArtworkFileReader, ExtractedArtwork} from './artwork';
 export {
   extractArtwork,
   extractArtworkFromDevice,
   isArtworkExtractionSupported,
   PictureType,
 } from './artwork';
-export type {ExtractedArtwork, FileReader as ArtworkFileReader} from './artwork';
 
 // Full metadata extraction (title, artist, album, BPM, key, genre, artwork)
+export type {ExtractedMetadata} from './metadata';
 export {
   extractFullMetadata,
   extractMetadataFromDevice,
   isMetadataExtractionSupported,
 } from './metadata';
-export type {ExtractedMetadata} from './metadata';
 
 // ANLZ file loading (for analysis data: beat grid, cues, phrases, waveforms)
+export type {
+  AnlzResolver,
+  AnlzResponse,
+  AnlzResponse2EX,
+  AnlzResponseDAT,
+  AnlzResponseEXT,
+} from './localdb/rekordbox';
 export {loadAnlz} from './localdb/rekordbox';
 export {fetchFile} from './nfs';
-export type {AnlzResolver, AnlzResponse, AnlzResponse2EX, AnlzResponseDAT, AnlzResponseEXT} from './localdb/rekordbox';
 
 // Database adapters (re-exported from onelibrary-connect)
 export type {
@@ -49,8 +55,8 @@ export type {
 } from 'onelibrary-connect';
 
 // Logger interface for pluggable logging
-export {noopLogger} from './logger';
 export type {Logger} from './logger';
+export {noopLogger} from './logger';
 
 // Types are exported last to avoid overwriting values with type-only exports
 export * from './types';

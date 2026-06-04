@@ -173,3 +173,94 @@ export interface OnAirStatus {
    */
   isSixChannel: boolean;
 }
+
+/**
+ * State of a single mixer channel fader, EQ, trim and routing.
+ */
+export interface ChannelState {
+  /**
+   * Input Trim level (0-255).
+   * Unity gain is typically 128 (0x80).
+   */
+  trim: number;
+  /**
+   * EQ High level (0-255).
+   * Fully cut at 0, unity at 128 (0x80), boosted to max at 255.
+   */
+  eqHi: number;
+  /**
+   * EQ Mid level (0-255).
+   * Fully cut at 0, unity at 128 (0x80), boosted to max at 255.
+   */
+  eqMid: number;
+  /**
+   * EQ Low level (0-255).
+   * Fully cut at 0, unity at 128 (0x80), boosted to max at 255.
+   */
+  eqLow: number;
+  /**
+   * Color FX knob position (0-255).
+   * Centered at 128 (0x80).
+   */
+  colorFx: number;
+  /**
+   * Channel fader position (0-255).
+   * 0 is completely closed, 255 is maximum level.
+   */
+  fader: number;
+  /**
+   * Crossfader assignment.
+   */
+  crossfaderAssign: 'thru' | 'A' | 'B';
+}
+
+/**
+ * Full mixer control state parsed from Stagehand unicast status (0x39 packets).
+ */
+export interface MixerState {
+  /**
+   * The reporting device ID (typically 33).
+   */
+  deviceId: number;
+  /**
+   * Device name reported by the mixer (e.g. "DJM-A9").
+   */
+  deviceName: string;
+  /**
+   * State of mixer channels (1-4).
+   */
+  channels: Record<number, ChannelState>;
+  /**
+   * Crossfader position (0-255).
+   * 0 is full-left (A), 255 is full-right (B).
+   */
+  crossfader: number;
+}
+
+/**
+ * A single audio VU level frame.
+ */
+export interface VUFrame {
+  /**
+   * Left channel level (0-65535).
+   */
+  left: number;
+  /**
+   * Right channel level (0-65535).
+   */
+  right: number;
+}
+
+/**
+ * Real-time sliding window audio level VU data parsed from Stagehand unicast packets (0x58).
+ */
+export interface VUState {
+  /**
+   * The reporting device ID (typically 33).
+   */
+  deviceId: number;
+  /**
+   * Array of 15 sliding window stereo VU level frames per channel (1-4).
+   */
+  channels: Record<number, VUFrame[]>;
+}
