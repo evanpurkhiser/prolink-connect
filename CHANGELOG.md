@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.21.2
+
+- chore: sync lockfiles to the onelibrary-connect v1.1.2 release
+
+
 ## v0.21.1
 
 - fix: keep StatusEmitter event typing strict for consumers
