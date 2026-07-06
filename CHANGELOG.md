@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.21.3
+
+- chore: bump metadata-connect to 1.1.10 in lockfiles
+
+
 ## v0.21.2
 
 - chore: sync lockfiles to the onelibrary-connect v1.1.2 release
