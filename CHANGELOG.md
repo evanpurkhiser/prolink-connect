@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.21.4
+
+- build: pin nan to 2.28.0 and bump sqlite to 12.11.1 for Electron 43
+- chore: require better-sqlite3-multiple-ciphers ^12.9.0 for Electron 43
+
+
 ## v0.21.3
 
 - chore: bump metadata-connect to 1.1.10 in lockfiles
