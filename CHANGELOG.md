@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.21.5
+
+- chore: pin onelibrary-connect's better-sqlite3-multiple-ciphers to ^12.9.0 in the lockfile
+
+
 ## v0.21.4
 
 - build: pin nan to 2.28.0 and bump sqlite to 12.11.1 for Electron 43
