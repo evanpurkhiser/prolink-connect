@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.21.6
+
+- chore: sync lockfiles to onelibrary-connect 1.1.3
+
+
 ## v0.21.5
 
 - chore: pin onelibrary-connect's better-sqlite3-multiple-ciphers to ^12.9.0 in the lockfile
