@@ -145,7 +145,7 @@ describe('DeviceManager', () => {
     await expect(gotDevice).resolves.toBe(null);
   });
 
-  it('immedaitely returns a device when it already exists using getDeviceEnsured', async () => {
+  it('immediately returns a device when it already exists using getDeviceEnsured', async () => {
     const dm = new DeviceManager(mockSocket, {deviceTimeout: 100});
     const deviceExample = mockDevice();
     dfpMock.mockReturnValue(deviceExample);

@@ -41,7 +41,8 @@ if (!Number.isInteger(VCDJ_ID) || VCDJ_ID < 1 || VCDJ_ID > 6) {
 }
 
 const ipToBytes = ip => Uint8Array.from(ip.split('.').map(Number));
-const macToBytes = mac => Uint8Array.from(mac.split(':').map(s => parseInt(s, 16)));
+const macToBytes = mac =>
+  Uint8Array.from(mac.split(':').map(s => Number.parseInt(s, 16)));
 
 const broadcastAddress = cidr => {
   const [addr, prefix] = cidr.split('/');

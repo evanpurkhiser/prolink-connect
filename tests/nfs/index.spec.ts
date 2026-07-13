@@ -10,7 +10,7 @@
 import * as ip from 'ip-address';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {RpcConnection} from 'src/nfs/rpc';
+import {configureRetryStrategy, fetchFile, resetDeviceCache} from 'src/nfs/index';
 import {
   fetchFile as fetchFileCall,
   getExports,
@@ -18,7 +18,7 @@ import {
   makeProgramClient,
   mountFilesystem,
 } from 'src/nfs/programs';
-import {configureRetryStrategy, fetchFile, resetDeviceCache} from 'src/nfs/index';
+import {RpcConnection} from 'src/nfs/rpc';
 import type {Device} from 'src/types';
 import {DeviceType, MediaSlot} from 'src/types';
 
@@ -56,7 +56,6 @@ vi.mock('src/nfs/programs', () => ({
   fetchFile: vi.fn(),
 }));
 
-
 const mockMakeProgramClient = vi.mocked(makeProgramClient);
 const mockGetExports = vi.mocked(getExports);
 const mockMountFilesystem = vi.mocked(mountFilesystem);
@@ -80,7 +79,7 @@ const makeFileInfo = (size = 1234) => ({
   type: 'regular' as const,
 });
 
-const makeFakeProgramClient = () => ({} as any);
+const makeFakeProgramClient = () => ({}) as any;
 
 describe('nfs/index', () => {
   beforeEach(() => {
@@ -145,9 +144,9 @@ describe('nfs/index', () => {
       mockGetExports.mockResolvedValue([{filesystem: '/B/', groups: []}]);
       const device = makeDevice({id: 9});
 
-      await expect(
-        fetchFile({device, slot: MediaSlot.USB, path: 'foo'}),
-      ).rejects.toThrow(/slot \(.*\) is not exported on Device 9/);
+      await expect(fetchFile({device, slot: MediaSlot.USB, path: 'foo'})).rejects.toThrow(
+        /slot \(.*\) is not exported on Device 9/,
+      );
     });
 
     it('reuses the cached connection on subsequent calls to the same device', async () => {
@@ -227,9 +226,9 @@ describe('nfs/index', () => {
       const device = makeDevice();
       mockLookupPath.mockRejectedValue(new Error('still bad'));
 
-      await expect(
-        fetchFile({device, slot: MediaSlot.USB, path: 'foo'}),
-      ).rejects.toThrow('still bad');
+      await expect(fetchFile({device, slot: MediaSlot.USB, path: 'foo'})).rejects.toThrow(
+        'still bad',
+      );
       expect(mockLookupPath).toHaveBeenCalledTimes(2);
     });
 
@@ -244,9 +243,9 @@ describe('nfs/index', () => {
       ]);
       mockGetExports.mockResolvedValueOnce([{filesystem: '/B/', groups: []}]);
 
-      await expect(
-        fetchFile({device, slot: MediaSlot.USB, path: 'foo'}),
-      ).rejects.toThrow(/slot \(.*\) is not exported on Device 7/);
+      await expect(fetchFile({device, slot: MediaSlot.USB, path: 'foo'})).rejects.toThrow(
+        /slot \(.*\) is not exported on Device 7/,
+      );
     });
 
     it('forwards the onProgress callback through to the read loop', async () => {
@@ -280,10 +279,9 @@ describe('nfs/index', () => {
       configureRetryStrategy({retries: 7});
       await fetchFile({device: makeDevice(), slot: MediaSlot.USB, path: 'a'});
 
-      expect(MockRpcConnection).toHaveBeenLastCalledWith(
-        expect.any(String),
-        {retries: 7},
-      );
+      expect(MockRpcConnection).toHaveBeenLastCalledWith(expect.any(String), {
+        retries: 7,
+      });
 
       // Reset to the module default for downstream tests.
       configureRetryStrategy({});

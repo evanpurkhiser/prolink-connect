@@ -33,16 +33,6 @@
       "default": "./lib/types.mjs"
     }
   },
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "^24.15.0"
-    },
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.0.0"
-    }
-  },
   "scripts": {
     "watch": "tsdown --watch",
     "build": "tsdown",
@@ -89,6 +79,16 @@
     "typedoc-plugin-missing-exports": "^4.1.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.0.0"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "^24.15.0"
+    }
   },
   "engines": {
     "node": ">=20.0.0"

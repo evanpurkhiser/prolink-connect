@@ -97,7 +97,10 @@ async function main() {
         );
         const matched = getMatchingInterface(firstPeer.ip);
         if (matched === null) {
-          signale.fatal('No local interface matches peer subnet (%s)', firstPeer.ip.address);
+          signale.fatal(
+            'No local interface matches peer subnet (%s)',
+            firstPeer.ip.address,
+          );
           process.exit(1);
         }
         return matched;

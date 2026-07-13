@@ -60,7 +60,11 @@ const decodeReadDirReply = (data: Buffer) => {
     off += padded;
     const cookie = data.subarray(off, off + 8);
     off += 8;
-    entries.push({fileid, name: nameBuf.toString('utf16le'), cookie: Buffer.from(cookie)});
+    entries.push({
+      fileid,
+      name: nameBuf.toString('utf16le'),
+      cookie: Buffer.from(cookie),
+    });
   }
   off += 4; // value-follows = 0
   const eof = data.readUInt32BE(off) !== 0;
@@ -77,7 +81,9 @@ async function readDir(handle: Buffer): Promise<Array<{name: string; fileid: num
     for (const e of entries) {
       all.push({name: e.name, fileid: e.fileid});
     }
-    if (eof || entries.length === 0) break;
+    if (eof || entries.length === 0) {
+      break;
+    }
     cookie = Buffer.from(entries[entries.length - 1].cookie);
   }
   return all;
@@ -86,7 +92,9 @@ async function readDir(handle: Buffer): Promise<Array<{name: string; fileid: num
 async function walk(prefix: string, handle: Buffer, depth: number) {
   const entries = await readDir(handle);
   for (const e of entries) {
-    if (e.name === '.' || e.name === '..') continue;
+    if (e.name === '.' || e.name === '..') {
+      continue;
+    }
     let info;
     try {
       info = await lookupFile(nfsClient, handle, e.name);
@@ -95,9 +103,7 @@ async function walk(prefix: string, handle: Buffer, depth: number) {
       continue;
     }
     const fullPath = `${prefix}${e.name}`;
-    console.log(
-      `${fullPath}\t${info.type}\tsize=${info.size}`,
-    );
+    console.log(`${fullPath}\t${info.type}\tsize=${info.size}`);
     if (info.type === 'directory' && depth < MAX_DEPTH) {
       await walk(`${fullPath}/`, info.handle, depth + 1);
     }

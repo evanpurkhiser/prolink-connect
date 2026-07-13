@@ -83,7 +83,7 @@ const nfsClient = await phase('portmap nfs-getport', () =>
 );
 
 if (!mountClient || !nfsClient) {
-  writeFileSync(OUT, records.map(r => JSON.stringify(r)).join('\n') + '\n');
+  writeFileSync(OUT, `${records.map(r => JSON.stringify(r)).join('\n')}\n`);
   console.error('aborting — could not establish RPC clients');
   process.exit(1);
 }
@@ -94,8 +94,12 @@ if (!exports?.length) {
   process.exit(1);
 }
 
-const root = await phase('mount-mnt-root', () => mountFilesystem(mountClient, exports[0]));
-if (!root) process.exit(1);
+const root = await phase('mount-mnt-root', () =>
+  mountFilesystem(mountClient, exports[0]),
+);
+if (!root) {
+  process.exit(1);
+}
 
 await phase('lookup-positive (Library at root)', () =>
   lookupFile(nfsClient, root, 'Library'),
@@ -135,7 +139,7 @@ if (rbDir) {
     lookupFile(nfsClient, rbDir.handle, 'master.db'),
   );
   if (big) {
-    await phase('read master.db (first 6KB → multi-chunk)', async () => {
+    await phase('read master.db (first 6KB → multi-chunk)', () => {
       // Hand-call read with truncated size to capture exactly 3 chunks.
       const truncated = {...big, size: 6 * 1024};
       return fetchFile(nfsClient, truncated);
@@ -143,6 +147,6 @@ if (rbDir) {
   }
 }
 
-writeFileSync(OUT, records.map(r => JSON.stringify(r)).join('\n') + '\n');
+writeFileSync(OUT, `${records.map(r => JSON.stringify(r)).join('\n')}\n`);
 console.log(`\nWrote ${records.length} RPC transactions to ${OUT}`);
 await conn.disconnect();

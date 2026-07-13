@@ -1,3 +1,5 @@
+import {beforeEach, describe, expect, it} from 'vitest';
+
 /**
  * Regression tests for the NFS RPC stack, driven by a wire-trace fixture
  * captured against a real Rekordbox session. Each test feeds a slice of the
@@ -8,7 +10,6 @@
  * the wire format intentionally changes.
  */
 import type {Socket} from 'node:dgram';
-import {beforeEach, describe, expect, it} from 'vitest';
 
 import {
   fetchFile,
@@ -82,20 +83,28 @@ describe('NFS replay against captured Rekordbox session', () => {
       const {conn} = newConn(recordsForPhases('mount-export-list'));
       const mountClient = {
         call: (data: {procedure: number; data: Buffer}) =>
-          conn.call({...data, port: 63612, program: mount.Program, version: mount.Version}),
+          conn.call({
+            ...data,
+            port: 63612,
+            program: mount.Program,
+            version: mount.Version,
+          }),
       } as Parameters<typeof getExports>[0];
 
       const exports = await getExports(mountClient);
-      expect(exports).toEqual([
-        {filesystem: '/', groups: ['10.0.0.119/255.255.255.0']},
-      ]);
+      expect(exports).toEqual([{filesystem: '/', groups: ['10.0.0.119/255.255.255.0']}]);
     });
 
     it('parses the root file handle from MNT', async () => {
       const {conn} = newConn(recordsForPhases('mount-mnt-root'));
       const mountClient = {
         call: (data: {procedure: number; data: Buffer}) =>
-          conn.call({...data, port: 63612, program: mount.Program, version: mount.Version}),
+          conn.call({
+            ...data,
+            port: 63612,
+            program: mount.Program,
+            version: mount.Version,
+          }),
       } as Parameters<typeof mountFilesystem>[0];
 
       const handle = await mountFilesystem(mountClient, {
@@ -129,12 +138,10 @@ describe('NFS replay against captured Rekordbox session', () => {
     });
 
     it('throws on a negative lookup (NFSERR_NOENT)', async () => {
-      const {conn} = newConn(
-        recordsForPhases('lookup-negative (PIONEER at root)'),
+      const {conn} = newConn(recordsForPhases('lookup-negative (PIONEER at root)'));
+      await expect(lookupFile(nfsCallable(conn), root, 'PIONEER')).rejects.toThrow(
+        /Failed file lookup of PIONEER/,
       );
-      await expect(
-        lookupFile(nfsCallable(conn), root, 'PIONEER'),
-      ).rejects.toThrow(/Failed file lookup of PIONEER/);
     });
 
     it('issues one RPC per path component when walking', async () => {
@@ -151,9 +158,7 @@ describe('NFS replay against captured Rekordbox session', () => {
 
   describe('NFS read', () => {
     it('fetches a small file across as many chunks as needed', async () => {
-      const {conn, socket} = newConn(
-        recordsForPhases('read datafile.edb'),
-      );
+      const {conn, socket} = newConn(recordsForPhases('read datafile.edb'));
       const nfsCallable = {
         call: (data: {procedure: number; data: Buffer}) =>
           conn.call({...data, port: 2049, program: nfs.Program, version: nfs.Version}),

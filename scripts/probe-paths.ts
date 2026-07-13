@@ -39,43 +39,76 @@ const tryAt = async (handle: Buffer, dir: string, names: string[]) => {
       if (info.type === 'directory') {
         // Surface that we can recurse here.
       }
-    } catch (err) {
+    } catch {
       // Skip negative hits to keep output tight.
     }
   }
 };
 
 await tryAt(root, '', [
-  'PIONEER', '.PIONEER', 'rekordbox', '.rekordbox', 'Rekordbox',
-  'export.pdb', 'master.db', 'database',
-  'B', '/B', 'C', '/C',
-  'Library', '.Library', 'Library/Pioneer',
-  'collection', 'share', 'Music', 'Volumes', 'Users',
-  '0', '1', '.',
+  'PIONEER',
+  '.PIONEER',
+  'rekordbox',
+  '.rekordbox',
+  'Rekordbox',
+  'export.pdb',
+  'master.db',
+  'database',
+  'B',
+  '/B',
+  'C',
+  '/C',
+  'Library',
+  '.Library',
+  'Library/Pioneer',
+  'collection',
+  'share',
+  'Music',
+  'Volumes',
+  'Users',
+  '0',
+  '1',
+  '.',
   'Application Support',
 ]);
 
 const lib = await lookupFile(nfsClient, root, 'Library');
 const libDirs = [
-  'Pioneer', 'pioneer', '.Pioneer',
-  'rekordbox', '.rekordbox',
+  'Pioneer',
+  'pioneer',
+  '.Pioneer',
+  'rekordbox',
+  '.rekordbox',
   'Application Support',
-  'PIONEER', 'export.pdb', 'master.db',
-  'Caches', 'Preferences',
+  'PIONEER',
+  'export.pdb',
+  'master.db',
+  'Caches',
+  'Preferences',
 ];
 await tryAt(lib.handle, 'Library/', libDirs);
 
 try {
   const pioneer = await lookupFile(nfsClient, lib.handle, 'Pioneer');
   await tryAt(pioneer.handle, 'Library/Pioneer/', [
-    'rekordbox', 'rekordbox6', 'Rekordbox', 'rekordbox-data',
-    'export.pdb', 'master.db', 'share',
+    'rekordbox',
+    'rekordbox6',
+    'Rekordbox',
+    'rekordbox-data',
+    'export.pdb',
+    'master.db',
+    'share',
   ]);
   try {
     const rb = await lookupFile(nfsClient, pioneer.handle, 'rekordbox');
     await tryAt(rb.handle, 'Library/Pioneer/rekordbox/', [
-      'export.pdb', 'master.db', 'share', 'option.xml',
-      'rekordbox.xml', 'PIONEER', 'analysis',
+      'export.pdb',
+      'master.db',
+      'share',
+      'option.xml',
+      'rekordbox.xml',
+      'PIONEER',
+      'analysis',
     ]);
   } catch {}
 } catch {}
@@ -83,37 +116,58 @@ try {
 try {
   const appSup = await lookupFile(nfsClient, lib.handle, 'Application Support');
   await tryAt(appSup.handle, 'Library/Application Support/', [
-    'Pioneer', 'rekordbox', 'Rekordbox',
+    'Pioneer',
+    'rekordbox',
+    'Rekordbox',
   ]);
 } catch {}
 
 const users = await lookupFile(nfsClient, root, 'Users');
 const userCandidates = process.env.USERS?.split(',') ?? [
-  'evan', 'evanpurkhiser', 'evanp', 'admin', 'user', 'Shared',
+  'evan',
+  'evanpurkhiser',
+  'evanp',
+  'admin',
+  'user',
+  'Shared',
 ];
 await tryAt(users.handle, 'Users/', userCandidates);
 
 for (const username of userCandidates) {
   try {
     const u = await lookupFile(nfsClient, users.handle, username);
-    if (u.type !== 'directory') continue;
+    if (u.type !== 'directory') {
+      continue;
+    }
     try {
       const ulib = await lookupFile(nfsClient, u.handle, 'Library');
       await tryAt(ulib.handle, `Users/${username}/Library/`, [
-        'Pioneer', 'rekordbox', 'Application Support',
+        'Pioneer',
+        'rekordbox',
+        'Application Support',
       ]);
       try {
         const pioneer = await lookupFile(nfsClient, ulib.handle, 'Pioneer');
         await tryAt(pioneer.handle, `Users/${username}/Library/Pioneer/`, [
-          'rekordbox', 'rekordbox6', 'rekordbox7', 'export.pdb', 'master.db',
+          'rekordbox',
+          'rekordbox6',
+          'rekordbox7',
+          'export.pdb',
+          'master.db',
         ]);
         try {
           const rb = await lookupFile(nfsClient, pioneer.handle, 'rekordbox');
           await tryAt(rb.handle, `Users/${username}/Library/Pioneer/rekordbox/`, [
-            'master.db', 'master.db-shm', 'master.db-wal',
-            'export.pdb', 'PIONEER',
-            'share', 'analysis', 'option.xml',
-            'datafile.edb', 'datafile.idx',
+            'master.db',
+            'master.db-shm',
+            'master.db-wal',
+            'export.pdb',
+            'PIONEER',
+            'share',
+            'analysis',
+            'option.xml',
+            'datafile.edb',
+            'datafile.idx',
             'rekordbox.xml',
           ]);
           try {
@@ -124,7 +178,11 @@ for (const username of userCandidates) {
               ['rekordbox', 'export.pdb', 'data', 'USB'],
             );
             try {
-              const rbPioneerRb = await lookupFile(nfsClient, rbPioneer.handle, 'rekordbox');
+              const rbPioneerRb = await lookupFile(
+                nfsClient,
+                rbPioneer.handle,
+                'rekordbox',
+              );
               await tryAt(
                 rbPioneerRb.handle,
                 `Users/${username}/Library/Pioneer/rekordbox/PIONEER/rekordbox/`,

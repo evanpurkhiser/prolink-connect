@@ -27,7 +27,7 @@ Thank you to [@brunchboy](https://github.com/brunchboy) for his work on
 ## Features
 
 - **Written in Typescript** - Accurate typings making implementation a breeze.
-  Autocompete your DJ tools to completion.
+  Autocomplete your DJ tools to completion.
 
 - **CDJ Status** - Receive Player state details for each CDJ on the network.
   The status is reported as a [`CDJStatus.State`](https://connect.prolink.tools/modules/_src_status_types_.html).

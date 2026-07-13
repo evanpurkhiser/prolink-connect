@@ -58,7 +58,7 @@ const portQuery = Buffer.concat([
 const portReply = await collectOnce(TARGET, QUERY_PORT, portQuery, 'dbserver-port-query');
 if (portReply.length !== 2) {
   console.error(`expected 2-byte reply, got ${portReply.length}b`);
-  writeFileSync(OUT, records.map(r => JSON.stringify(r)).join('\n') + '\n');
+  writeFileSync(OUT, `${records.map(r => JSON.stringify(r)).join('\n')}\n`);
   process.exit(1);
 }
 const dbPort = portReply.readUInt16BE();
@@ -69,5 +69,5 @@ console.log(`dbserver port = ${dbPort}`);
 const setupPkt = Buffer.from([0x11, 0x00, 0x00, 0x00, 0x01]);
 await collectOnce(TARGET, dbPort, setupPkt, 'dbserver-setup-greeting');
 
-writeFileSync(OUT, records.map(r => JSON.stringify(r)).join('\n') + '\n');
+writeFileSync(OUT, `${records.map(r => JSON.stringify(r)).join('\n')}\n`);
 console.log(`Wrote ${records.length} TCP records to ${OUT}`);

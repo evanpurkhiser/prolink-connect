@@ -124,7 +124,7 @@ export class MixstatusProcessor {
    */
   #livePlayers = new Set<DeviceID>();
   /**
-   * Incidates if we're currentiny in an active DJ set
+   * Indicates if we're currently in an active DJ set
    */
   #isSetActive = false;
   /**
