@@ -196,7 +196,7 @@ class LocalDatabase {
     // way for us to know the type of filesystem, so we have to try both
     const path = 'PIONEER/rekordbox/export.pdb';
 
-    // Attempt to be semi-smart and first try the path coorelating to the OS
+    // Attempt to be semi-smart and first try the path correlating to the OS
     // they're running this on. The assumption is they may have used the same
     // machine to export their tracks on.
     const attemptOrder =

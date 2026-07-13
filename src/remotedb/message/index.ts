@@ -59,7 +59,7 @@ type Data<T> = ReturnType<(typeof responseTransform)[ResponseType<T>]>;
  */
 export class Message<T extends MessageType = MessageType> {
   /**
-   * Read a single mesasge via a readable stream
+   * Read a single message via a readable stream
    */
   static async fromStream<T extends Response>(
     stream: PromiseReadable<any>,
