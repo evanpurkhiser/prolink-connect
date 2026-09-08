@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.25.3
+
+- ci: the AlphaTheta connector builds on Node 24 like every other connector
+
+
 ## v0.25.2
 
 - chore: lockfiles record the metadata-connect 1.2.0 and onelibrary-connect 1.1.4 bumps
