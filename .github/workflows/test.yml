@@ -34,7 +34,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.13.0'
+          # Match the publish job.
+          node-version: '24'
+
+      - name: Upgrade npm to match the publish job
+        run: npm install -g npm@latest
 
       - name: Build metadata-connect
         working-directory: metadata-connect

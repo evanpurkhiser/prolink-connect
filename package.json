@@ -114,5 +114,9 @@
   },
   "resolutions": {
     "nan": "^2.28.0"
+  },
+  "allowScripts": {
+    "better-sqlite3-multiple-ciphers": true,
+    "cap": true
   }
 }
