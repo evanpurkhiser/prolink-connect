@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.26.0
+
+- feat: add a Stagehand monitor example for watching and driving CDJs
+- fix: Stagehand mode keeps receiving live CDJ status after a reconnect
+
+
 ## v0.25.3
 
 - ci: the AlphaTheta connector builds on Node 24 like every other connector
