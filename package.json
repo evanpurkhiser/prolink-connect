@@ -12,7 +12,7 @@
     "reverse-engineer"
   ],
   "license": "MIT",
-  "author": "Evan Purkhiser <evanpurkhiser@gmail.com>",
+  "author": "Evan Purkhiser <prolink-connect.js@evanpurkhiser.com>",
   "bin": {
     "prolink-connect": "./lib/cli.mjs"
   },
