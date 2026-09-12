@@ -6,9 +6,10 @@ This document describes how to use the Stagehand connection mode in `alphatheta-
 
 ## 1. Overview
 
-Pioneer DJ's Stagehand is a mobile application used by front-of-house crew to monitor DJ gear (CDJs and mixers) on the network. 
+Pioneer DJ's Stagehand is a mobile application used by front-of-house crew to monitor DJ gear (CDJs and mixers) on the network.
 
 By posing as a Stagehand iOS device on the network, `alphatheta-connect` can:
+
 1. Receive **high-frequency per-channel mixer state** pushes (faders, EQ knobs, trim, crossfader).
 2. Receive **ultra-low-latency real-time VU level samples** directly from the mixer.
 3. Perform **CDJ remote control** (play, pause, seek forward/backward, track skip).
@@ -27,7 +28,7 @@ async function main() {
   // Bring the network online with Stagehand configuration
   const network = await bringOnline({
     connectMethod: 'stagehand',
-    vcdjName: 'Stagehand-Control' // Custom virtual iPad name
+    vcdjName: 'Stagehand-Control', // Custom virtual iPad name
   });
 
   // Autoconfigure interface from peers (assigns a randomized ID in the 141-211 range)
@@ -35,7 +36,7 @@ async function main() {
 
   // Connect to start the Stagehand abbreviated handshake
   network.connect();
-  
+
   console.log('Connected to network posing as Stagehand client!');
 }
 ```
@@ -54,7 +55,7 @@ The mixer (such as DJM-A9 or DJM-V10) pushes physical knob and fader positions a
 network.statusEmitter.on('mixerState', mixerState => {
   console.log(`Mixer State from ${mixerState.deviceName} (ID: ${mixerState.deviceId}):`);
   console.log(`  Crossfader: ${mixerState.crossfader}`);
-  
+
   for (const [ch, state] of Object.entries(mixerState.channels)) {
     console.log(`  Channel ${ch}:`);
     console.log(`    Trim: ${state.trim}`);
@@ -73,11 +74,13 @@ The mixer pushes real-time VU level sample streams on port `50001` approximately
 ```typescript
 network.positionEmitter.on('vu', vu => {
   console.log(`VU Levels for Mixer (ID: ${vu.deviceId}):`);
-  
+
   for (const [ch, frames] of Object.entries(vu.channels)) {
     // Each channel contains a sliding-window array of 15 stereo frames (16-bit uint values)
     const latestFrame = frames[frames.length - 1];
-    console.log(`  Channel ${ch} - Latest VU -> Left: ${latestFrame.left}, Right: ${latestFrame.right}`);
+    console.log(
+      `  Channel ${ch} - Latest VU -> Left: ${latestFrame.left}, Right: ${latestFrame.right}`
+    );
   }
 });
 ```
@@ -150,19 +153,33 @@ Configure equipment settings directly from the virtual Stagehand client by trans
 
 ```typescript
 // Toggle On-Air display mode to ON
-await network.control.setPreference(cdjDevice, { onAir: 'on' });
+await network.control.setPreference(cdjDevice, {onAir: 'on'});
 
 // Toggle On-Air display mode to OFF
-await network.control.setPreference(cdjDevice, { onAir: 'off' });
+await network.control.setPreference(cdjDevice, {onAir: 'off'});
 
 // Toggle quantize value change (value is set as 0x80 | enum_index)
-await network.control.setPreference(cdjDevice, { quantize: 1 }); // Quantize index 1
+await network.control.setPreference(cdjDevice, {quantize: 1}); // Quantize index 1
 ```
 
 ---
 
-## 5. API Compatibility
+## 5. Example: Stagehand Monitor CLI
+
+`examples/stagehand-monitor.ts` joins the network as a Stagehand device and prints every event the library surfaces (device announcements, player status, media slots, on-air flags, mixer state, VU, position), with a periodic summary of packet rates. It also drives a player over the Stagehand control protocol, from single keys on a TTY or one command per line on a pipe, so the write side can be exercised against real or emulated hardware.
+
+```bash
+yarn build-examples
+node lib/examples/stagehand-monitor.js --iface en0            # interactive
+printf 'play\n' | node lib/examples/stagehand-monitor.js --player 1   # scripted
+node lib/examples/stagehand-monitor.js --json --quiet > events.jsonl
+```
+
+See the header comment in the file for the full option and command list.
+
+## 6. API Compatibility
 
 To preserve backwards-compatibility and maintain documentation integrity:
+
 - Existing active (`vcdjId` < 7) and passive modes remain fully supported and completely untouched.
 - `network.control.setPlayState(device, state)` works out-of-the-box regardless of your connection mode, automatically translating state mappings into correct network packets.

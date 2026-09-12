@@ -32,6 +32,8 @@
     "build": "webpack",
     "build-docs": "typedoc --out docs src/index.ts",
     "test": "jest",
+    "build-examples": "webpack --config webpack.examples.config.ts",
+    "stagehand": "npm run build-examples && node lib/examples/stagehand-monitor.js",
     "lint": "eslint src/**/*.ts tests/**/*.ts",
     "preversion": "yarn lint; yarn test",
     "prepare": "ts-patch install -s && npm run build",
