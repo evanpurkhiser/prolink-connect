@@ -330,9 +330,14 @@ export class ProlinkNetwork {
 
     const connectMethod = this.#config.connectMethod ?? 'active';
 
+    // Pick the device number once and keep it. A CDJ-3000 that already holds
+    // a record for our IP ignores a re-claim under a different number, so a
+    // disconnect/connect cycle must present the same identity (see
+    // getStagehandMac).
     const vcdjId =
       this.#config.vcdjId ??
       (connectMethod === 'stagehand' ? generateStagehandDeviceId() : DEFAULT_VCDJ_ID);
+    this.#config.vcdjId = vcdjId;
     const vcdjName =
       this.#config.vcdjName ?? (connectMethod === 'stagehand' ? 'Stagehand' : undefined);
 

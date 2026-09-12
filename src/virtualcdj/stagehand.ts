@@ -19,17 +19,21 @@ export enum StagehandStartupStage {
 }
 
 /**
- * Generates a randomized MAC address with the AlphaTheta OUI (c8:3d:fc).
+ * The protocol-layer MAC a Stagehand device embeds in its 0x02 claim and 0x06
+ * keep-alive: the AlphaTheta OUI (c8:3d:fc) followed by the low three bytes of
+ * the interface's own MAC.
+ *
+ * This must stay stable for the life of the host. A CDJ-3000 records a peer by
+ * the identity in its claim, and once it holds a record for our IP it ignores
+ * later claims from the same IP that carry a different MAC or device number:
+ * the new peer never receives the unicast status/position stream. Observed on
+ * emulated CDJ-3000 firmware 3.20: a freshly randomized identity on every
+ * connect() was served once and then never again until the player rebooted,
+ * while the previously registered identity kept being served immediately.
  */
-export function generateStagehandMac(): Uint8Array {
-  const mac = new Uint8Array(6);
-  mac[0] = 0xc8;
-  mac[1] = 0x3d;
-  mac[2] = 0xfc;
-  mac[3] = Math.floor(Math.random() * 256);
-  mac[4] = Math.floor(Math.random() * 256);
-  mac[5] = Math.floor(Math.random() * 256);
-  return mac;
+export function getStagehandMac(iface: NetworkInterfaceInfoIPv4): Uint8Array {
+  const ifaceMac = iface.mac.split(':').map(s => parseInt(s, 16));
+  return Uint8Array.from([0xc8, 0x3d, 0xfc, ...ifaceMac.slice(3, 6)]);
 }
 
 /**
@@ -45,13 +49,13 @@ export function generateStagehandDeviceId(): number {
  * @param iface - The network interface to use
  * @param id - The device ID to use (defaults to random Stagehand ID)
  * @param name - The device name (defaults to 'Stagehand')
- * @param macAddr - The optional randomized MAC address
+ * @param macAddr - The protocol-layer MAC (defaults to one derived from iface)
  */
 export const getVirtualStagehand = (
   iface: NetworkInterfaceInfoIPv4,
   id: DeviceID = generateStagehandDeviceId(),
   name = 'Stagehand',
-  macAddr = generateStagehandMac()
+  macAddr = getStagehandMac(iface)
 ): Device => ({
   id,
   name,

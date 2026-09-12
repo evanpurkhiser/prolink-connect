@@ -4,7 +4,7 @@ import DeviceManager from 'src/devices';
 import {DeviceType} from 'src/types';
 import {
   generateStagehandDeviceId,
-  generateStagehandMac,
+  getStagehandMac,
   getVirtualStagehand,
   makeStagehand0aPacket,
   makeStagehand02Packet,
@@ -24,13 +24,17 @@ describe('Stagehand Connection Method', () => {
   };
 
   describe('Utility generators', () => {
-    it('should generate valid AlphaTheta-OUI MAC address', () => {
-      const mac = generateStagehandMac();
+    it('should derive an AlphaTheta-OUI MAC from the interface MAC', () => {
+      const mac = getStagehandMac(mockIface);
       expect(mac).toBeInstanceOf(Uint8Array);
-      expect(mac.length).toBe(6);
-      expect(mac[0]).toBe(0xc8);
-      expect(mac[1]).toBe(0x3d);
-      expect(mac[2]).toBe(0xfc);
+      expect(Array.from(mac)).toEqual([0xc8, 0x3d, 0xfc, 0x33, 0x44, 0x55]);
+    });
+
+    it('should derive the same MAC every time for the same interface', () => {
+      expect(getStagehandMac(mockIface)).toEqual(getStagehandMac({...mockIface}));
+      expect(getVirtualStagehand(mockIface, 150).macAddr).toEqual(
+        getStagehandMac(mockIface)
+      );
     });
 
     it('should generate random device ID in 141-211 range', () => {
@@ -42,7 +46,7 @@ describe('Stagehand Connection Method', () => {
     });
 
     it('should create a valid Stagehand device', () => {
-      const mac = generateStagehandMac();
+      const mac = getStagehandMac(mockIface);
       const device = getVirtualStagehand(mockIface, 150, 'Stagehand-Test', mac);
       expect(device.id).toBe(150);
       expect(device.name).toBe('Stagehand-Test');
@@ -64,7 +68,7 @@ describe('Stagehand Connection Method', () => {
     });
 
     it('should build exactly 50 bytes Stagehand 0x02 packet', () => {
-      const mac = generateStagehandMac();
+      const mac = getStagehandMac(mockIface);
       const device = getVirtualStagehand(mockIface, 150, 'Stagehand', mac);
       const packet = makeStagehand02Packet(device, mac, 1);
       expect(packet.length).toBe(50);
@@ -78,7 +82,7 @@ describe('Stagehand Connection Method', () => {
     });
 
     it('should build exactly 54 bytes Stagehand 0x06 packet', () => {
-      const mac = generateStagehandMac();
+      const mac = getStagehandMac(mockIface);
       const device = getVirtualStagehand(mockIface, 150, 'Stagehand', mac);
       const packet = makeStagehand06Packet(device, mac);
       expect(packet.length).toBe(54);
@@ -93,7 +97,7 @@ describe('Stagehand Connection Method', () => {
 
   describe('StagehandAnnouncer Lifecycle', () => {
     it('should start and stop announcer and send packets', () => {
-      const mac = generateStagehandMac();
+      const mac = getStagehandMac(mockIface);
       const device = getVirtualStagehand(mockIface, 150, 'Stagehand', mac);
       const mockSocket = {
         send: jest.fn(),
