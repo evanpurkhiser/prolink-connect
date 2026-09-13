@@ -88,7 +88,9 @@ export async function viaLocal(local: LocalDatabase, opts: Options) {
       if (!orm) {
         break;
       }
-      yield orm.findTrack(entry.id);
+      // Playlist entries reference the track through trackId; entry.id is the
+      // entry's own row id (or its index, for OneLibrary), not a track.
+      yield orm.findTrack(entry.trackId);
     }
   };
 
