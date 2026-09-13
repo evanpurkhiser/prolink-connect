@@ -29,21 +29,23 @@ export function makeBeatGrid(data: any): BeatGrid {
  * Fill cue and loop data from the ANLZ section
  */
 export function makeCueAndLoop(data: any): CueAndLoop[] {
-  return data.body.cues.map((entry: any) => {
-    // Cues with the status 0 are likely leftovers that were removed
+  return data.body.cues
+    .map((entry: any) => {
+      // Cues with the status 0 are likely leftovers that were removed
 
-    // `hotCue` is the button number (1-8, A-H); zero marks a memory cue.
-    // `type` only says whether the entry is a cue point (1) or a loop (2).
-    const button = entry.hotCue === 0 ? false : (entry.hotCue as HotcueButton);
-    const isCue = entry.type === 0x01;
-    const isLoop = entry.type === 0x02;
+      // `hotCue` is the button number (1-8, A-H); zero marks a memory cue.
+      // `type` only says whether the entry is a cue point (1) or a loop (2).
+      const button = entry.hotCue === 0 ? false : (entry.hotCue as HotcueButton);
+      const isCue = entry.type === 0x01;
+      const isLoop = entry.type === 0x02;
 
-    // NOTE: Unlike the remotedb, these entries are already in milliseconds.
-    const offset = entry.time;
-    const length = entry.loopTime - offset;
+      // NOTE: Unlike the remotedb, these entries are already in milliseconds.
+      const offset = entry.time;
+      const length = entry.loopTime - offset;
 
-    return makeCueLoopEntry(isCue, isLoop, offset, length, button);
-  });
+      return makeCueLoopEntry(isCue, isLoop, offset, length, button);
+    })
+    .filter((c: CueAndLoop | null): c is CueAndLoop => c !== null);
 }
 
 /**

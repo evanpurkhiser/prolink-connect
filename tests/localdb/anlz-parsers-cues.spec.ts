@@ -42,9 +42,9 @@ describe('makeCueAndLoop', () => {
     ]);
   });
 
-  it('yields null for entries that are neither a cue nor a loop', () => {
+  it('drops entries that are neither a cue nor a loop', () => {
     const result = makeCueAndLoop(section([entry(0, 0, 100), entry(0, 1, 200)]));
 
-    expect(result).toEqual([null, {type: 'cue_point', offset: 200}]);
+    expect(result).toEqual([{type: 'cue_point', offset: 200}]);
   });
 });
