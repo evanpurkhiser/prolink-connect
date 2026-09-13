@@ -155,20 +155,26 @@ export function makeSongStructure(data: any): SongStructure {
   };
 
   const mood = moodMap[data.body.mood] ?? 'high';
-  const bank = bankMap[data.body.rawBank] ?? 'default';
+  const bank = bankMap[data.body.bank] ?? 'default';
 
+  // Field names follow the Kaitai-generated object (rekordbox_anlz.ksy
+  // `song_structure_entry`): `phraseNumber`, `beatNumber`, `fillIn`,
+  // `fillInBeatNumber`, and `kind` is a `phrase_high` / `phrase_mid` /
+  // `phrase_low` object whose `id` carries the raw kind value.
   const phrases: Phrase[] = data.body.entries.map((entry: any) => {
+    const kind: number = typeof entry.kind === 'object' ? entry.kind.id : entry.kind;
+
     const phrase: Phrase = {
-      index: entry.index,
-      beat: entry.beat,
-      kind: entry.kind,
-      phraseType: phraseTypeMap[mood][entry.kind] ?? 'Unknown',
+      index: entry.phraseNumber,
+      beat: entry.beatNumber,
+      kind,
+      phraseType: phraseTypeMap[mood][kind] ?? 'Unknown',
     };
 
     // Add fill-in information if present
-    if (entry.fill > 0) {
-      phrase.fill = entry.fill;
-      phrase.fillBeat = entry.beatFill;
+    if (entry.fillIn > 0) {
+      phrase.fill = entry.fillIn;
+      phrase.fillBeat = entry.fillInBeatNumber;
     }
 
     return phrase;
