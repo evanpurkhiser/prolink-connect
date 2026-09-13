@@ -84,9 +84,13 @@ export function makeExtendedCues(data: any): ExtendedCue[] {
       };
     }
 
-    // Add comment if present
+    // Add comment if present. The tag stores it with a trailing NUL, which
+    // is not part of what the DJ typed.
     if (entry.lenComment > 0 && entry.comment) {
-      cue.comment = entry.comment;
+      const comment = entry.comment.replace(/\0+$/, '');
+      if (comment.length > 0) {
+        cue.comment = comment;
+      }
     }
 
     // Add quantized loop information if present
