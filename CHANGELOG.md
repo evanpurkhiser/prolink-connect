@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.26.1
+
+- fix: ANLZ cue lists no longer contain null entries (#7)
+- fix: extended cues report their quantized loop size and clean comments (#8)
+- fix: local playlists yield the tracks they contain (#6)
+- fix: ANLZ hot cues report the button they are assigned to (#5)
+- fix: song structure phrases carry their real index, beat, kind and bank (#4)
+
+
 ## v0.26.0
 
 - feat: add a Stagehand monitor example for watching and driving CDJs
