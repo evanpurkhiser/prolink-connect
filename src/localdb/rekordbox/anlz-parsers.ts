@@ -32,7 +32,9 @@ export function makeCueAndLoop(data: any): CueAndLoop[] {
   return data.body.cues.map((entry: any) => {
     // Cues with the status 0 are likely leftovers that were removed
 
-    const button = entry.hotCue === 0 ? false : (entry.type as HotcueButton);
+    // `hotCue` is the button number (1-8, A-H); zero marks a memory cue.
+    // `type` only says whether the entry is a cue point (1) or a loop (2).
+    const button = entry.hotCue === 0 ? false : (entry.hotCue as HotcueButton);
     const isCue = entry.type === 0x01;
     const isLoop = entry.type === 0x02;
 
