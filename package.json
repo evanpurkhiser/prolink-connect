@@ -65,7 +65,7 @@
     "strict-event-emitter-types": "^2.0.0"
   },
   "devDependencies": {
-    "@evanpurkhiser/oxc-config": "^0.8.0",
+    "@evanpurkhiser/oxc-config": "^0.16.0",
     "@types/retry": "^0.12.5",
     "@types/stream-buffers": "^3.0.8",
     "oxfmt": "^0.47.0",
