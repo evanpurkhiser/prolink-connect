@@ -11,8 +11,9 @@ export function statusFromPacket(packet: Buffer) {
     throw new Error('CDJ status packet does not start with the expected header');
   }
 
-  // Rekordbox sends some short status packets that we can just ignore.
-  if (packet.length < 0xc8) {
+  // Rekordbox sends some short status packets that we can just ignore. The packet counter is a
+  // u32 at 0xc8, so anything shorter than 0xcc cannot be read as a status.
+  if (packet.length < 0xcc) {
     return;
   }
 

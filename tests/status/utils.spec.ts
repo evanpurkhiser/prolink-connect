@@ -18,6 +18,15 @@ describe('statusFromPacket', () => {
     expect(statusFromPacket(packet)).toBeUndefined();
   });
 
+  it('ignores packets too short to hold the packet counter', () => {
+    for (const length of [0xc8, 0xc9, 0xca, 0xcb]) {
+      const packet = Buffer.alloc(length);
+      PROLINK_HEADER.forEach((byte, i) => packet.writeUInt8(byte, i));
+
+      expect(statusFromPacket(packet)).toBeUndefined();
+    }
+  });
+
   it('handles a real announce packet', async () => {
     const packet = await readMock('status-simple.dat');
 

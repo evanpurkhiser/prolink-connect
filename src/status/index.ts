@@ -54,14 +54,27 @@ class StatusEmitter {
   once: Emitter['once'] = this.#emitter.once.bind(this.#emitter);
 
   #handleStatus = (message: Buffer) => {
-    const status = statusFromPacket(message);
+    // Any app on the network can send a datagram to this port, and the parsers throw on one that
+    // is not a Pro DJ Link packet. A throw inside a socket listener is an uncaught exception that
+    // ends the process, so such a datagram is ignored. Only the parsing is guarded: an error from
+    // a listener of the emitter still surfaces.
+    let status;
+    let mediaSlot;
+
+    try {
+      status = statusFromPacket(message);
+
+      // Media slot status is also reported on this socket
+      if (status === undefined) {
+        mediaSlot = mediaSlotFromPacket(message);
+      }
+    } catch {
+      return;
+    }
 
     if (status !== undefined) {
       return this.#emitter.emit('status', status);
     }
-
-    // Media slot status is also reported on this socket
-    const mediaSlot = mediaSlotFromPacket(message);
 
     if (mediaSlot !== undefined) {
       this.#emitter.emit('mediaSlot', mediaSlot);
