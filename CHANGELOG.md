@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Require Node 20 minimum version
 - Fixed a typo in `ItemType.OriginalArtist` (was misspelled as `OrigianlArtist`)
 - Small comment correction for vCDJ ID on `autoconfigFromPeers`
+- Ignore datagrams on the status port that are not Pro DJ Link packets (or are too short to hold the packet counter) instead of throwing from the socket listener, which ended the process
 
 ## [v0.11.0] - 2022-10-24
 
