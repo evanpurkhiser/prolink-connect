@@ -225,8 +225,8 @@ importers:
         version: 2.0.0
     devDependencies:
       '@evanpurkhiser/oxc-config':
-        specifier: ^0.16.0
-        version: 0.16.0(oxlint@1.62.0)
+        specifier: ^0.20.0
+        version: 0.20.0(oxlint@1.62.0)
       '@types/retry':
         specifier: ^0.12.5
         version: 0.12.5
@@ -300,8 +300,8 @@ packages:
   '@emnapi/wasi-threads@1.2.1':
     resolution: {integrity: sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w==}
 
-  '@evanpurkhiser/oxc-config@0.16.0':
-    resolution: {integrity: sha512-FGJRko0Y/XvXrhSQLwRB3Cfd7tz6niEosLWUECtRtzCKojvRd9o4CprXfultUPab0/9PzKX2gEf+3X/IMZieTQ==}
+  '@evanpurkhiser/oxc-config@0.20.0':
+    resolution: {integrity: sha512-Kv3zwc8riKE2YwarvKcUuz+7aHw51fZS6/dyCaUFFWk/UAKm/c5MqgDNCo1Z2TsecXnYdZqdGbcI20D1PBlH3Q==}
     peerDependencies:
       oxlint: '>=1.56.0'
 
@@ -1666,7 +1666,7 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@evanpurkhiser/oxc-config@0.16.0(oxlint@1.62.0)':
+  '@evanpurkhiser/oxc-config@0.20.0(oxlint@1.62.0)':
     dependencies:
       oxlint: 1.62.0
 
