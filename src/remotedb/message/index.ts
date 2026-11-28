@@ -54,6 +54,25 @@ interface Options<T extends MessageType> {
 type ResponseType<T> = T extends Response ? T : never;
 type Data<T> = ReturnType<(typeof responseTransform)[ResponseType<T>]>;
 
+async function readArguments(stream: PromiseReadable<any>, count: number, types: Buffer) {
+  // 06. Read all argument fields in
+  const args: Field[] = Array.from({length: count});
+
+  for (let i = 0; i < count; ++i) {
+    // XXX: There is a small quirk in a few message response types that send
+    //      binary data, but if the binary data is empty the field will not
+    //      be sent.
+    if (types[i] === ArgumentType.Binary && args[i - 1]?.value === 0) {
+      args[i] = new Binary(Buffer.alloc(0));
+      continue;
+    }
+
+    args[i] = await readField(stream, argsFieldMap[types[i] as ArgumentType]);
+  }
+
+  return args;
+}
+
 /**
  * Representation of a set of fields sequenced into a known message format.
  */
@@ -90,20 +109,7 @@ export class Message<T extends MessageType = MessageType> {
     // 05. Read argument list
     const argList = await readField(stream, FieldType.Binary);
 
-    // 06. Read all argument fields in
-    const args: Field[] = Array.from({length: argCount.value});
-
-    for (let i = 0; i < argCount.value; ++i) {
-      // XXX: There is a small quirk in a few message response types that send
-      //      binary data, but if the binary data is empty the field will not
-      //      be sent.
-      if (argList.value[i] === ArgumentType.Binary && args[i - 1]?.value === 0) {
-        args[i] = new Binary(Buffer.alloc(0));
-        continue;
-      }
-
-      args[i] = await readField(stream, argsFieldMap[argList.value[i] as ArgumentType]);
-    }
+    const args = await readArguments(stream, argCount.value, argList.value);
 
     if (messageType.value !== expect) {
       const expected = expect.toString(16);
