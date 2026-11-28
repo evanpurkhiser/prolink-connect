@@ -94,17 +94,15 @@ export class MetadataORM {
     // Map row columns to camel case compatibility
     const trackRow = mapKeys(row, (_, k) => camelCase(k)) as Track<EntityFK.WithFKs>;
 
-    trackRow.beatGrid = null;
-    trackRow.cueAndLoops = null;
-    trackRow.waveformHd = null;
-
-    // Explicitly restore dates and booleans
-    trackRow.autoloadHotcues = Boolean(trackRow.autoloadHotcues);
-    trackRow.kuvoPublic = Boolean(trackRow.kuvoPublic);
-
-    // Explicitly restore date objects
-    trackRow.analyzeDate = new Date(trackRow.analyzeDate as any);
-    trackRow.dateAdded = new Date(trackRow.dateAdded as any);
+    Object.assign(trackRow, {
+      beatGrid: null,
+      cueAndLoops: null,
+      waveformHd: null,
+      autoloadHotcues: Boolean(trackRow.autoloadHotcues),
+      kuvoPublic: Boolean(trackRow.kuvoPublic),
+      analyzeDate: new Date(trackRow.analyzeDate as any),
+      dateAdded: new Date(trackRow.dateAdded as any),
+    });
 
     // Query all track relationships
     const track = trackRow as any;

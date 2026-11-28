@@ -15,32 +15,40 @@ const dfpMock = vi.mocked(deviceFromPacket);
 
 vi.useFakeTimers();
 
+const announcement = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+
+function watchLifecycle(manager: DeviceManager) {
+  const announced = vi.fn();
+  const connected = vi.fn();
+  const disconnected = vi.fn();
+
+  manager.on('announced', announced);
+  manager.on('connected', connected);
+  manager.on('disconnected', disconnected);
+
+  return {announced, connected, disconnected};
+}
+
 describe('DeviceManager', () => {
   const mockSocket = new EventEmitter() as Socket;
 
   it('produces device lifecycle events', () => {
     const dm = new DeviceManager(mockSocket, {deviceTimeout: 100});
 
-    const announceFn = vi.fn();
-    dm.on('announced', announceFn);
-
-    const connectedFn = vi.fn();
-    dm.on('connected', connectedFn);
-
-    const disconnectedFn = vi.fn();
-    dm.on('disconnected', disconnectedFn);
-
-    // Mocked message value
-    const deadBeef = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+    const {
+      announced: announceFn,
+      connected: connectedFn,
+      disconnected: disconnectedFn,
+    } = watchLifecycle(dm);
 
     const deviceExample = mockDevice();
 
     dfpMock.mockReturnValue(deviceExample);
 
     // Trigger device announcement
-    mockSocket.emit('message', deadBeef);
+    mockSocket.emit('message', announcement);
 
-    expect(deviceFromPacket).toHaveBeenCalledWith(deadBeef);
+    expect(deviceFromPacket).toHaveBeenCalledWith(announcement);
     expect(connectedFn).toHaveBeenCalledWith(deviceExample);
     expect(announceFn).toHaveBeenCalledWith(deviceExample);
     expect(dm.devices.size).toBe(1);
@@ -54,7 +62,7 @@ describe('DeviceManager', () => {
     vi.advanceTimersByTime(75);
 
     // Trigger device announcement
-    mockSocket.emit('message', deadBeef);
+    mockSocket.emit('message', announcement);
 
     expect(connectedFn).not.toHaveBeenCalled();
     expect(announceFn).toHaveBeenCalledWith(deviceExample);
@@ -67,25 +75,30 @@ describe('DeviceManager', () => {
     vi.advanceTimersByTime(25);
     expect(disconnectedFn).toHaveBeenCalledWith(deviceExample);
     expect(dm.devices.size).toBe(0);
+  });
 
-    // Reconfigure for longer timeout
-    dm.reconfigure({deviceTimeout: 500});
+  it('uses the new timeout when a disconnected device returns', () => {
+    const socket = new EventEmitter() as Socket;
+    const dm = new DeviceManager(socket, {deviceTimeout: 100});
+    const {connected, disconnected} = watchLifecycle(dm);
+    const device = mockDevice();
+    dfpMock.mockReturnValue(device);
 
-    // Device reconnects and emits a new connection event
-    connectedFn.mockReset();
-    mockSocket.emit('message', deadBeef);
-
-    expect(connectedFn).toHaveBeenCalledWith(deviceExample);
-
-    disconnectedFn.mockReset();
-
-    // Device will not timeout with reconfigured timeout
-    vi.advanceTimersByTime(400);
-    expect(disconnectedFn).not.toHaveBeenCalled();
-
-    // Device will now timeout
+    socket.emit('message', announcement);
     vi.advanceTimersByTime(100);
-    expect(disconnectedFn).toHaveBeenCalledWith(deviceExample);
+    expect(disconnected).toHaveBeenCalledWith(device);
+
+    dm.reconfigure({deviceTimeout: 500});
+    connected.mockClear();
+    disconnected.mockClear();
+    socket.emit('message', announcement);
+    expect(connected).toHaveBeenCalledWith(device);
+
+    vi.advanceTimersByTime(400);
+    expect(disconnected).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(100);
+    expect(disconnected).toHaveBeenCalledWith(device);
   });
 
   it('does not announce invalid announce packets', () => {

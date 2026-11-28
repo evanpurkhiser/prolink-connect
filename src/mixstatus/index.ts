@@ -381,6 +381,12 @@ export class MixstatusProcessor {
       return;
     }
 
+    this.#handleElapsedTransitions(state);
+  }
+
+  #handleElapsedTransitions(state: CDJStatus.State) {
+    const {deviceId} = state;
+
     // If a device has been playing for the required number of beats, we may be
     // able to report it as live
     const startedAt = this.#lastStartTime.get(deviceId);

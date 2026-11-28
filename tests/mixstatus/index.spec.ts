@@ -61,157 +61,6 @@ describe('mixstatus processor', () => {
     currentNow = 0;
   });
 
-  it('does not report first state if immediately not onair and playing', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-
-    feedState(5, {
-      trackId: 123,
-      playState: CDJStatus.PlayState.Playing,
-    });
-    expect(npHandler).not.toBeCalled();
-  });
-
-  it('does not report first state if off-air and played as first track', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-
-    feedState(1, {
-      trackId: 123,
-      playState: CDJStatus.PlayState.Cued,
-    });
-
-    feedState(1, {
-      playState: CDJStatus.PlayState.Playing,
-    });
-
-    expect(npHandler).not.toBeCalled();
-  });
-
-  it('reports an immediate on-air playing device as nowPlaying', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-
-    feedState(5, {
-      trackId: 123,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Playing,
-    });
-    expect(npHandler).toBeCalledWith(oc({deviceId: 5, trackId: 123}));
-  });
-
-  it('reports tracks brought on-air when no others are playing', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-
-    feedState(1, {
-      trackId: 123,
-      playState: CDJStatus.PlayState.Playing,
-    });
-
-    // Oops forgot to bring the track on air
-    feedState(1, {isOnAir: true});
-
-    expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 123}));
-  });
-
-  it('does not report off-air playing track after live track cues', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-
-    // Player 1 is playing
-    feedState(1, {
-      trackId: 123,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Playing,
-    });
-
-    expect(npHandler).toHaveBeenCalledTimes(1);
-    npHandler.mockReset();
-
-    // Player 2 is off air and cued
-    feedState(2, {
-      trackId: 234,
-      isOnAir: false,
-      playState: CDJStatus.PlayState.Cued,
-    });
-
-    // Player 2 begins playing
-    feedState(2, {
-      playState: CDJStatus.PlayState.Playing,
-    });
-
-    // Player 1 cues
-    feedState(1, {
-      playState: CDJStatus.PlayState.Cued,
-    });
-    expect(npHandler).not.toHaveBeenCalled();
-  });
-
-  it('reports the stopping of a single device', () => {
-    const stoppedHandler = vi.fn();
-    processor.on('stopped', stoppedHandler);
-
-    feedState(5, {
-      trackId: 123,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Playing,
-    });
-    advanceByBeatCount(64);
-    feedState(5, {
-      trackId: 123,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Ended,
-    });
-    expect(stoppedHandler).toBeCalledWith({deviceId: 5});
-  });
-
-  it('reports the first device as playing when no others are', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-
-    // Send cued states for two players
-    feedState(1, {
-      trackId: 123,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Cued,
-    });
-    feedState(2, {
-      trackId: 321,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Cued,
-    });
-
-    expect(npHandler).not.toBeCalled();
-
-    // Start 2nd player playing
-    feedState(2, {playState: CDJStatus.PlayState.Playing});
-
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 321}));
-  });
-
-  it('reports that a set has started when a player starts', () => {
-    const ssHandler = vi.fn();
-    processor.on('setStarted', ssHandler);
-
-    feedState(1, {
-      trackId: 123,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Cued,
-    });
-
-    feedState(1, {
-      trackId: 123,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Playing,
-    });
-
-    expect(ssHandler).toBeCalledTimes(1);
-  });
-
-  /**
-   * Loads one track, then a second, then starts playing the second offair.
-   */
   const setupTwoTracks = () => {
     feedState(1, {
       trackId: 123,
@@ -252,164 +101,320 @@ describe('mixstatus processor', () => {
     expect(npHandler).not.toHaveBeenCalled();
   });
 
-  it('reports next device after the configured beats pass and both are live', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
+  describe('initial announcements', () => {
+    it('does not report first state if immediately not onair and playing', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
 
-    // Player 2 comes onair after 64 beats
-    advanceByBeatCount(64);
-    feedState(2, {isOnAir: true});
-
-    expect(npHandler).not.toBeCalled();
-
-    // Player 2 stays onair. At beat 128 it is reported live.
-    advanceByBeatCount(64);
-    feedState(2, {});
-
-    expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
-
-  it('reports the next device early if the first is stopped', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
-
-    // Player 2 comes onair after 64 beats
-    advanceByBeatCount(64);
-    feedState(2, {isOnAir: true});
-
-    // Player 1 stops, player 2 should report early
-    feedState(1, {playState: CDJStatus.PlayState.Cued});
-
-    expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
-
-  it('reports the next device early if the first is paused', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
-
-    // Player 2 comes onair after 64 beats
-    advanceByBeatCount(64);
-    feedState(2, {isOnAir: true});
-
-    // Player 1 stops, player 2 should report early
-    feedState(1, {playState: CDJStatus.PlayState.Paused});
-
-    // Wait 8 more beats to account for the interrupt beats
-    advanceByBeatCount(8);
-    feedState(1, {});
-
-    expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
-
-  it('reports the next device early if the first goes off air', () => {
-    const npHandler = vi.fn();
-    const stoppedHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    processor.on('stopped', stoppedHandler);
-
-    setupTwoTracks();
-    npHandler.mockReset();
-
-    // Player 2 comes onair after 64 beats
-    advanceByBeatCount(64);
-    feedState(2, {isOnAir: true});
-
-    // Player 1 goes off-air, player 2 should report early
-    feedState(1, {isOnAir: false});
-
-    expect(stoppedHandler).toBeCalledTimes(0);
-
-    // Wait 8 more beats to account for the interrupt beats
-    advanceByBeatCount(8);
-    feedState(1, {});
-
-    expect(stoppedHandler).toBeCalledTimes(1);
-    expect(stoppedHandler).toBeCalledWith({deviceId: 1});
-
-    expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
-
-  it('reports the device playing the longest if the playing track stops', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
-
-    // Add one additional player that starts 32 beats in
-    advanceByBeatCount(32);
-    feedState(3, {
-      trackId: 2,
-      isOnAir: true,
-      playState: CDJStatus.PlayState.Playing,
+      feedState(5, {
+        trackId: 123,
+        playState: CDJStatus.PlayState.Playing,
+      });
+      expect(npHandler).not.toBeCalled();
     });
 
-    // Player 2 comes onair after 32 more beats
-    advanceByBeatCount(32);
-    feedState(2, {isOnAir: true});
+    it('does not report first state if off-air and played as first track', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
 
-    // Player 1 stops, player 2 should report early
-    feedState(1, {playState: CDJStatus.PlayState.Cued});
+      feedState(1, {
+        trackId: 123,
+        playState: CDJStatus.PlayState.Cued,
+      });
 
-    expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+      feedState(1, {
+        playState: CDJStatus.PlayState.Playing,
+      });
+
+      expect(npHandler).not.toBeCalled();
+    });
+
+    it('reports an immediate on-air playing device as nowPlaying', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+
+      feedState(5, {
+        trackId: 123,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Playing,
+      });
+      expect(npHandler).toBeCalledWith(oc({deviceId: 5, trackId: 123}));
+    });
+
+    it('reports tracks brought on-air when no others are playing', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+
+      feedState(1, {
+        trackId: 123,
+        playState: CDJStatus.PlayState.Playing,
+      });
+
+      // Oops forgot to bring the track on air
+      feedState(1, {isOnAir: true});
+
+      expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 123}));
+    });
+
+    it('does not report off-air playing track after live track cues', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+
+      // Player 1 is playing
+      feedState(1, {
+        trackId: 123,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Playing,
+      });
+
+      expect(npHandler).toHaveBeenCalledTimes(1);
+      npHandler.mockReset();
+
+      // Player 2 is off air and cued
+      feedState(2, {
+        trackId: 234,
+        isOnAir: false,
+        playState: CDJStatus.PlayState.Cued,
+      });
+
+      // Player 2 begins playing
+      feedState(2, {
+        playState: CDJStatus.PlayState.Playing,
+      });
+
+      // Player 1 cues
+      feedState(1, {
+        playState: CDJStatus.PlayState.Cued,
+      });
+      expect(npHandler).not.toHaveBeenCalled();
+    });
+
+    it('reports the stopping of a single device', () => {
+      const stoppedHandler = vi.fn();
+      processor.on('stopped', stoppedHandler);
+
+      feedState(5, {
+        trackId: 123,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Playing,
+      });
+      advanceByBeatCount(64);
+      feedState(5, {
+        trackId: 123,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Ended,
+      });
+      expect(stoppedHandler).toBeCalledWith({deviceId: 5});
+    });
+
+    it('reports the first device as playing when no others are', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+
+      // Send cued states for two players
+      feedState(1, {
+        trackId: 123,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Cued,
+      });
+      feedState(2, {
+        trackId: 321,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Cued,
+      });
+
+      expect(npHandler).not.toBeCalled();
+
+      // Start 2nd player playing
+      feedState(2, {playState: CDJStatus.PlayState.Playing});
+
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 321}));
+    });
+
+    it('reports that a set has started when a player starts', () => {
+      const ssHandler = vi.fn();
+      processor.on('setStarted', ssHandler);
+
+      feedState(1, {
+        trackId: 123,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Cued,
+      });
+
+      feedState(1, {
+        trackId: 123,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Playing,
+      });
+
+      expect(ssHandler).toBeCalledTimes(1);
+    });
+
+    /**
+     * Loads one track, then a second, then starts playing the second offair.
+     */
   });
 
-  it('allow pause interrupts before the next device is reported live', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
+  describe('switching between live players', () => {
+    it('reports next device after the configured beats pass and both are live', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
 
-    // Player 2 comes onair after 64 beats
-    advanceByBeatCount(64);
-    feedState(2, {isOnAir: true});
+      // Player 2 comes onair after 64 beats
+      advanceByBeatCount(64);
+      feedState(2, {isOnAir: true});
 
-    // Player 1 pauses 4 beats, the next track is NOT reported live
-    feedState(1, {playState: CDJStatus.PlayState.Paused});
-    advanceByBeatCount(4);
-    feedState(1, {playState: CDJStatus.PlayState.Playing});
-    expect(npHandler).not.toBeCalled();
+      expect(npHandler).not.toBeCalled();
 
-    // Player 2 stays onair. At beat 128 it is reported live.
-    advanceByBeatCount(60);
-    feedState(2, {});
+      // Player 2 stays onair. At beat 128 it is reported live.
+      advanceByBeatCount(64);
+      feedState(2, {});
 
-    expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
+      expect(npHandler).toBeCalledTimes(1);
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
 
-  it('allow onair interrupts before the next device is reported live', () => {
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
+    it('reports the next device early if the first is stopped', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
 
-    // Player 2 comes onair after 64 beats
-    advanceByBeatCount(64);
-    feedState(2, {isOnAir: true});
+      // Player 2 comes onair after 64 beats
+      advanceByBeatCount(64);
+      feedState(2, {isOnAir: true});
 
-    // Player 1 pauses 4 beats, the next track is NOT reported live
-    feedState(1, {isOnAir: false});
-    advanceByBeatCount(4);
-    feedState(1, {isOnAir: true});
-    expect(npHandler).not.toBeCalled();
+      // Player 1 stops, player 2 should report early
+      feedState(1, {playState: CDJStatus.PlayState.Cued});
 
-    // Player 2 stays onair. At beat 128 it is reported live.
-    advanceByBeatCount(60);
-    feedState(2, {});
+      expect(npHandler).toBeCalledTimes(1);
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
 
-    expect(npHandler).toBeCalledTimes(1);
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    it('reports the next device early if the first is paused', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
+
+      // Player 2 comes onair after 64 beats
+      advanceByBeatCount(64);
+      feedState(2, {isOnAir: true});
+
+      // Player 1 stops, player 2 should report early
+      feedState(1, {playState: CDJStatus.PlayState.Paused});
+
+      // Wait 8 more beats to account for the interrupt beats
+      advanceByBeatCount(8);
+      feedState(1, {});
+
+      expect(npHandler).toBeCalledTimes(1);
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
+
+    it('reports the next device early if the first goes off air', () => {
+      const npHandler = vi.fn();
+      const stoppedHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      processor.on('stopped', stoppedHandler);
+
+      setupTwoTracks();
+      npHandler.mockReset();
+
+      // Player 2 comes onair after 64 beats
+      advanceByBeatCount(64);
+      feedState(2, {isOnAir: true});
+
+      // Player 1 goes off-air, player 2 should report early
+      feedState(1, {isOnAir: false});
+
+      expect(stoppedHandler).toBeCalledTimes(0);
+
+      // Wait 8 more beats to account for the interrupt beats
+      advanceByBeatCount(8);
+      feedState(1, {});
+
+      expect(stoppedHandler).toBeCalledTimes(1);
+      expect(stoppedHandler).toBeCalledWith({deviceId: 1});
+
+      expect(npHandler).toBeCalledTimes(1);
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
+
+    it('reports the device playing the longest if the playing track stops', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
+
+      // Add one additional player that starts 32 beats in
+      advanceByBeatCount(32);
+      feedState(3, {
+        trackId: 2,
+        isOnAir: true,
+        playState: CDJStatus.PlayState.Playing,
+      });
+
+      // Player 2 comes onair after 32 more beats
+      advanceByBeatCount(32);
+      feedState(2, {isOnAir: true});
+
+      // Player 1 stops, player 2 should report early
+      feedState(1, {playState: CDJStatus.PlayState.Cued});
+
+      expect(npHandler).toBeCalledTimes(1);
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
+
+    it('allow pause interrupts before the next device is reported live', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
+
+      // Player 2 comes onair after 64 beats
+      advanceByBeatCount(64);
+      feedState(2, {isOnAir: true});
+
+      // Player 1 pauses 4 beats, the next track is NOT reported live
+      feedState(1, {playState: CDJStatus.PlayState.Paused});
+      advanceByBeatCount(4);
+      feedState(1, {playState: CDJStatus.PlayState.Playing});
+      expect(npHandler).not.toBeCalled();
+
+      // Player 2 stays onair. At beat 128 it is reported live.
+      advanceByBeatCount(60);
+      feedState(2, {});
+
+      expect(npHandler).toBeCalledTimes(1);
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
+
+    it('allow onair interrupts before the next device is reported live', () => {
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
+
+      // Player 2 comes onair after 64 beats
+      advanceByBeatCount(64);
+      feedState(2, {isOnAir: true});
+
+      // Player 1 pauses 4 beats, the next track is NOT reported live
+      feedState(1, {isOnAir: false});
+      advanceByBeatCount(4);
+      feedState(1, {isOnAir: true});
+      expect(npHandler).not.toBeCalled();
+
+      // Player 2 stays onair. At beat 128 it is reported live.
+      advanceByBeatCount(60);
+      feedState(2, {});
+
+      expect(npHandler).toBeCalledTimes(1);
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
   });
 
   it('reports that a set has ended when all players stop', async () => {
@@ -488,116 +493,118 @@ describe('mixstatus processor', () => {
     expect(npHandler).toBeCalledWith(oc({deviceId: 1, trackId: 456}));
   });
 
-  it('does not report after requiredPlayTime when MixstatusMode.WaitsForSilence', () => {
-    processor.configure({mode: MixstatusMode.WaitsForSilence});
+  describe('mix detection modes', () => {
+    it('does not report after requiredPlayTime when MixstatusMode.WaitsForSilence', () => {
+      processor.configure({mode: MixstatusMode.WaitsForSilence});
 
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
 
-    // Player 2 comes onair after 64 beats
-    advanceByBeatCount(64);
-    feedState(2, {isOnAir: true});
+      // Player 2 comes onair after 64 beats
+      advanceByBeatCount(64);
+      feedState(2, {isOnAir: true});
 
-    // Player 2 stays onair. At beat 128 it is reported live.
-    advanceByBeatCount(64);
-    feedState(2, {});
+      // Player 2 stays onair. At beat 128 it is reported live.
+      advanceByBeatCount(64);
+      feedState(2, {});
 
-    // Player 2 is NOT reported as live due to reportRequiresSilence
-    expect(npHandler).not.toHaveBeenCalled();
+      // Player 2 is NOT reported as live due to reportRequiresSilence
+      expect(npHandler).not.toHaveBeenCalled();
 
-    // Player 1 stops and player 2 is reporte live
-    feedState(1, {playState: CDJStatus.PlayState.Cued});
+      // Player 1 stops and player 2 is reporte live
+      feedState(1, {playState: CDJStatus.PlayState.Cued});
 
-    expect(npHandler).toHaveBeenCalledTimes(1);
-  });
-
-  it('ignores isOnAir when useOnAirStatus is false', () => {
-    processor.configure({useOnAirStatus: false});
-
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
-
-    // Player 2 is reported live at beat 128 without having isOnAir set true
-    advanceByBeatCount(128);
-    feedState(2, {});
-
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
-
-  it('reports for useOnAirStatus:false + MixstatusMode.WaitsForSilence', () => {
-    processor.configure({
-      mode: MixstatusMode.WaitsForSilence,
-      useOnAirStatus: false,
+      expect(npHandler).toHaveBeenCalledTimes(1);
     });
 
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
+    it('ignores isOnAir when useOnAirStatus is false', () => {
+      processor.configure({useOnAirStatus: false});
 
-    // Player 2 is not reported since player 1 has not yet stopped
-    advanceByBeatCount(128);
-    feedState(2, {});
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
 
-    expect(npHandler).not.toHaveBeenCalled();
+      // Player 2 is reported live at beat 128 without having isOnAir set true
+      advanceByBeatCount(128);
+      feedState(2, {});
 
-    advanceByBeatCount(64);
-    feedState(1, {playState: CDJStatus.PlayState.Cued});
-
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
-
-  it('reports while using MixstatusMode.FollowsMaster', () => {
-    processor.configure({mode: MixstatusMode.FollowsMaster});
-
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
-
-    // Player 2 is not reported since it has not yet become master
-    advanceByBeatCount(128);
-    feedState(2, {isOnAir: true});
-
-    expect(npHandler).not.toHaveBeenCalled();
-
-    advanceByBeatCount(64);
-    feedState(1, {});
-
-    // Player 2 is not reported since it has not yet become master
-    expect(npHandler).not.toHaveBeenCalled();
-
-    // Player 2 becomes master and is reported
-    feedState(1, {isMaster: false});
-    feedState(2, {isMaster: true});
-
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
-  });
-
-  it('reports with MixstatusMode.FollowsMaster, master selected early', () => {
-    processor.configure({
-      mode: MixstatusMode.FollowsMaster,
-      useOnAirStatus: false,
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
     });
 
-    const npHandler = vi.fn();
-    processor.on('nowPlaying', npHandler);
-    setupTwoTracks();
-    npHandler.mockReset();
+    it('reports for useOnAirStatus:false + MixstatusMode.WaitsForSilence', () => {
+      processor.configure({
+        mode: MixstatusMode.WaitsForSilence,
+        useOnAirStatus: false,
+      });
 
-    // Player 2 is cued and then becomes master
-    feedState(2, {playState: CDJStatus.PlayState.Cued});
-    feedState(2, {isMaster: true});
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
 
-    expect(npHandler).not.toHaveBeenCalled();
+      // Player 2 is not reported since player 1 has not yet stopped
+      advanceByBeatCount(128);
+      feedState(2, {});
 
-    // Player 2 starts playing as master
-    feedState(2, {playState: CDJStatus.PlayState.Playing});
+      expect(npHandler).not.toHaveBeenCalled();
 
-    expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+      advanceByBeatCount(64);
+      feedState(1, {playState: CDJStatus.PlayState.Cued});
+
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
+
+    it('reports while using MixstatusMode.FollowsMaster', () => {
+      processor.configure({mode: MixstatusMode.FollowsMaster});
+
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
+
+      // Player 2 is not reported since it has not yet become master
+      advanceByBeatCount(128);
+      feedState(2, {isOnAir: true});
+
+      expect(npHandler).not.toHaveBeenCalled();
+
+      advanceByBeatCount(64);
+      feedState(1, {});
+
+      // Player 2 is not reported since it has not yet become master
+      expect(npHandler).not.toHaveBeenCalled();
+
+      // Player 2 becomes master and is reported
+      feedState(1, {isMaster: false});
+      feedState(2, {isMaster: true});
+
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
+
+    it('reports with MixstatusMode.FollowsMaster, master selected early', () => {
+      processor.configure({
+        mode: MixstatusMode.FollowsMaster,
+        useOnAirStatus: false,
+      });
+
+      const npHandler = vi.fn();
+      processor.on('nowPlaying', npHandler);
+      setupTwoTracks();
+      npHandler.mockReset();
+
+      // Player 2 is cued and then becomes master
+      feedState(2, {playState: CDJStatus.PlayState.Cued});
+      feedState(2, {isMaster: true});
+
+      expect(npHandler).not.toHaveBeenCalled();
+
+      // Player 2 starts playing as master
+      feedState(2, {playState: CDJStatus.PlayState.Playing});
+
+      expect(npHandler).toBeCalledWith(oc({deviceId: 2, trackId: 234}));
+    });
   });
 });
